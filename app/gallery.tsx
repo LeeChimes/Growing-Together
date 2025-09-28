@@ -397,27 +397,57 @@ export default function GalleryScreen() {
           </Text>
         </View>
       ) : hasData ? (
-        <FlatList
-          data={currentData}
-          renderItem={({ item, index }) => 
-            viewMode === 'albums' ? renderAlbumCard({ item }) : renderPhotoTile({ item, index })
-          }
-          keyExtractor={(item) => item.id}
-          numColumns={viewMode === 'albums' ? 2 : 3}
-          contentContainerStyle={styles.listContent}
-          columnWrapperStyle={viewMode === 'albums' ? styles.albumRow : styles.photoRow}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={() => {
-                albumsQuery.refetch();
-                photosQuery.refetch();
-              }}
-              colors={[theme.colors.green]}
+        <ErrorBoundary fallback={
+          <View style={styles.errorFallback}>
+            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+              Unable to load {viewMode}. Please try again.
+            </Text>
+            <Button title="Retry" onPress={() => {
+              albumsQuery.refetch();
+              photosQuery.refetch();
+            }} />
+          </View>
+        }>
+          {viewMode === 'albums' ? (
+            <OptimizedGridList
+              data={filteredAlbums}
+              renderItem={({ item }) => renderAlbumCard({ item })}
+              numColumns={2}
+              itemHeight={ALBUM_SIZE + 40}
+              spacing={12}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={() => {
+                    albumsQuery.refetch();
+                    photosQuery.refetch();
+                  }}
+                  colors={[theme.colors.green]}
+                />
+              }
+              showsVerticalScrollIndicator={false}
             />
-          }
-          showsVerticalScrollIndicator={false}
-        />
+          ) : (
+            <OptimizedGridList
+              data={filteredPhotos}
+              renderItem={({ item, index }) => renderPhotoTile({ item, index })}
+              numColumns={3}
+              itemHeight={PHOTO_SIZE + 20}
+              spacing={8}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={() => {
+                    albumsQuery.refetch();
+                    photosQuery.refetch();
+                  }}
+                  colors={[theme.colors.green]}
+                />
+              }
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </ErrorBoundary>
       ) : (
         renderEmptyState()
       )}
