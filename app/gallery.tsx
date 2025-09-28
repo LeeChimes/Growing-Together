@@ -137,11 +137,9 @@ export default function GalleryScreen() {
       });
 
       if (!result.canceled) {
-        await uploadMutation.mutateAsync({
-          photos: [result.assets[0].uri],
-          albumId: selectedAlbum || undefined,
-        });
-        Alert.alert('Success', 'Photo uploaded successfully!');
+        const imageUri = result.assets[0].uri;
+        setPendingPhotos([imageUri]);
+        setShowCaptionModal(true);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to upload photo');
