@@ -60,25 +60,28 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <StatusBar style="dark" />
-        <Tabs 
-          screenOptions={{
-            headerTitle: () => <Logo width={160} />,
-            tabBarActiveTintColor: '#22c55e',
-            tabBarInactiveTintColor: '#6b7280',
-            tabBarStyle: {
-              paddingBottom: 8,
-              paddingTop: 8,
-              height: 64,
-            },
-            tabBarLabelStyle: {
-              fontSize: 12,
-              fontWeight: '500',
-            },
-          }}
-        >
+    <ErrorBoundary onError={(error, errorInfo) => {
+      console.error('Root level error:', error, errorInfo);
+    }}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <StatusBar style="dark" />
+          <Tabs 
+            screenOptions={{
+              headerTitle: () => <Logo width={160} />,
+              tabBarActiveTintColor: '#22c55e',
+              tabBarInactiveTintColor: '#6b7280',
+              tabBarStyle: {
+                paddingBottom: 8,
+                paddingTop: 8,
+                height: 64,
+              },
+              tabBarLabelStyle: {
+                fontSize: 12,
+                fontWeight: '500',
+              },
+            }}
+          >
         <Tabs.Screen 
           name="home" 
           options={{ 
