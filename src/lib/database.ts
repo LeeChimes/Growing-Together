@@ -261,3 +261,15 @@ export const cacheOperations = {
     });
   },
 };
+
+// Sync manager for online/offline detection
+export const syncManager = {
+  isOnline: async (): Promise<boolean> => {
+    try {
+      // Simple network check - in a real app you might want more sophisticated detection
+      return true; // For now, assume always online in development
+    } catch {
+      return false;
+    }
+  },
+};
