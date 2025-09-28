@@ -286,17 +286,17 @@ frontend:
         agent: "testing"
         comment: "✅ COMMUNITY SCREEN FULLY FUNCTIONAL: Create post button working. 6 reaction buttons found and functional. Community posts display with user avatars, timestamps, content, and reaction counts. Social interaction features working properly."
 
-  - task: "Gallery Screen"
+  - task: "Gallery Screen (New Expo App)"
     implemented: true
-    working: true
-    file: "frontend/src/components/EnhancedGalleryScreen.jsx"
+    working: partial
+    file: "app/gallery.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-      - working: true
-        agent: "testing"
-        comment: "✅ GALLERY SCREEN WORKING: Upload Photos button functional. Photo albums display correctly (Spring Growth 2024, Harvest Festival, Plot Transformations, Pest Management). Create New Album functionality available. Search and category filters present. Gallery is comprehensive with proper photo organization."
+      - working: partial
+        agent: "main"
+        comment: "✅ Step 13 Gallery Screen implemented with comprehensive features: Album management (create, view, search), bulk photo upload with caption modal, photo viewer with navigation, offline-first caching with Supabase integration, proper TypeScript types. Components include: CreateAlbumModal, PhotoViewerModal, PhotoCaptionModal. Features: Album creation with privacy settings, bulk upload with progress tracking, image organization, search/filter, gallery statistics. Some TypeScript compilation errors need fixing for full functionality."
 
   - task: "Tasks Screen"
     implemented: true
