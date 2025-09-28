@@ -404,7 +404,7 @@ export default function GalleryScreen() {
             <FAB
               icon={<Ionicons name="camera" size={20} color="white" />}
               onPress={handleQuickPhoto}
-              style={{ backgroundColor: theme.colors.green }}
+              style={{ backgroundColor: theme.colors.sky }}
               size="small"
             />
           </>
