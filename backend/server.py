@@ -970,3 +970,62 @@ async def initialize_db():
         for plant in sample_plants:
             await db.plants.insert_one(plant.dict())
         logger.info("Sample plants added")
+    
+    # Initialize sample plots
+    sample_plots_count = await db.plots.count_documents({})
+    if sample_plots_count == 0:
+        sample_plots = []
+        for i in range(1, 21):  # Create 20 sample plots
+            plot = Plot(
+                number=str(i),
+                size="10m x 5m",
+                notes=f"Standard allotment plot {i}"
+            )
+            sample_plots.append(plot)
+        
+        for plot in sample_plots:
+            await db.plots.insert_one(plot.dict())
+        logger.info("Sample plots added")
+    
+    # Initialize default rules if none exist
+    rules_count = await db.rules.count_documents({})
+    if rules_count == 0:
+        default_rules = RulesDoc(
+            version="1.0",
+            markdown="""# Growing Together Allotment Community Rules
+
+## 1. Plot Use
+- Plots must be actively cultivated for growing food or flowers
+- No subletting or commercial use of plots
+- Keep paths and communal areas clear and accessible
+- Notify the secretary if you will be away for extended periods
+
+## 2. Structures and Buildings
+- All structures require committee approval before construction
+- Maximum shed size: 8ft x 6ft
+- Greenhouses and polytunnels must be appropriately sited
+- Use appropriate materials - no corrugated iron or unsightly materials
+
+## 3. Compost and Waste
+- Green waste only in designated compost areas
+- No household rubbish or non-compostable materials
+- Dispose of diseased plants appropriately
+- Keep compost areas tidy and well-maintained
+
+## 4. Water Usage
+- Use water butts and collection systems where possible
+- No hoses left running unattended
+- Report any leaks or water system issues immediately
+- Be considerate of water usage during dry periods
+
+## 5. Community and Respect
+- Respect your neighbors and their plots
+- Quiet hours: 8 PM - 8 AM on weekdays, 8 PM - 9 AM on weekends
+- Resolve disputes through committee mediation
+- Participate in community events and work days when possible""",
+            summary="Initial community rules and guidelines",
+            created_by="admin"  # Will be replaced with actual admin ID if needed
+        )
+        
+        await db.rules.insert_one(default_rules.dict())
+        logger.info("Default rules added")
