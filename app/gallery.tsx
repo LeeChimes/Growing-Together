@@ -535,6 +535,7 @@ export default function GalleryScreen() {
         loading={uploadMutation.isPending}
       />
     </SafeAreaView>
+    </ScreenErrorBoundary>
   );
 }
 
