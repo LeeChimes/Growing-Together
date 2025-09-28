@@ -634,10 +634,8 @@ class PerformanceOptimizer {
 
   // Public API for components
   optimizeComponent(ComponentName) {
-    return React.memo(ComponentName, (prevProps, nextProps) => {
-      // Custom comparison logic for better performance
-      return JSON.stringify(prevProps) === JSON.stringify(nextProps);
-    });
+    // Return component as-is to avoid React dependency issues
+    return ComponentName;
   }
 
   debounce(func, wait) {
