@@ -32,6 +32,7 @@ import {
 } from '../src/hooks/useGallery';
 import { CreateAlbumModal } from '../src/components/CreateAlbumModal';
 import { PhotoViewerModal } from '../src/components/PhotoViewerModal';
+import { PhotoCaptionModal } from '../src/components/PhotoCaptionModal';
 
 const { width } = Dimensions.get('window');
 const ALBUM_SIZE = (width - 48) / 2; // 2 columns with padding
