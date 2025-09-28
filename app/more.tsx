@@ -20,6 +20,7 @@ import { useNotificationPreferences, useNotificationPermissions } from '../src/h
 import { useAccessibilitySettings, useUserProfile, useUpdateProfile } from '../src/hooks/useSettings';
 import { useAuthStore } from '../src/store/authStore';
 import { AdminDashboard } from '../src/components/AdminDashboard';
+import { QADashboard } from '../src/components/QADashboard';
 
 export default function MoreScreen() {
   const theme = useTheme();
