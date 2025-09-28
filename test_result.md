@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Growing Together allotment community app - lots of buttons are not working and needs to match the detailed PDF specifications and wireframe provided. App should have comprehensive functionality including Home dashboard, Diary with templates, Plant Library with AI integration, Events with RSVP, Community feed, Tasks management, Gallery with albums, and proper navigation."
+user_problem_statement: "Growing Together allotment community app - Complete implementation of Plot Inspections and Rules & Member Documents add-ons to the existing Expo Router + React Native + TypeScript + Supabase + SQLite application. Features should include offline-first inspection forms with photo attachments, warning systems, member views, exports; versioned rules system with markdown support, search functionality, acknowledgements; per-member document storage with admin management."
 
 backend:
   - task: "Authentication System"
