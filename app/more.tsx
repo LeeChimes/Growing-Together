@@ -592,6 +592,12 @@ export default function MoreScreen() {
         visible={showAdminDashboard}
         onClose={() => setShowAdminDashboard(false)}
       />
+
+      {/* QA Dashboard Modal */}
+      <QADashboard
+        visible={showQADashboard}
+        onClose={() => setShowQADashboard(false)}
+      />
     </SafeAreaView>
   );
 }
