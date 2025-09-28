@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { useAuth } from '../App';
+import React, { useState, useContext } from 'react';
+
+const AuthContext = React.createContext();
+const useAuth = () => useContext(AuthContext);
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
