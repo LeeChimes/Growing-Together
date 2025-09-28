@@ -1,16 +1,86 @@
 
+import React from 'react';
 import { Tabs } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { ThemeProvider } from '../src/design';
 import { Logo } from '../src/design/Logo';
 
 export default function RootLayout() {
   return (
-    <Tabs screenOptions={{ headerTitle: () => <Logo width={160} /> }}>
-      <Tabs.Screen name="home" options={{ title: 'Home' }} />
-      <Tabs.Screen name="diary" options={{ title: 'Diary' }} />
-      <Tabs.Screen name="events" options={{ title: 'Events' }} />
-      <Tabs.Screen name="community" options={{ title: 'Community' }} />
-      <Tabs.Screen name="gallery" options={{ title: 'Gallery' }} />
-      <Tabs.Screen name="more" options={{ title: 'More' }} />
-    </Tabs>
+    <ThemeProvider>
+      <StatusBar style="dark" />
+      <Tabs 
+        screenOptions={{
+          headerTitle: () => <Logo width={160} />,
+          tabBarActiveTintColor: '#22c55e',
+          tabBarInactiveTintColor: '#6b7280',
+          tabBarStyle: {
+            paddingBottom: 8,
+            paddingTop: 8,
+            height: 64,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+          },
+        }}
+      >
+        <Tabs.Screen 
+          name="home" 
+          options={{ 
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="home" size={size} color={color} />
+            ),
+          }} 
+        />
+        <Tabs.Screen 
+          name="diary" 
+          options={{ 
+            title: 'Diary',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="book" size={size} color={color} />
+            ),
+          }} 
+        />
+        <Tabs.Screen 
+          name="events" 
+          options={{ 
+            title: 'Events',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="calendar" size={size} color={color} />
+            ),
+          }} 
+        />
+        <Tabs.Screen 
+          name="community" 
+          options={{ 
+            title: 'Community',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="people" size={size} color={color} />
+            ),
+          }} 
+        />
+        <Tabs.Screen 
+          name="gallery" 
+          options={{ 
+            title: 'Gallery',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="images" size={size} color={color} />
+            ),
+          }} 
+        />
+        <Tabs.Screen 
+          name="more" 
+          options={{ 
+            title: 'More',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="ellipsis-horizontal" size={size} color={color} />
+            ),
+          }} 
+        />
+      </Tabs>
+    </ThemeProvider>
   );
 }
