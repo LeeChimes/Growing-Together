@@ -1,52 +1,237 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import './App.css';
 
+// Context
+const AuthContext = createContext();
+const useAuth = () => useContext(AuthContext);
+
+// API Configuration
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
+// Set up axios interceptor for auth
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Components
+import Navigation from './components/Navigation';
+import AuthScreen from './components/AuthScreen';
+import HomeScreen from './components/HomeScreen';
+import DiaryScreen from './components/DiaryScreen';
+import EventsScreen from './components/EventsScreen';
+import CommunityScreen from './components/CommunityScreen';
+import GalleryScreen from './components/GalleryScreen';
+import TasksScreen from './components/TasksScreen';
+import PlantLibraryScreen from './components/PlantLibraryScreen';
+import AdminScreen from './components/AdminScreen';
+import SettingsScreen from './components/SettingsScreen';
+
+// Auth Provider Component
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      checkAuthStatus();
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const checkAuthStatus = async () => {
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      const response = await axios.get(`${API}/auth/me`);
+      setUser(response.data);
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post(`${API}/auth/login`, { email, password });
+      localStorage.setItem('token', response.data.token);
+      setUser(response.data.user);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Login failed' };
+    }
+  };
 
+  const register = async (userData) => {
+    try {
+      const response = await axios.post(`${API}/auth/register`, userData);
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.detail || 'Registration failed' };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    isAdmin: user?.role === 'admin',
+    isApproved: user?.role !== 'guest'
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+// Main App Layout
+const AppLayout = ({ children }) => {
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50">
+      <Navigation />
+      <main className="pb-20">
+        {children}
+      </main>
     </div>
   );
 };
 
+// Protected Route Component
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  const { user, loading, isAdmin } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// Main App Component
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Auth Route */}
+            <Route 
+              path="/auth" 
+              element={
+                <AuthContext.Consumer>
+                  {({ user }) => 
+                    user ? <Navigate to="/" replace /> : <AuthScreen />
+                  }
+                </AuthContext.Consumer>
+              } 
+            />
+            
+            {/* Protected Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <HomeScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/diary" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <DiaryScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/events" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <EventsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/community" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <CommunityScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/gallery" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <GalleryScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/tasks" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <TasksScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/plants" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <PlantLibraryScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <SettingsScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/admin" element={
+              <ProtectedRoute requireAdmin={true}>
+                <AppLayout>
+                  <AdminScreen />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Default redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </div>
   );
 }

@@ -1,34 +1,356 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Growing Together App Styles */
+
+.App {
+  text-align: left;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Custom theme colors based on the branding */
+:root {
+  --primary-green: #4ade80;
+  --dark-green: #16a34a;
+  --light-green: #bbf7d0;
+  --golden-yellow: #fbbf24;
+  --light-yellow: #fef3c7;
+  --earth-brown: #92400e;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+/* Update CSS custom properties for the green theme */
+.App {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 3.9%;
+  --primary: 142 76% 36%; /* Green primary */
+  --primary-foreground: 0 0% 98%;
+  --secondary: 142 30% 85%; /* Light green secondary */
+  --secondary-foreground: 142 76% 20%;
+  --muted: 142 30% 85%;
+  --muted-foreground: 0 0% 45.1%;
+  --accent: 45 93% 47%; /* Golden yellow accent */
+  --accent-foreground: 0 0% 9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 89.8%;
+  --input: 0 0% 89.8%;
+  --ring: 142 76% 36%;
 }
 
-.App-link {
-    color: #61dafb;
+/* Garden-themed gradients */
+.gradient-garden {
+  background: linear-gradient(135deg, #bbf7d0 0%, #fef3c7 100%);
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.gradient-earth {
+  background: linear-gradient(135deg, #16a34a 0%, #92400e 100%);
+}
+
+/* Growing animation for plants/seeds */
+@keyframes grow {
+  0% {
+    transform: scale(0.8) translateY(10px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05) translateY(-5px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-grow {
+  animation: grow 1.5s ease-out;
+}
+
+/* Accessibility improvements */
+.btn-accessible {
+  min-height: 44px;
+  min-width: 44px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.text-accessible {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --primary: 142 100% 25%;
+    --secondary: 142 100% 90%;
+    --border: 0 0% 20%;
+  }
+}
+
+/* Large text mode support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-grow {
+    animation: none;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .btn-accessible {
+    min-height: 48px;
+    min-width: 48px;
+    font-size: 18px;
+  }
+  
+  .text-accessible {
+    font-size: 18px;
+  }
+}
+
+/* Custom scrollbar for garden theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f9ff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #16a34a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #15803d;
+}
+
+/* Photo upload zones */
+.photo-upload-zone {
+  border: 2px dashed #16a34a;
+  background: linear-gradient(135deg, #f0f9ff 0%, #ecfdf5 100%);
+  transition: all 0.3s ease;
+}
+
+.photo-upload-zone:hover {
+  border-color: #15803d;
+  background: linear-gradient(135deg, #e0f7fa 0%, #e8f5e8 100%);
+}
+
+/* Task completion animations */
+@keyframes taskComplete {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    background-color: #16a34a;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.task-complete {
+  animation: taskComplete 0.5s ease-out;
+}
+
+/* Weather widget styles */
+.weather-card {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+}
+
+.weather-icon {
+  font-size: 2.5rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Plant care card styles */
+.plant-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.plant-card:hover {
+  border-color: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(22, 163, 74, 0.15);
+}
+
+/* Community post styles */
+.post-card {
+  border-left: 4px solid #16a34a;
+  transition: all 0.3s ease;
+}
+
+.post-card:hover {
+  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.1);
+  transform: translateX(4px);
+}
+
+/* Event card styles */
+.event-card {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+  border: 1px solid #f59e0b;
+}
+
+.event-card.upcoming {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(251, 191, 36, 0.1);
+  }
+}
+
+/* Loading states */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Success/Error message styles */
+.message-success {
+  background: linear-gradient(135deg, #bbf7d0 0%, #d1fae5 100%);
+  border: 1px solid #16a34a;
+  color: #15803d;
+}
+
+.message-error {
+  background: linear-gradient(135deg, #fecaca 0%, #fef2f2 100%);
+  border: 1px solid #dc2626;
+  color: #b91c1c;
+}
+
+/* Form styles for better accessibility */
+.form-input {
+  min-height: 44px;
+  font-size: 16px;
+  border: 2px solid #d1d5db;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+  outline: none;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+/* Badge styles */
+.badge-admin {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+}
+
+.badge-member {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+}
+
+.badge-guest {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+/* Navigation improvements */
+.nav-item {
+  transition: all 0.3s ease;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: white;
+}
+
+.nav-item:hover:not(.active) {
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+/* Photo gallery grid */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.photo-item {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.photo-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Calendar styles */
+.calendar-day {
+  min-height: 40px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.calendar-day:hover {
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.calendar-day.has-event {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+  font-weight: 600;
+}
+
+/* Responsive typography */
+.heading-primary {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.heading-secondary {
+  font-size: clamp(1.25rem, 3vw, 1.875rem);
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
 }
