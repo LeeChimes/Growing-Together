@@ -572,6 +572,12 @@ export default function MoreScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* Admin Dashboard Modal */}
+      <AdminDashboard
+        visible={showAdminDashboard}
+        onClose={() => setShowAdminDashboard(false)}
+      />
     </SafeAreaView>
   );
 }
