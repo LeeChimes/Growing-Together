@@ -11,6 +11,8 @@ import { queryClient } from '../src/lib/queryClient';
 import { initializeDatabase } from '../src/lib/database';
 import { startAutoSync } from '../src/lib/sync';
 import { useNotifications } from '../src/hooks/useNotifications';
+import { PerformanceMonitor } from '../src/lib/performance';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { View, ActivityIndicator } from 'react-native';
 
 export default function RootLayout() {
