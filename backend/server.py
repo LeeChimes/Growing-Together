@@ -459,6 +459,99 @@ async def get_pending_users(current_user: User = Depends(get_admin_user)):
     users = await db.users.find({"is_approved": False}).to_list(100)
     return [{"id": user['id'], "email": user['email'], "username": user['username'], "plot_number": user.get('plot_number')} for user in users]
 
+@api_router.get("/admin/analytics")
+async def get_analytics(current_user: User = Depends(get_admin_user)):
+    """Get comprehensive analytics for admin dashboard"""
+    try:
+        # Get user statistics
+        total_users = await db.users.count_documents({})
+        active_users = await db.users.count_documents({"is_approved": True})
+        pending_users = await db.users.count_documents({"is_approved": False})
+        
+        # Get content statistics
+        total_diary_entries = await db.diary_entries.count_documents({})
+        total_events = await db.events.count_documents({})
+        total_posts = await db.posts.count_documents({})
+        total_tasks = await db.tasks.count_documents({})
+        completed_tasks = await db.tasks.count_documents({"completed": True})
+        
+        # Get recent activity (last 7 days)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        recent_entries = await db.diary_entries.count_documents({"date": {"$gte": seven_days_ago}})
+        recent_posts = await db.posts.count_documents({"created_at": {"$gte": seven_days_ago}})
+        
+        # Get plot statistics
+        plots_with_entries = await db.diary_entries.distinct("plot_number")
+        active_plots = len(plots_with_entries)
+        
+        # Monthly activity for the last 6 months
+        monthly_stats = []
+        for i in range(6):
+            month_start = datetime.utcnow().replace(day=1) - timedelta(days=30*i)
+            month_end = month_start + timedelta(days=31)
+            
+            month_entries = await db.diary_entries.count_documents({
+                "date": {"$gte": month_start, "$lt": month_end}
+            })
+            month_posts = await db.posts.count_documents({
+                "created_at": {"$gte": month_start, "$lt": month_end}
+            })
+            
+            monthly_stats.append({
+                "month": month_start.strftime("%Y-%m"),
+                "entries": month_entries,
+                "posts": month_posts
+            })
+        
+        return {
+            "users": {
+                "total": total_users,
+                "active": active_users,
+                "pending": pending_users
+            },
+            "content": {
+                "diary_entries": total_diary_entries,
+                "events": total_events,
+                "posts": total_posts,
+                "tasks": total_tasks,
+                "completed_tasks": completed_tasks
+            },
+            "activity": {
+                "recent_entries": recent_entries,
+                "recent_posts": recent_posts,
+                "active_plots": active_plots
+            },
+            "monthly_stats": monthly_stats
+        }
+    except Exception as e:
+        logger.error(f"Analytics error: {e}")
+        return {"error": "Failed to fetch analytics"}
+
+@api_router.get("/admin/export-data")
+async def export_community_data(current_user: User = Depends(get_admin_user)):
+    """Export community data for backup/analysis"""
+    try:
+        # Get all data
+        users_data = await db.users.find({}, {"password_hash": 0}).to_list(1000)
+        diary_data = await db.diary_entries.find().to_list(1000)
+        events_data = await db.events.find().to_list(1000)
+        posts_data = await db.posts.find().to_list(1000)
+        tasks_data = await db.tasks.find().to_list(1000)
+        
+        export_data = {
+            "export_date": datetime.utcnow().isoformat(),
+            "users": users_data,
+            "diary_entries": diary_data,
+            "events": events_data,
+            "posts": posts_data,
+            "tasks": tasks_data
+        }
+        
+        return export_data
+    except Exception as e:
+        logger.error(f"Export error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to export data")
+
 @api_router.patch("/admin/users/{user_id}/approve")
 async def approve_user(user_id: str, current_user: User = Depends(get_admin_user)):
     await db.users.update_one(
