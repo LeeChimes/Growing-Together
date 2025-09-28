@@ -24,6 +24,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const HomeScreen = () => {
+  const navigate = useNavigate();
   const [weather, setWeather] = useState(null);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [weeklyTasks, setWeeklyTasks] = useState([]);
