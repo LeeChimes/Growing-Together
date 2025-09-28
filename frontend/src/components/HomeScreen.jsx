@@ -99,6 +99,7 @@ const HomeScreen = () => {
         <Button
           className="btn-accessible h-20 flex-col space-y-2 bg-green-600 hover:bg-green-700"
           data-testid="quick-add-diary"
+          onClick={() => setShowQuickDiary(true)}
         >
           <Plus size={24} />
           <span>Add Diary</span>
