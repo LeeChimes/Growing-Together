@@ -13,8 +13,12 @@ class SyncManagerImpl implements SyncManager {
   private isCurrentlySync = false;
 
   async isOnline(): Promise<boolean> {
-    const networkState = await Network.getNetworkStateAsync();
-    return networkState.isConnected && networkState.isInternetReachable !== false;
+    try {
+      const networkState = await Network.getNetworkStateAsync();
+      return networkState.isConnected === true && networkState.isInternetReachable !== false;
+    } catch {
+      return false;
+    }
   }
 
   async syncAll(): Promise<void> {
