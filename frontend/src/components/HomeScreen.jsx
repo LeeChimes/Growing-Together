@@ -25,6 +25,7 @@ const HomeScreen = () => {
   const [weeklyTasks, setWeeklyTasks] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showQuickDiary, setShowQuickDiary] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
