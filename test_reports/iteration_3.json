@@ -14,7 +14,7 @@
         "issue": "React bundle not loading properly via external URL - 'React is not defined' error in browser console",
         "selector": "External URL routing issue",
         "fix_priority": "CRITICAL",
-        "details": "Frontend compiles successfully and serves locally on port 3000, but external URL (https://app-blueprint-52.preview.emergentagent.com) shows blank page with 'You need to enable JavaScript to run this app' message. React bundle exists and is accessible internally but not loading via external route.",
+        "details": "Frontend compiles successfully and serves locally on port 3000, but external URL (https://allotment-app-1.preview.emergentagent.com) shows blank page with 'You need to enable JavaScript to run this app' message. React bundle exists and is accessible internally but not loading via external route.",
         "impact": "Prevents testing of all Phase 3 enterprise features including admin dashboard, analytics, security manager, performance optimizer, real-time services, and offline manager"
       }
     ],
@@ -82,7 +82,7 @@
     "/app/backend_test.py"
   ],
   
-  "action_item_for_E1": "CRITICAL: Fix React app loading issue via external URL. The frontend compiles successfully and works locally but doesn't load via the external URL (https://app-blueprint-52.preview.emergentagent.com). This prevents testing of all Phase 3 enterprise features including the admin dashboard, analytics, security manager, performance optimizer, real-time services, and offline manager. Possible causes: 1) External URL routing configuration issue, 2) React 19 compatibility issue, 3) Bundle serving configuration problem. All backend APIs are working perfectly and ready for integration testing once frontend loads.",
+  "action_item_for_E1": "CRITICAL: Fix React app loading issue via external URL. The frontend compiles successfully and works locally but doesn't load via the external URL (https://allotment-app-1.preview.emergentagent.com). This prevents testing of all Phase 3 enterprise features including the admin dashboard, analytics, security manager, performance optimizer, real-time services, and offline manager. Possible causes: 1) External URL routing configuration issue, 2) React 19 compatibility issue, 3) Bundle serving configuration problem. All backend APIs are working perfectly and ready for integration testing once frontend loads.",
   
   "should_call_test_agent_after_fix": true,
   
