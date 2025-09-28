@@ -367,7 +367,8 @@ metadata:
 test_plan:
   current_focus:
     - "Gallery Screen (New Expo App) - Step 13 implementation"
-    - "Notifications System (New Expo App) - Step 14 implementation"
+    - "Notifications System (New Expo App) - Step 14 implementation" 
+    - "Admin & Settings System (New Expo App) - Step 15 implementation"
   stuck_tasks: []
   test_all: true
   test_priority: "completed"
