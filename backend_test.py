@@ -647,6 +647,13 @@ class GrowingTogetherAPITester:
         self.test_ai_plant_advice()
         self.test_admin_operations()
         
+        # NEW ADD-ON FEATURES TESTING
+        print("\n🔍 Testing New Add-on Features:")
+        print("-" * 30)
+        self.test_plot_inspections_system()
+        self.test_rules_system()
+        self.test_documents_system()
+        
         # Print summary
         print("\n" + "=" * 50)
         print(f"📊 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
