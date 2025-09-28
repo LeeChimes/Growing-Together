@@ -386,7 +386,8 @@ export default function GalleryScreen() {
   const hasData = currentData.length > 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenErrorBoundary screenName="Gallery">
+      <SafeAreaView style={styles.container}>
       {renderHeader()}
       
       {isLoading ? (
