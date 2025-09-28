@@ -43,14 +43,17 @@ const Navigation = () => {
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-green-200 shadow-lg z-50 md:top-0 md:bottom-auto md:border-b-2 md:border-t-0">
       <div className="flex justify-around items-center py-2 md:px-4 max-w-6xl mx-auto">
         {/* Logo on desktop */}
-        <div className="hidden md:flex items-center space-x-2 mr-8">
-          <img 
-            src="/logos/growing-logo-128.png" 
-            alt="Growing Together" 
-            className="h-10 w-10"
-            onError={(e) => {e.target.style.display = 'none'}}
-          />
-          <span className="font-bold text-green-700 text-lg">Growing Together</span>
+        <div className="hidden md:flex items-center space-x-4 mr-8">
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/logos/growing-logo-128.png" 
+              alt="Growing Together" 
+              className="h-10 w-10"
+              onError={(e) => {e.target.style.display = 'none'}}
+            />
+            <span className="font-bold text-green-700 text-lg">Growing Together</span>
+          </div>
+          <NotificationCenter />
         </div>
 
         {/* Navigation items */}
