@@ -41,6 +41,9 @@ export default function EventsScreen() {
   const { data: events = [], isLoading, refetch } = useEvents();
   const { data: myRSVPs = [] } = useMyRSVPs();
   const updateRSVPMutation = useUpdateEventRSVP();
+  
+  // Initialize event notifications
+  useEventNotifications();
 
   const upcomingEvents = events.filter(event => new Date(event.start_date) >= new Date());
   const pastEvents = events.filter(event => new Date(event.start_date) < new Date());
