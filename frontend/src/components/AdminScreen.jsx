@@ -75,6 +75,11 @@ const AdminScreen = () => {
           </TabsTrigger>
         </TabsList>
 
+        {/* Enterprise Dashboard */}
+        <TabsContent value="enterprise">
+          <EnterpriseAdminDashboard />
+        </TabsContent>
+
         {/* Member Approval */}
         <TabsContent value="users">
           <Card>
