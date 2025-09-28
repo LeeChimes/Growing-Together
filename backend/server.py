@@ -158,6 +158,103 @@ class AIQueryRequest(BaseModel):
     question: str
     photo_base64: Optional[str] = None
 
+# Plot Inspections Models
+class Plot(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    number: str
+    holder_user_id: Optional[str] = None
+    size: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Inspection(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    plot_id: str
+    assessor_user_id: str
+    date: datetime = Field(default_factory=datetime.utcnow)
+    use_status: str  # active, partial, not_used
+    upkeep: str  # good, fair, poor
+    issues: List[str] = []
+    notes: Optional[str] = None
+    photos: List[str] = []
+    score: int
+    action: str = "none"  # none, advisory, warning, final_warning, recommend_removal
+    reinspect_by: Optional[datetime] = None
+    shared_with_member: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class InspectionCreate(BaseModel):
+    plot_id: str
+    use_status: str
+    upkeep: str
+    issues: List[str] = []
+    notes: Optional[str] = None
+    photos: List[str] = []
+    action: str = "none"
+    reinspect_by: Optional[str] = None
+
+class MemberNotice(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    inspection_id: Optional[str] = None
+    title: str
+    body: str
+    status: str = "open"  # open, acknowledged, closed
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Rules System Models
+class RulesDoc(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    version: str
+    markdown: str
+    published_at: datetime = Field(default_factory=datetime.utcnow)
+    summary: Optional[str] = None
+    created_by: str
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class RulesCreate(BaseModel):
+    version: str
+    markdown: str
+    summary: Optional[str] = None
+
+class RuleAcknowledgement(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    rule_id: str
+    user_id: str
+    acknowledged_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class AcknowledgeRules(BaseModel):
+    rule_id: str
+
+# Documents System Models
+class UserDocument(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    title: str
+    type: str  # contract, id, other
+    file_url: str
+    file_name: str
+    file_size: Optional[int] = None
+    mime_type: Optional[str] = None
+    uploaded_by_user_id: str
+    expires_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class DocumentUpload(BaseModel):
+    title: str
+    type: str
+    file_name: str
+    file_size: Optional[int] = None
+    mime_type: Optional[str] = None
+    expires_at: Optional[str] = None
+
 # Auth utilities
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
