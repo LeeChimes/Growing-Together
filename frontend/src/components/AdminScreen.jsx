@@ -58,8 +58,12 @@ const AdminScreen = () => {
         <p className="text-gray-600">Manage community members and settings</p>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="enterprise" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="enterprise" data-testid="admin-enterprise-tab">
+            <Activity size={16} className="mr-2" />
+            Enterprise
+          </TabsTrigger>
           <TabsTrigger value="users" data-testid="admin-users-tab">
             Member Approval ({pendingUsers.length})
           </TabsTrigger>
