@@ -389,25 +389,22 @@ export default function GalleryScreen() {
       <View style={styles.fabContainer}>
         {viewMode === 'albums' ? (
           <FAB
-            icon="add"
+            icon={<Ionicons name="add" size={24} color="white" />}
             onPress={() => setShowCreateAlbum(true)}
-            label="Create Album"
             style={{ backgroundColor: theme.colors.green }}
           />
         ) : (
           <>
             <FAB
-              icon="images"
+              icon={<Ionicons name="images" size={20} color="white" />}
               onPress={handleBulkUpload}
-              label="Bulk Upload"
               style={{ backgroundColor: theme.colors.green, marginRight: 12 }}
               size="small"
             />
             <FAB
-              icon="camera"
+              icon={<Ionicons name="camera" size={20} color="white" />}
               onPress={handleQuickPhoto}
-              label="Quick Photo"
-              style={{ backgroundColor: theme.colors.blue }}
+              style={{ backgroundColor: theme.colors.green }}
               size="small"
             />
           </>
