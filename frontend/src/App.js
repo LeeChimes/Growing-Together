@@ -55,11 +55,20 @@ const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
+      // Only clear token if it's actually invalid, not on network errors
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        localStorage.removeItem('token');
+      }
     } finally {
       setLoading(false);
     }
