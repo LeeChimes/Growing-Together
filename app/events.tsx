@@ -20,6 +20,7 @@ import {
   useTheme,
 } from '../src/design';
 import { useEvents, useEventRSVPs, useUpdateEventRSVP, useMyRSVPs } from '../src/hooks/useEvents';
+import { useEventNotifications } from '../src/hooks/useNotifications';
 import { CreateEventModal } from '../src/components/CreateEventModal';
 import { Database } from '../src/lib/database.types';
 import { useAuthStore } from '../src/store/authStore';
