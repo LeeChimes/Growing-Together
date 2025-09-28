@@ -801,7 +801,14 @@ async def get_rule_acknowledgements(rule_id: Optional[str] = None, current_user:
         query["rule_id"] = rule_id
     
     acknowledgements = await db.rule_acknowledgements.find(query).sort("acknowledged_at", -1).to_list(1000)
-    return acknowledgements
+    # Convert to proper format, excluding MongoDB _id field
+    result = []
+    for ack in acknowledgements:
+        ack_dict = dict(ack)
+        if '_id' in ack_dict:
+            del ack_dict['_id']
+        result.append(ack_dict)
+    return result
 
 @api_router.get("/rules/my-acknowledgement")
 async def get_my_rule_acknowledgement(rule_id: str, current_user: User = Depends(get_current_user)):
