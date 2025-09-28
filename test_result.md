@@ -334,6 +334,30 @@ frontend:
         agent: "main"
         comment: "✅ Step 16 QA & Performance System COMPLETED - All repair plan requirements fulfilled: Performance optimization with list virtualization (OptimizedList, OptimizedGridList), image compression service (≤1600px edge, 80% quality), error boundaries (root level + screen specific), comprehensive QA test suite covering airplane-mode sync, performance monitoring, image compression validation, accessibility compliance (AA contrast, 48dp targets), error handling validation. Components: ErrorBoundary, ScreenErrorBoundary, FeatureErrorBoundary, OptimizedList components, ImageCompressionService, QATestRunner, PerformanceMonitor. Features: Automated testing, continuous QA monitoring, performance metrics collection, memory leak prevention, graceful error handling with fallback UI. QA Dashboard for dev/admin access. All 16 steps of the repair plan successfully completed."
 
+  - task: "Plot Inspections System (Add-on Feature)"
+    implemented: true
+    working: false
+    file: "app/inspections.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "🚧 PLOT INSPECTIONS ADD-ON IMPLEMENTED - Comprehensive offline-first inspection system created: Features: Plot inspection forms with photos, scoring system (0-100), action levels (advisory/warning/final warning/removal), issue tracking with predefined tags, member notifications, reinspection scheduling, batch processing, data export (CSV/JSON). Components: InspectionsScreen (app/inspections.tsx), CreateInspectionModal, InspectionDetailModal with photo viewer, filters and search. Database: Complete schema with plots, inspections, member_notices tables, proper RLS policies. Hooks: useInspections, useMyPlotInspections, useCreateInspection, useUpdateInspection, useDeleteInspection, useExportInspections. Integration: Connected to More screen navigation, admin-only access, notification scheduling for reinspections. Status: Implementation complete, needs testing for functionality and offline capabilities."
+
+  - task: "Rules & Member Documents System (Add-on Feature)"
+    implemented: true
+    working: false
+    file: "app/rules.tsx"
+    stuck_count: 0
+    priority: "high" 
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "🚧 RULES & DOCUMENTS ADD-ON IMPLEMENTED - Complete versioned rules and document management system: Rules Features: Markdown-based rules with versioning, search functionality, table of contents, acknowledgement system, admin stats dashboard, member compliance tracking. Document Features: Per-member document storage (contracts, ID, other), expiry tracking with status indicators, admin document management, file type validation (PDF, DOC, images), 10MB size limits. Components: RulesScreen (app/rules.tsx), DocumentsScreen (app/documents.tsx), CreateRulesModal, UploadDocumentModal, AdminDocumentsModal, RulesStatsModal. Database: rules, rule_acknowledgements, user_documents tables with proper RLS policies. Hooks: useRules, useAcknowledgeRules, useSearchRules, useDocuments, useUploadDocument with document picker integration. Integration: Connected to More screen navigation, accessible to all users with admin management features. Status: Implementation complete, needs testing for functionality and file handling."
+
   - task: "Tasks Screen"
     implemented: true
     working: true
