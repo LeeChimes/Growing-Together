@@ -5,9 +5,13 @@ import { Database } from './database.types';
 export const db = SQLite.openDatabaseSync('growing_together.db');
 
 // Database initialization
-export const initializeDatabase = () => {
-  return new Promise<void>((resolve, reject) => {
-    db.transaction((tx) => {
+export const initializeDatabase = async (): Promise<void> => {
+  try {
+    // For the new SQLite API, we execute SQL directly
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      PRAGMA foreign_keys = ON;
+    `);
       // Profiles cache
       tx.executeSql(`
         CREATE TABLE IF NOT EXISTS profiles_cache (
