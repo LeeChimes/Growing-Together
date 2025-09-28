@@ -1,12 +1,34 @@
 
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Tabs, Redirect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider } from '../src/design';
 import { Logo } from '../src/design/Logo';
+import { useAuthStore } from '../src/store/authStore';
+import { View, ActivityIndicator } from 'react-native';
 
 export default function RootLayout() {
+  const { user, isLoading, isInitialized, initialize } = useAuthStore();
+
+  useEffect(() => {
+    initialize();
+  }, []);
+
+  if (!isInitialized || isLoading) {
+    return (
+      <ThemeProvider>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#22c55e" />
+        </View>
+      </ThemeProvider>
+    );
+  }
+
+  if (!user) {
+    return <Redirect href="/auth" />;
+  }
+
   return (
     <ThemeProvider>
       <StatusBar style="dark" />
