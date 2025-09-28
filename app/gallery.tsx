@@ -95,26 +95,35 @@ export default function GalleryScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        setUploadProgress({ visible: true, current: 0, total: result.assets.length });
-
         const imageUris = result.assets.map(asset => asset.uri);
-        
-        try {
-          await uploadMutation.mutateAsync({
-            photos: imageUris,
-            albumId: selectedAlbum || undefined,
-          });
-          
-          Alert.alert('Success', `${result.assets.length} photos uploaded successfully!`);
-        } catch (error) {
-          Alert.alert('Error', 'Failed to upload some photos. Please try again.');
-        } finally {
-          setUploadProgress({ visible: false, current: 0, total: 0 });
-        }
+        setPendingPhotos(imageUris);
+        setShowCaptionModal(true);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to access photo library');
+    }
+  };
+
+  const handlePhotosWithCaptions = async (photosWithCaptions: Array<{uri: string; caption: string}>) => {
+    setShowCaptionModal(false);
+    setUploadProgress({ visible: true, current: 0, total: photosWithCaptions.length });
+
+    try {
+      const imageUris = photosWithCaptions.map(p => p.uri);
+      const captions = photosWithCaptions.map(p => p.caption);
+      
+      await uploadMutation.mutateAsync({
+        photos: imageUris,
+        albumId: selectedAlbum || undefined,
+        captions,
+      });
+      
+      Alert.alert('Success', `${photosWithCaptions.length} photos uploaded successfully!`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to upload some photos. Please try again.');
+    } finally {
       setUploadProgress({ visible: false, current: 0, total: 0 });
+      setPendingPhotos([]);
     }
   };
 
