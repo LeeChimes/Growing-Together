@@ -71,20 +71,23 @@ class PerformanceOptimizer {
   }
 
   setupRenderMonitoring() {
-    const originalCreateElement = React.createElement;
-    
-    React.createElement = (...args) => {
-      const startTime = performance.now();
-      const result = originalCreateElement(...args);
-      const endTime = performance.now();
+    // Skip React monitoring in browser environment to avoid conflicts
+    if (typeof window !== 'undefined' && window.React) {
+      const originalCreateElement = window.React.createElement;
       
-      if (args[0] && typeof args[0] === 'function') {
-        const componentName = args[0].name || 'AnonymousComponent';
-        this.recordRenderTime(componentName, endTime - startTime);
-      }
-      
-      return result;
-    };
+      window.React.createElement = (...args) => {
+        const startTime = performance.now();
+        const result = originalCreateElement(...args);
+        const endTime = performance.now();
+        
+        if (args[0] && typeof args[0] === 'function') {
+          const componentName = args[0].name || 'AnonymousComponent';
+          this.recordRenderTime(componentName, endTime - startTime);
+        }
+        
+        return result;
+      };
+    }
   }
 
   setupNetworkOptimization() {
