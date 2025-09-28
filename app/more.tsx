@@ -5,22 +5,21 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  FlatList,
+  Switch,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { 
   Card, 
-  Tag, 
   Button,
-  EmptyState,
-  useTheme 
+  useTheme,
+  ListItem 
 } from '../src/design';
-import { ukPlants, plantCategories, getDifficultyColor, getMonthName, Plant } from '../src/data/plants';
-import { AskAIModal } from '../src/components/AskAIModal';
+import { useNotificationPreferences, useNotificationPermissions } from '../src/hooks/useNotifications';
+import { useAuthStore } from '../src/store/authStore';
 
-export default function PlantLibraryScreen() {
+export default function MoreScreen() {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
