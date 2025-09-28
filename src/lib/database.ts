@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 import { Database } from './database.types';
 
 // Initialize SQLite database
-export const db = SQLite.openDatabase('growing_together.db');
+export const db = SQLite.openDatabaseSync('growing_together.db');
 
 // Database initialization
 export const initializeDatabase = () => {
