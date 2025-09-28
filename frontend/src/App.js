@@ -30,7 +30,7 @@ import HomeScreen from './components/HomeScreen';
 import DiaryScreen from './components/DiaryScreen';
 import EventsScreen from './components/EventsScreen';
 import CommunityScreen from './components/CommunityScreen';
-import GalleryScreen from './components/GalleryScreen';
+import EnhancedGalleryScreen from './components/EnhancedGalleryScreen';
 import TasksScreen from './components/TasksScreen';
 import PlantLibraryScreen from './components/PlantLibraryScreen';
 import AdminScreen from './components/AdminScreen';
