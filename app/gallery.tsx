@@ -53,6 +53,8 @@ export default function GalleryScreen() {
   }>({ visible: false, current: 0, total: 0 });
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
   const [showPhotoViewer, setShowPhotoViewer] = useState(false);
+  const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
+  const [showCaptionModal, setShowCaptionModal] = useState(false);
 
   // Data hooks
   const albumsQuery = useAlbums();
