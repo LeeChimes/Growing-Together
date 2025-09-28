@@ -719,4 +719,15 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 3,
   },
+  errorFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });
