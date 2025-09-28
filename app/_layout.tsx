@@ -14,12 +14,29 @@ import { View, ActivityIndicator } from 'react-native';
 
 export default function RootLayout() {
   const { user, isLoading, isInitialized, initialize } = useAuthStore();
+  const [dbInitialized, setDbInitialized] = useState(false);
 
   useEffect(() => {
-    initialize();
+    const initApp = async () => {
+      try {
+        // Initialize SQLite database
+        await initializeDatabase();
+        setDbInitialized(true);
+        
+        // Initialize auth
+        await initialize();
+        
+        // Start auto-sync
+        startAutoSync();
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+      }
+    };
+
+    initApp();
   }, []);
 
-  if (!isInitialized || isLoading) {
+  if (!dbInitialized || !isInitialized || isLoading) {
     return (
       <ThemeProvider>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
