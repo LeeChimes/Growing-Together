@@ -44,7 +44,10 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      checkAuthStatus();
+      // Add a small delay to ensure axios interceptor is set up
+      setTimeout(() => {
+        checkAuthStatus();
+      }, 100);
     } else {
       setLoading(false);
     }
