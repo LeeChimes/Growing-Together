@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../App';
 import { 
   Home, 
   Book, 
@@ -11,9 +12,6 @@ import {
   Settings,
   Shield
 } from 'lucide-react';
-
-const AuthContext = React.createContext();
-const useAuth = () => useContext(AuthContext);
 
 const Navigation = () => {
   const location = useLocation();
