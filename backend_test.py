@@ -363,6 +363,264 @@ class GrowingTogetherAPITester:
         
         return success
 
+    def test_plot_inspections_system(self):
+        """Test Plot Inspections System endpoints"""
+        if not self.admin_token:
+            self.log_test("Plot Inspections System", False, "No admin token available")
+            return False
+        
+        all_tests_passed = True
+        
+        # Test 1: Get all plots
+        response, error = self.make_request('GET', 'plots', use_admin=True)
+        if error:
+            self.log_test("Get Plots", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get Plots", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+            else:
+                plots_data = response.json()
+                print(f"   Found {len(plots_data)} plots")
+        
+        # Test 2: Get all inspections (admin only)
+        response, error = self.make_request('GET', 'inspections', use_admin=True)
+        if error:
+            self.log_test("Get Inspections (Admin)", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get Inspections (Admin)", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        # Test 3: Create inspection (admin only)
+        inspection_data = {
+            'plot_id': 'test-plot-id',  # Will use first available plot if exists
+            'use_status': 'active',
+            'upkeep': 'good',
+            'issues': ['weeds', 'watering'],
+            'notes': 'Test inspection created by automated testing',
+            'photos': [],
+            'action': 'advisory',
+            'reinspect_by': (datetime.now() + timedelta(days=30)).isoformat()
+        }
+        
+        # Get a real plot ID if available
+        response, error = self.make_request('GET', 'plots', use_admin=True)
+        if response and response.status_code == 200:
+            plots = response.json()
+            if plots:
+                inspection_data['plot_id'] = plots[0]['id']
+        
+        response, error = self.make_request('POST', 'inspections', inspection_data, use_admin=True)
+        if error:
+            self.log_test("Create Inspection", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Create Inspection", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        # Test 4: Get user's plot inspections
+        response, error = self.make_request('GET', 'inspections/my-plot', use_admin=True)
+        if error:
+            self.log_test("Get My Plot Inspections", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get My Plot Inspections", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        # Test 5: Get member notices
+        response, error = self.make_request('GET', 'member-notices', use_admin=True)
+        if error:
+            self.log_test("Get Member Notices", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get Member Notices", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        return all_tests_passed
+
+    def test_rules_system(self):
+        """Test Rules System endpoints"""
+        if not self.admin_token:
+            self.log_test("Rules System", False, "No admin token available")
+            return False
+        
+        all_tests_passed = True
+        
+        # Test 1: Get active rules (public endpoint)
+        response, error = self.make_request('GET', 'rules')
+        if error:
+            self.log_test("Get Active Rules", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get Active Rules", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+            else:
+                rules_data = response.json()
+                print(f"   Active rules version: {rules_data.get('version', 'N/A')}")
+        
+        # Test 2: Create new rules version (admin only)
+        rules_data = {
+            'version': f'test-v{datetime.now().strftime("%H%M%S")}',
+            'markdown': '# Test Rules\n\n## Section 1\nTest rule content for automated testing.',
+            'summary': 'Test rules created by automated testing'
+        }
+        
+        response, error = self.make_request('POST', 'rules', rules_data, use_admin=True)
+        if error:
+            self.log_test("Create Rules", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Create Rules", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+            else:
+                created_rules = response.json()
+                rule_id = created_rules.get('id')
+                
+                # Test 3: Acknowledge rules
+                if rule_id:
+                    ack_data = {'rule_id': rule_id}
+                    response, error = self.make_request('POST', 'rules/acknowledge', ack_data, use_admin=True)
+                    if error:
+                        self.log_test("Acknowledge Rules", False, error)
+                        all_tests_passed = False
+                    else:
+                        success = response.status_code == 200
+                        self.log_test("Acknowledge Rules", success, f"Status: {response.status_code}" if not success else "")
+                        if not success:
+                            all_tests_passed = False
+        
+        # Test 4: Get rule acknowledgements (admin only)
+        response, error = self.make_request('GET', 'rules/acknowledgements', use_admin=True)
+        if error:
+            self.log_test("Get Rule Acknowledgements", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get Rule Acknowledgements", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        # Test 5: Get user's rule acknowledgement
+        response, error = self.make_request('GET', 'rules/my-acknowledgement?rule_id=test-rule-id', use_admin=True)
+        if error:
+            self.log_test("Get My Rule Acknowledgement", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get My Rule Acknowledgement", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        return all_tests_passed
+
+    def test_documents_system(self):
+        """Test Documents System endpoints"""
+        if not self.admin_token:
+            self.log_test("Documents System", False, "No admin token available")
+            return False
+        
+        all_tests_passed = True
+        
+        # Test 1: Get user's documents
+        response, error = self.make_request('GET', 'documents', use_admin=True)
+        if error:
+            self.log_test("Get User Documents", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get User Documents", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        # Test 2: Upload document
+        document_data = {
+            'title': 'Test Document',
+            'type': 'contract',
+            'file_name': 'test_contract.pdf',
+            'file_size': 1024,
+            'mime_type': 'application/pdf',
+            'expires_at': (datetime.now() + timedelta(days=365)).isoformat()
+        }
+        
+        response, error = self.make_request('POST', 'documents/upload', document_data, use_admin=True)
+        if error:
+            self.log_test("Upload Document", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Upload Document", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+            else:
+                uploaded_doc = response.json()
+                document_id = uploaded_doc.get('id')
+                
+                # Test 4: Delete document (if upload was successful)
+                if document_id:
+                    response, error = self.make_request('DELETE', f'documents/{document_id}', use_admin=True)
+                    if error:
+                        self.log_test("Delete Document", False, error)
+                        all_tests_passed = False
+                    else:
+                        success = response.status_code == 200
+                        self.log_test("Delete Document", success, f"Status: {response.status_code}" if not success else "")
+                        if not success:
+                            all_tests_passed = False
+        
+        # Test 3: Get all users' documents (admin only)
+        response, error = self.make_request('GET', 'admin/documents', use_admin=True)
+        if error:
+            self.log_test("Get All User Documents (Admin)", False, error)
+            all_tests_passed = False
+        else:
+            success = response.status_code == 200
+            self.log_test("Get All User Documents (Admin)", success, f"Status: {response.status_code}" if not success else "")
+            if not success:
+                all_tests_passed = False
+        
+        return all_tests_passed
+
+    def make_request(self, method, endpoint, data=None, use_admin=False):
+        """Make API request with proper headers - enhanced for DELETE method"""
+        url = f"{self.api_url}/{endpoint}"
+        headers = {'Content-Type': 'application/json'}
+        
+        # Use admin token if specified and available
+        token = self.admin_token if use_admin and self.admin_token else self.token
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                return None, f"Unsupported method: {method}"
+
+            return response, None
+        except requests.exceptions.RequestException as e:
+            return None, str(e)
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting Growing Together API Tests")
