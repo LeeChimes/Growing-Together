@@ -129,6 +129,15 @@ export default function RootLayout() {
           }} 
         />
         <Tabs.Screen 
+          name="plants" 
+          options={{ 
+            title: 'Plants',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="leaf" size={size} color={color} />
+            ),
+          }} 
+        />
+        <Tabs.Screen 
           name="more" 
           options={{ 
             title: 'More',
