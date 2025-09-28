@@ -26,48 +26,61 @@ class PerformanceOptimizer {
   }
 
   setupPerformanceMonitoring() {
-    // Monitor page load performance
-    window.addEventListener('load', () => {
-      if ('performance' in window) {
-        const navigation = performance.getEntriesByType('navigation')[0];
-        this.recordLoadTime(navigation.loadEventEnd - navigation.loadEventStart);
-        
-        // Monitor largest contentful paint
-        new PerformanceObserver((entryList) => {
-          const entries = entryList.getEntries();
-          const lastEntry = entries[entries.length - 1];
-          console.log('LCP:', lastEntry.startTime);
-        }).observe({ entryTypes: ['largest-contentful-paint'] });
-        
-        // Monitor cumulative layout shift
-        new PerformanceObserver((entryList) => {
-          let clsValue = 0;
-          for (const entry of entryList.getEntries()) {
-            if (!entry.hadRecentInput) {
-              clsValue += entry.value;
+    try {
+      // Monitor page load performance
+      window.addEventListener('load', () => {
+        if ('performance' in window) {
+          const navigation = performance.getEntriesByType('navigation')[0];
+          if (navigation) {
+            this.recordLoadTime(navigation.loadEventEnd - navigation.loadEventStart);
+          }
+          
+          // Monitor performance metrics with error handling
+          try {
+            if ('PerformanceObserver' in window) {
+              // Monitor largest contentful paint
+              new PerformanceObserver((entryList) => {
+                const entries = entryList.getEntries();
+                const lastEntry = entries[entries.length - 1];
+                console.log('LCP:', lastEntry.startTime);
+              }).observe({ entryTypes: ['largest-contentful-paint'] });
+              
+              // Monitor cumulative layout shift
+              new PerformanceObserver((entryList) => {
+                let clsValue = 0;
+                for (const entry of entryList.getEntries()) {
+                  if (!entry.hadRecentInput) {
+                    clsValue += entry.value;
+                  }
+                }
+                console.log('CLS:', clsValue);
+              }).observe({ entryTypes: ['layout-shift'] });
+              
+              // Monitor first input delay
+              new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                  console.log('FID:', entry.processingStart - entry.startTime);
+                }
+              }).observe({ entryTypes: ['first-input'] });
             }
+          } catch (error) {
+            console.warn('Performance monitoring setup failed:', error);
           }
-          console.log('CLS:', clsValue);
-        }).observe({ entryTypes: ['layout-shift'] });
-        
-        // Monitor first input delay
-        new PerformanceObserver((entryList) => {
-          for (const entry of entryList.getEntries()) {
-            console.log('FID:', entry.processingStart - entry.startTime);
-          }
-        }).observe({ entryTypes: ['first-input'] });
-      }
-    });
+        }
+      });
 
-    // Monitor component render times
-    this.setupRenderMonitoring();
-    
-    // Monitor memory usage
-    setInterval(() => {
-      if ('memory' in performance) {
-        this.recordMemoryUsage(performance.memory);
-      }
-    }, 30000); // Every 30 seconds
+      // Monitor component render times with error handling
+      this.setupRenderMonitoring();
+      
+      // Monitor memory usage
+      setInterval(() => {
+        if ('performance' in window && 'memory' in performance) {
+          this.recordMemoryUsage(performance.memory);
+        }
+      }, 30000); // Every 30 seconds
+    } catch (error) {
+      console.error('Performance monitoring initialization failed:', error);
+    }
   }
 
   setupRenderMonitoring() {
