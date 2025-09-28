@@ -12,24 +12,26 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-navigation/native": "^6.1.18",
+    "@tanstack/react-query": "^5.52.1",
     "expo": "~51.0.0",
+    "expo-constants": "^18.0.9",
     "expo-router": "~3.5.8",
+    "expo-sqlite": "~14.0.3",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
-    "react-native": "0.74.1",
-    "@react-navigation/native": "^6.1.18",
-    "expo-sqlite": "~14.0.3",
-    "@tanstack/react-query": "^5.52.1",
-    "zustand": "^4.5.2",
     "react-hook-form": "^7.53.0",
-    "zod": "^3.23.8"
+    "react-native": "0.74.1",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
     "@types/react": "~18.2.79",
     "@types/react-native": "~0.73.0",
-    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",
-    "@typescript-eslint/eslint-plugin": "^7.9.0"
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5"
   }
 }
