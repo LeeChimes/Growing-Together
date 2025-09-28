@@ -89,20 +89,42 @@ export default function GalleryScreen() {
         return;
       }
 
-      // Launch image picker for multiple images
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-        selectionLimit: 10, // Limit to 10 images
-      });
+      // Use optimized image picker with compression
+      const result = await pickAndCompressImages(
+        {
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsMultipleSelection: true,
+          selectionLimit: 10,
+        },
+        {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.8,
+        },
+        (completed, total) => {
+          setUploadProgress(prev => ({ 
+            ...prev, 
+            visible: true, 
+            current: completed, 
+            total 
+          }));
+        }
+      );
 
-      if (!result.canceled && result.assets.length > 0) {
-        const imageUris = result.assets.map(asset => asset.uri);
-        setPendingPhotos(imageUris);
+      if (result && result.uris.length > 0) {
+        setPendingPhotos(result.uris);
         setShowCaptionModal(true);
+        
+        // Show compression summary
+        const compressedCount = result.compressed.filter(Boolean).length;
+        if (compressedCount > 0) {
+          console.log(`📸 Compressed ${compressedCount}/${result.uris.length} images for optimal upload`);
+        }
       }
+      
+      setUploadProgress({ visible: false, current: 0, total: 0 });
     } catch (error) {
+      setUploadProgress({ visible: false, current: 0, total: 0 });
       Alert.alert('Error', 'Failed to access photo library');
     }
   };
