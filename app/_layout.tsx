@@ -125,6 +125,7 @@ export default function RootLayout() {
           }} 
         />
       </Tabs>
-    </ThemeProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
