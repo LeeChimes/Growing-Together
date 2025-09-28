@@ -309,6 +309,13 @@ const HomeScreen = () => {
           </p>
         </CardContent>
       </Card>
+
+      {/* Enhanced Quick Diary Modal */}
+      <EnhancedDiaryModal
+        open={showQuickDiary}
+        onClose={() => setShowQuickDiary(false)}
+        onSubmit={handleQuickDiarySubmit}
+      />
     </div>
   );
 };
