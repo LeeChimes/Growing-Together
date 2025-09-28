@@ -393,66 +393,48 @@ async def get_plants(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/plants/ai-advice")
 async def get_ai_plant_advice(query: AIQueryRequest, current_user: User = Depends(get_current_user)):
-    # Prepare the AI query
-    prompt = f"""You are an expert gardener helping with plant care at an allotment. 
-    
-    Question: {query.question}
-    """
-    
-    if query.plant_name:
-        prompt += f"\nPlant: {query.plant_name}"
-    
-    if query.photo_base64:
-        prompt += "\n\nThe user has provided a photo of their plant. Please analyze any visible issues and provide specific advice."
-    
-    prompt += "\n\nProvide practical, actionable advice in a friendly tone. Include specific steps they can take."
-    
     try:
-        # Call OpenAI API using Emergent LLM key
-        response = requests.post(
-            'https://api.openai.com/v1/chat/completions',
-            headers={
-                'Authorization': f'Bearer {EMERGENT_LLM_KEY}',
-                'Content-Type': 'application/json',
-            },
-            json={
-                'model': 'gpt-4',
-                'messages': [
-                    {
-                        'role': 'system',
-                        'content': 'You are an expert gardener helping allotment holders with plant care advice.'
-                    },
-                    {
-                        'role': 'user',
-                        'content': prompt
-                    }
-                ],
-                'max_tokens': 500,
-                'temperature': 0.7
-            }
+        # Initialize LLM Chat with Emergent LLM key
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"plant_advice_{uuid.uuid4()}",
+            system_message="You are an expert gardener helping allotment holders with plant care advice. Provide practical, actionable advice in a friendly tone. Include specific steps they can take."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        # Prepare the query message
+        prompt = f"Question: {query.question}"
+        
+        if query.plant_name:
+            prompt += f"\nPlant: {query.plant_name}"
+        
+        # Create user message with optional image
+        file_contents = []
+        if query.photo_base64:
+            prompt += "\n\nI've attached a photo of my plant. Please analyze any visible issues and provide specific advice based on what you can see."
+            # Add image content for vision models
+            image_content = ImageContent(image_base64=query.photo_base64)
+            file_contents.append(image_content)
+        
+        user_message = UserMessage(
+            text=prompt,
+            file_contents=file_contents if file_contents else None
         )
         
-        if response.status_code == 200:
-            ai_response = response.json()
-            advice = ai_response['choices'][0]['message']['content']
-            
-            return {
-                "advice": advice,
-                "can_save_as_task": True,
-                "suggested_actions": []
-            }
-        else:
-            return {
-                "advice": "I'm having trouble connecting to the AI service right now. Please try again later or consult a gardening guide.",
-                "can_save_as_task": False,
-                "suggested_actions": []
-            }
-            
-    except Exception as e:
+        # Get AI response
+        response = await chat.send_message(user_message)
+        
         return {
-            "advice": "I'm having trouble connecting to the AI service right now. Please try again later or consult a gardening guide.",
-            "can_save_as_task": False,
+            "advice": response,
+            "can_save_as_task": True,
             "suggested_actions": []
+        }
+        
+    except Exception as e:
+        print(f"AI advice error: {e}")
+        return {
+            "advice": "I'm having trouble connecting to the AI service right now. Here's some general advice: Check your plant's leaves for signs of disease, ensure proper watering (soil should be moist but not waterlogged), and make sure it's getting adequate sunlight for its species. Please try the AI assistant again later.",
+            "can_save_as_task": False,
+            "suggested_actions": ["Check soil moisture", "Inspect leaves for pests", "Verify sunlight requirements"]
         }
 
 # Admin Routes
