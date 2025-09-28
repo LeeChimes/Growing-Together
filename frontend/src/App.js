@@ -52,10 +52,18 @@ const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
+      console.log('Checking auth status...');
+      const token = localStorage.getItem('token');
+      console.log('Token exists:', !!token);
+      console.log('Making request to:', `${API}/auth/me`);
+      
       const response = await axios.get(`${API}/auth/me`);
+      console.log('Auth check successful:', response.data);
       setUser(response.data);
     } catch (error) {
       console.error('Auth check failed:', error);
+      console.error('Error details:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       localStorage.removeItem('token');
     } finally {
       setLoading(false);
