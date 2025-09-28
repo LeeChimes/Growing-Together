@@ -350,16 +350,19 @@ frontend:
         comment: "❌ CRITICAL: BACKEND ENDPOINTS MISSING - Comprehensive testing reveals Plot Inspections system is NOT implemented in backend. All API endpoints return 404: GET /api/plots, GET /api/inspections, POST /api/inspections, GET /api/member-notices. Frontend components exist but backend API layer is completely missing. Database schema designed for Supabase PostgreSQL but current backend uses MongoDB. Core issue: Implementation is incomplete - only frontend exists without corresponding backend endpoints."
 
   - task: "Rules & Member Documents System (Add-on Feature)"
-    implemented: true
+    implemented: false
     working: false
     file: "app/rules.tsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high" 
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "🚧 RULES & DOCUMENTS ADD-ON IMPLEMENTED - Complete versioned rules and document management system: Rules Features: Markdown-based rules with versioning, search functionality, table of contents, acknowledgement system, admin stats dashboard, member compliance tracking. Document Features: Per-member document storage (contracts, ID, other), expiry tracking with status indicators, admin document management, file type validation (PDF, DOC, images), 10MB size limits. Components: RulesScreen (app/rules.tsx), DocumentsScreen (app/documents.tsx), CreateRulesModal, UploadDocumentModal, AdminDocumentsModal, RulesStatsModal. Database: rules, rule_acknowledgements, user_documents tables with proper RLS policies. Hooks: useRules, useAcknowledgeRules, useSearchRules, useDocuments, useUploadDocument with document picker integration. Integration: Connected to More screen navigation, accessible to all users with admin management features. Status: Implementation complete, needs testing for functionality and file handling."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL: BACKEND ENDPOINTS MISSING - Comprehensive testing reveals Rules & Documents system is NOT implemented in backend. All API endpoints return 404: GET /api/rules, POST /api/rules, POST /api/rules/acknowledge, GET /api/rules/acknowledgements, GET /api/documents, POST /api/documents/upload, GET /api/admin/documents. Frontend components exist but backend API layer is completely missing. Database schema designed for Supabase PostgreSQL but current backend uses MongoDB. Core issue: Implementation is incomplete - only frontend exists without corresponding backend endpoints."
 
   - task: "Tasks Screen"
     implemented: true
