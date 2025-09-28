@@ -64,6 +64,16 @@ const HomeScreen = () => {
     }
   };
 
+  const handleQuickDiarySubmit = async (diaryData) => {
+    try {
+      await axios.post(`${API}/diary`, diaryData);
+      // Refresh data after adding diary entry
+      loadDashboardData();
+    } catch (error) {
+      console.error('Error creating diary entry:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-4 space-y-4">
