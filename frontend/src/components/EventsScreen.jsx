@@ -67,6 +67,48 @@ const EventsScreen = () => {
   const upcomingEvents = events.filter(event => new Date(event.date) >= now);
   const pastEvents = events.filter(event => new Date(event.date) < now);
 
+  // Calendar view helper functions
+  const getCurrentMonthEvents = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    return events.filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+    });
+  };
+
+  const generateCalendarDays = () => {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const days = [];
+    const currentMonthEvents = getCurrentMonthEvents();
+    
+    for (let i = 0; i < 42; i++) { // 6 weeks * 7 days
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      
+      const dayEvents = currentMonthEvents.filter(event => {
+        const eventDate = new Date(event.date);
+        return eventDate.toDateString() === date.toDateString();
+      });
+      
+      days.push({
+        date,
+        isCurrentMonth: date.getMonth() === currentMonth,
+        isToday: date.toDateString() === currentDate.toDateString(),
+        events: dayEvents
+      });
+    }
+    
+    return days;
+  };
+
   return (
     <div className="p-4 max-w-4xl mx-auto mt-16 md:mt-20">
       <div className="mb-8">
