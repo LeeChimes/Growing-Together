@@ -71,6 +71,158 @@ export default function MoreScreen() {
     }
   };
 
+  const renderAccessibilitySettings = () => {
+    if (!showAccessibilitySettings) return null;
+
+    return (
+      <View style={styles.settingsSection}>
+        <TouchableOpacity
+          style={styles.backHeader}
+          onPress={() => setShowAccessibilitySettings(false)}
+        >
+          <Ionicons name="arrow-back" size={24} color={theme.colors.charcoal} />
+          <Text style={[styles.backHeaderTitle, { color: theme.colors.charcoal }]}>
+            Accessibility Settings
+          </Text>
+        </TouchableOpacity>
+
+        <ScrollView style={styles.settingsContent}>
+          {/* Theme Settings */}
+          <Card style={styles.settingsCard}>
+            <Text style={[styles.settingsTitle, { color: theme.colors.charcoal }]}>
+              Appearance
+            </Text>
+            
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingLabel, { color: theme.colors.charcoal }]}>
+                  Theme
+                </Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.gray }]}>
+                  Currently: {accessibilitySettings.theme}
+                </Text>
+              </View>
+              <View style={styles.themeButtons}>
+                {['light', 'dark', 'system'].map((themeOption) => (
+                  <TouchableOpacity
+                    key={themeOption}
+                    style={[
+                      styles.themeButton,
+                      {
+                        backgroundColor: accessibilitySettings.theme === themeOption 
+                          ? theme.colors.green + '20' 
+                          : theme.colors.grayLight,
+                        borderColor: accessibilitySettings.theme === themeOption 
+                          ? theme.colors.green 
+                          : theme.colors.grayLight,
+                      }
+                    ]}
+                    onPress={() => updateAccessibilitySettings({ theme: themeOption as any })}
+                  >
+                    <Text style={[
+                      styles.themeButtonText,
+                      { color: accessibilitySettings.theme === themeOption ? theme.colors.green : theme.colors.gray }
+                    ]}>
+                      {themeOption.charAt(0).toUpperCase() + themeOption.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingLabel, { color: theme.colors.charcoal }]}>
+                  High Contrast
+                </Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.gray }]}>
+                  Increase contrast for better visibility
+                </Text>
+              </View>
+              <Switch
+                value={accessibilitySettings.highContrast}
+                onValueChange={(value) => updateAccessibilitySettings({ highContrast: value })}
+                trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
+                thumbColor={accessibilitySettings.highContrast ? theme.colors.green : theme.colors.gray}
+              />
+            </View>
+          </Card>
+
+          {/* Text Settings */}
+          <Card style={styles.settingsCard}>
+            <Text style={[styles.settingsTitle, { color: theme.colors.charcoal }]}>
+              Text & Reading
+            </Text>
+            
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingLabel, { color: theme.colors.charcoal }]}>
+                  Text Size
+                </Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.gray }]}>
+                  Currently: {accessibilitySettings.fontSize}
+                </Text>
+              </View>
+              <View style={styles.fontSizeButtons}>
+                {['small', 'normal', 'large', 'extra-large'].map((size) => (
+                  <TouchableOpacity
+                    key={size}
+                    style={[
+                      styles.fontSizeButton,
+                      {
+                        backgroundColor: accessibilitySettings.fontSize === size 
+                          ? theme.colors.green + '20' 
+                          : theme.colors.grayLight,
+                        borderColor: accessibilitySettings.fontSize === size 
+                          ? theme.colors.green 
+                          : theme.colors.grayLight,
+                      }
+                    ]}
+                    onPress={() => updateAccessibilitySettings({ fontSize: size as any })}
+                  >
+                    <Text style={[
+                      styles.fontSizeButtonText,
+                      { 
+                        color: accessibilitySettings.fontSize === size ? theme.colors.green : theme.colors.gray,
+                        fontSize: size === 'small' ? 12 : size === 'large' ? 18 : size === 'extra-large' ? 20 : 14,
+                      }
+                    ]}>
+                      Aa
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </Card>
+
+          {/* Motion Settings */}
+          <Card style={styles.settingsCard}>
+            <Text style={[styles.settingsTitle, { color: theme.colors.charcoal }]}>
+              Motion & Animation
+            </Text>
+            
+            <View style={styles.settingItem}>
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingLabel, { color: theme.colors.charcoal }]}>
+                  Reduce Motion
+                </Text>
+                <Text style={[styles.settingDescription, { color: theme.colors.gray }]}>
+                  Minimize animations and transitions
+                </Text>
+              </View>
+              <Switch
+                value={accessibilitySettings.reduceMotion}
+                onValueChange={(value) => updateAccessibilitySettings({ reduceMotion: value })}
+                trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
+                thumbColor={accessibilitySettings.reduceMotion ? theme.colors.green : theme.colors.gray}
+              />
+            </View>
+          </Card>
+        </ScrollView>
+      </View>
+    );
+  };
+
   const renderNotificationSettings = () => {
     if (!showNotificationSettings || !preferences) return null;
 
