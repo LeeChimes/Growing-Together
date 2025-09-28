@@ -164,7 +164,7 @@ export function PhotoViewerModal({
             <Avatar
               name={currentPhoto.uploader.full_name}
               imageUri={currentPhoto.uploader.avatar_url}
-              size={32}
+              size="small"
             />
             <View style={styles.uploaderText}>
               <Text style={styles.uploaderName}>
