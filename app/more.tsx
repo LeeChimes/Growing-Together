@@ -28,6 +28,7 @@ export default function MoreScreen() {
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showQADashboard, setShowQADashboard] = useState(false);
   
   const { 
     preferences, 
