@@ -4,7 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Shield, Users, UserCheck, Download, AlertTriangle } from 'lucide-react';
+import { Shield, Users, UserCheck, Download, AlertTriangle, Settings, Activity } from 'lucide-react';
+import EnterpriseAdminDashboard from './EnterpriseAdminDashboard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
