@@ -25,6 +25,8 @@ export default function MoreScreen() {
   const theme = useTheme();
   const { user, signOut } = useAuthStore();
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   
   const { 
     preferences, 
