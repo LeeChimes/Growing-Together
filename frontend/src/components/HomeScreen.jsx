@@ -89,6 +89,21 @@ const HomeScreen = () => {
 
   return (
     <div className="p-4 max-w-6xl mx-auto space-y-6 mt-16 md:mt-20">
+      {/* Admin Announcements Banner */}
+      <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg mb-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-5 h-5 text-yellow-600">📢</div>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm font-medium text-yellow-800">
+              <strong>Admin Announcement:</strong> Welcome to our Growing Together community! 
+              Don't forget to check your plot assignments and join us for the weekend workday this Saturday.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Welcome Header */}
       <div className="text-center mb-8">
         <h1 className="heading-primary mb-2">Welcome to Growing Together</h1>
