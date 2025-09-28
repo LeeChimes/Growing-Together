@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Growing Together",
+    "slug": "growing-together",
+    "scheme": "grow",
+    "icon": "./assets/icons/growing-logo-1024.png",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "uk.growingtogether.app",
+      "icon": "./assets/icons/growing-logo-1024.png"
+    },
+    "android": {
+      "package": "uk.growingtogether.app",
+      "icon": "./assets/icons/growing-logo-1024.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/growing-logo-1024.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "favicon": "./assets/icons/growing-logo-256.png"
+    },
+    "splash": {
+      "image": "./assets/logos/growing-logo-1600x400.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    }
+  }
+}
