@@ -515,12 +515,34 @@ async def get_analytics(current_user: User = Depends(get_admin_user)):
 async def export_community_data(current_user: User = Depends(get_admin_user)):
     """Export community data for backup/analysis"""
     try:
+        # Helper function to convert ObjectId to string
+        def convert_objectid(data):
+            if isinstance(data, list):
+                return [convert_objectid(item) for item in data]
+            elif isinstance(data, dict):
+                result = {}
+                for key, value in data.items():
+                    if key == '_id' and hasattr(value, '__str__'):
+                        result[key] = str(value)
+                    else:
+                        result[key] = convert_objectid(value)
+                return result
+            else:
+                return data
+        
         # Get all data
         users_data = await db.users.find({}, {"password_hash": 0}).to_list(1000)
         diary_data = await db.diary_entries.find().to_list(1000)
         events_data = await db.events.find().to_list(1000)
         posts_data = await db.posts.find().to_list(1000)
         tasks_data = await db.tasks.find().to_list(1000)
+        
+        # Convert ObjectIds to strings
+        users_data = convert_objectid(users_data)
+        diary_data = convert_objectid(diary_data)
+        events_data = convert_objectid(events_data)
+        posts_data = convert_objectid(posts_data)
+        tasks_data = convert_objectid(tasks_data)
         
         export_data = {
             "export_date": datetime.utcnow().isoformat(),
