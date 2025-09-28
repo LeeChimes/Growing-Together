@@ -127,7 +127,12 @@ const HomeScreen = () => {
         <Button
           className="h-24 flex-col space-y-2 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
           data-testid="quick-check-weather"
-          onClick={() => window.scrollTo({ top: document.querySelector('[data-testid="weather-widget"]')?.offsetTop || 0, behavior: 'smooth' })}
+          onClick={() => {
+            const weatherElement = document.querySelector('[data-testid="weather-widget"]');
+            if (weatherElement) {
+              weatherElement.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
         >
           <Cloud size={32} />
           <span>Weather</span>
@@ -135,7 +140,7 @@ const HomeScreen = () => {
         <Button
           className="h-24 flex-col space-y-2 bg-orange-600 hover:bg-orange-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
           data-testid="quick-view-events"
-          onClick={() => window.location.href = '/events'}
+          onClick={() => navigate('/events')}
         >
           <Calendar size={32} />
           <span>Events</span>
@@ -143,7 +148,7 @@ const HomeScreen = () => {
         <Button
           className="h-24 flex-col space-y-2 bg-purple-600 hover:bg-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
           data-testid="quick-view-community"
-          onClick={() => window.location.href = '/community'}
+          onClick={() => navigate('/community')}
         >
           <Users size={32} />
           <span>Community</span>
