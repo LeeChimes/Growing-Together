@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../App';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -15,10 +16,6 @@ import {
   Download,
   Users
 } from 'lucide-react';
-
-// Import AuthContext directly since we can't import from App.js
-const AuthContext = React.createContext();
-const useAuth = () => useContext(AuthContext);
 
 const SettingsScreen = () => {
   const auth = useAuth();
