@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test admin data export specifically
-base_url = "https://allotment-app-1.preview.emergentagent.com"
+base_url = "https://garden-connect-1.preview.emergentagent.com"
 api_url = f"{base_url}/api"
 
 # Login as admin
