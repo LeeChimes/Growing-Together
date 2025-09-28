@@ -11,7 +11,15 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Leaf, Users, AlertCircle, CheckCircle } from 'lucide-react';
 
 const AuthScreen = () => {
-  const { login, register } = useAuth();
+  const auth = useAuth();
+  
+  if (!auth) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <p>Loading authentication...</p>
+    </div>;
+  }
+  
+  const { login, register } = auth;
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
