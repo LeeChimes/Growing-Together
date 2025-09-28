@@ -863,6 +863,7 @@ async def get_all_user_documents(current_user: User = Depends(get_admin_user)):
         },
         {
             "$project": {
+                "_id": 0,  # Exclude MongoDB _id field
                 "id": 1,
                 "username": 1,
                 "email": 1,
@@ -873,6 +874,12 @@ async def get_all_user_documents(current_user: User = Depends(get_admin_user)):
     ]
     
     users_with_docs = await db.users.aggregate(pipeline).to_list(1000)
+    # Clean up any remaining ObjectId fields in documents
+    for user in users_with_docs:
+        if 'documents' in user:
+            for doc in user['documents']:
+                if '_id' in doc:
+                    del doc['_id']
     return users_with_docs
 
 @api_router.delete("/documents/{document_id}")
