@@ -462,6 +462,14 @@ export default function MoreScreen() {
     );
   }
 
+  if (showAccessibilitySettings) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {renderAccessibilitySettings()}
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
