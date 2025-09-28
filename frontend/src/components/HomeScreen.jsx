@@ -112,35 +112,35 @@ const HomeScreen = () => {
         </p>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Big Buttons for Accessibility */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Button
-          className="btn-accessible h-20 flex-col space-y-2 bg-green-600 hover:bg-green-700"
+          className="h-24 flex-col space-y-2 bg-green-600 hover:bg-green-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
           data-testid="quick-add-diary"
           onClick={() => setShowQuickDiary(true)}
         >
-          <Plus size={24} />
+          <Plus size={32} />
           <span>Add Diary</span>
         </Button>
         <Button
-          className="btn-accessible h-20 flex-col space-y-2 bg-blue-600 hover:bg-blue-700"
+          className="h-24 flex-col space-y-2 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
           data-testid="quick-check-weather"
         >
-          <Cloud size={24} />
+          <Cloud size={32} />
           <span>Weather</span>
         </Button>
         <Button
-          className="btn-accessible h-20 flex-col space-y-2 bg-yellow-600 hover:bg-yellow-700"
+          className="h-24 flex-col space-y-2 bg-orange-600 hover:bg-orange-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
           data-testid="quick-view-events"
         >
-          <Calendar size={24} />
+          <Calendar size={32} />
           <span>Events</span>
         </Button>
         <Button
-          className="btn-accessible h-20 flex-col space-y-2 bg-purple-600 hover:bg-purple-700"
+          className="h-24 flex-col space-y-2 bg-purple-600 hover:bg-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl"
           data-testid="quick-view-community"
         >
-          <Users size={24} />
+          <Users size={32} />
           <span>Community</span>
         </Button>
       </div>
