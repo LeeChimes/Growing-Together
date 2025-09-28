@@ -366,50 +366,7 @@ export function CreateEventModal({ visible, onClose, event }: CreateEventModalPr
           </View>
         </ScrollView>
 
-        {/* Date/Time Pickers */}
-        {showStartDatePicker && (
-          <DateTimePicker
-            value={new Date(watchStartDate)}
-            mode="date"
-            display="default"
-            onChange={(event, selectedDate) => 
-              handleDateTimeChange(event, selectedDate, 'start_date', 'date')
-            }
-          />
-        )}
-        
-        {showStartTimePicker && (
-          <DateTimePicker
-            value={new Date(watchStartDate)}
-            mode="time"
-            display="default"
-            onChange={(event, selectedDate) => 
-              handleDateTimeChange(event, selectedDate, 'start_date', 'time')
-            }
-          />
-        )}
-        
-        {showEndDatePicker && (
-          <DateTimePicker
-            value={watchEndDate ? new Date(watchEndDate) : new Date()}
-            mode="date"
-            display="default"
-            onChange={(event, selectedDate) => 
-              handleDateTimeChange(event, selectedDate, 'end_date', 'date')
-            }
-          />
-        )}
-        
-        {showEndTimePicker && (
-          <DateTimePicker
-            value={watchEndDate ? new Date(watchEndDate) : new Date()}
-            mode="time"
-            display="default"
-            onChange={(event, selectedDate) => 
-              handleDateTimeChange(event, selectedDate, 'end_date', 'time')
-            }
-          />
-        )}
+        {/* Date/Time Selection - Using simple input approach for now */}
       </SafeAreaView>
     </Modal>
   );
