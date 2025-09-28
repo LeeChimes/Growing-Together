@@ -64,16 +64,11 @@ const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('Attempting login...');
       const response = await axios.post(`${API}/auth/login`, { email, password });
-      console.log('Login response:', response.data);
-      
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
-      console.log('User set:', response.data.user);
       return { success: true };
     } catch (error) {
-      console.error('Login failed:', error);
       return { success: false, error: error.response?.data?.detail || 'Login failed' };
     }
   };
