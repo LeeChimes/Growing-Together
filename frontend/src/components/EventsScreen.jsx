@@ -227,59 +227,116 @@ const EventsScreen = () => {
               </Card>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-2">No upcoming events</h3>
-            <p className="text-gray-500">Check back later for new community events!</p>
+            ) : (
+              <div className="text-center py-12">
+                <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-600 mb-2">No upcoming events</h3>
+                <p className="text-gray-500">Check back later for new community events!</p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Past Events */}
-      {pastEvents.length > 0 && (
-        <div>
-          <h2 className="heading-secondary mb-4 flex items-center">
-            <Clock className="mr-2" size={24} />
-            Past Events
-          </h2>
-          
-          <div className="space-y-4" data-testid="past-events-list">
-            {pastEvents.slice(0, 3).map((event) => (
-              <Card key={event.id} className="opacity-75 hover:opacity-90 transition-opacity">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg text-gray-700 mb-2">{event.title}</CardTitle>
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2 text-gray-500 text-sm">
-                          <Clock size={14} />
-                          <span>{new Date(event.date).toLocaleString()}</span>
+          {/* Past Events */}
+          {pastEvents.length > 0 && (
+            <div>
+              <h2 className="heading-secondary mb-4 flex items-center">
+                <Clock className="mr-2" size={24} />
+                Past Events
+              </h2>
+              
+              <div className="space-y-4" data-testid="past-events-list">
+                {pastEvents.slice(0, 3).map((event) => (
+                  <Card key={event.id} className="opacity-75 hover:opacity-90 transition-opacity">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg text-gray-700 mb-2">{event.title}</CardTitle>
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2 text-gray-500 text-sm">
+                              <Clock size={14} />
+                              <span>{new Date(event.date).toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-gray-500 text-sm">
+                              <MapPin size={14} />
+                              <span>{event.location}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2 text-gray-500 text-sm">
-                          <MapPin size={14} />
-                          <span>{event.location}</span>
-                        </div>
+                        
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                          Past Event
+                        </Badge>
                       </div>
-                    </div>
+                    </CardHeader>
                     
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-600">
-                      Past Event
-                    </Badge>
+                    <CardContent>
+                      <p className="text-gray-600 text-sm line-clamp-2">{event.description}</p>
+                      <div className="mt-2 text-sm text-gray-500">
+                        {event.rsvp_list?.length || 0} people attended
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Calendar View */}
+        <TabsContent value="calendar">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </h2>
+            </div>
+            
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="p-2 text-center font-semibold text-gray-600 bg-gray-50">
+                  {day}
+                </div>
+              ))}
+              
+              {generateCalendarDays().map((day, index) => (
+                <div
+                  key={index}
+                  className={`min-h-24 p-1 border border-gray-200 ${
+                    !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                  } ${day.isToday ? 'bg-blue-50 border-blue-300' : ''}`}
+                >
+                  <div className={`text-sm ${day.isToday ? 'font-bold text-blue-600' : ''}`}>
+                    {day.date.getDate()}
                   </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <p className="text-gray-600 text-sm line-clamp-2">{event.description}</p>
-                  <div className="mt-2 text-sm text-gray-500">
-                    {event.rsvp_list?.length || 0} people attended
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  
+                  {day.events.map((event, eventIndex) => (
+                    <div
+                      key={eventIndex}
+                      className="text-xs bg-green-100 text-green-800 rounded px-1 py-0.5 mt-1 truncate cursor-pointer hover:bg-green-200"
+                      title={`${event.title} - ${new Date(event.date).toLocaleTimeString()}`}
+                    >
+                      {event.title}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            
+            {/* Calendar Legend */}
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-blue-50 border border-blue-300 rounded"></div>
+                <span>Today</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-100 rounded"></div>
+                <span>Events</span>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
