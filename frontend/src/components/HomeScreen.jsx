@@ -269,6 +269,15 @@ const HomeScreen = () => {
         </CardContent>
       </Card>
 
+      {/* Mobile Enhancements */}
+      <OfflineIndicator />
+      <QuickActionBar
+        onQuickDiary={() => setShowQuickDiary(true)}
+        onQuickPhoto={() => console.log('Quick photo')}
+        onQuickTask={() => console.log('Quick task')}
+      />
+      <ScrollToTop />
+
       {/* Enhanced Quick Diary Modal */}
       <EnhancedDiaryModal
         open={showQuickDiary}
