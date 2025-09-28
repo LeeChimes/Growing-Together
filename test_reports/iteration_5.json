@@ -198,7 +198,7 @@
   },
   
   "deployment_notes": {
-    "current_status": "✅ Successfully deployed and accessible at https://garden-connect-1.preview.emergentagent.com",
+    "current_status": "✅ Successfully deployed and accessible at https://harvest-hub-64.preview.emergentagent.com",
     "database_status": "✅ MongoDB integration working with sample data",
     "external_integrations": "✅ Weather API and AI services working",
     "admin_access": "✅ Admin credentials working: admin@staffordallotment.com / admin123",
