@@ -24,6 +24,9 @@
       "image": "./assets/logos/growing-logo-1600x400.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }
