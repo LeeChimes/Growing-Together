@@ -680,6 +680,207 @@ async def approve_user(user_id: str, current_user: User = Depends(get_admin_user
     )
     return {"message": "User approved"}
 
+# Plot Inspections API
+@api_router.get("/plots", response_model=List[Plot])
+async def get_plots(current_user: User = Depends(get_current_user)):
+    plots = await db.plots.find().sort("number", 1).to_list(100)
+    return [Plot(**plot) for plot in plots]
+
+@api_router.get("/inspections", response_model=List[Inspection])
+async def get_inspections(current_user: User = Depends(get_admin_user)):
+    inspections = await db.inspections.find().sort("date", -1).to_list(100)
+    return [Inspection(**inspection) for inspection in inspections]
+
+@api_router.post("/inspections", response_model=Inspection)
+async def create_inspection(inspection_data: InspectionCreate, current_user: User = Depends(get_admin_user)):
+    # Calculate score
+    score = calculate_inspection_score(inspection_data.use_status, inspection_data.upkeep)
+    
+    # Parse reinspect_by if provided
+    reinspect_by = None
+    if inspection_data.reinspect_by:
+        try:
+            reinspect_by = datetime.fromisoformat(inspection_data.reinspect_by.replace('Z', '+00:00'))
+        except:
+            pass
+    
+    inspection = Inspection(
+        assessor_user_id=current_user.id,
+        score=score,
+        reinspect_by=reinspect_by,
+        **inspection_data.dict(exclude={'reinspect_by'})
+    )
+    
+    await db.inspections.insert_one(inspection.dict())
+    
+    # Create member notice if action is required
+    if inspection.action != "none":
+        plot = await db.plots.find_one({"id": inspection.plot_id})
+        if plot and plot.get("holder_user_id"):
+            notice = MemberNotice(
+                user_id=plot["holder_user_id"],
+                inspection_id=inspection.id,
+                title=f"Plot {plot.get('number', 'N/A')} Inspection - {inspection.action.title()}",
+                body=f"Your plot has been inspected with result: {inspection.action}. {inspection.notes or ''}"
+            )
+            await db.member_notices.insert_one(notice.dict())
+    
+    return inspection
+
+@api_router.get("/inspections/my-plot", response_model=List[Inspection])
+async def get_my_plot_inspections(current_user: User = Depends(get_current_user)):
+    # Find user's plot
+    plot = await db.plots.find_one({"holder_user_id": current_user.id})
+    if not plot:
+        return []
+    
+    inspections = await db.inspections.find({
+        "plot_id": plot["id"], 
+        "shared_with_member": True
+    }).sort("date", -1).to_list(100)
+    
+    return [Inspection(**inspection) for inspection in inspections]
+
+@api_router.get("/member-notices", response_model=List[MemberNotice])
+async def get_member_notices(current_user: User = Depends(get_current_user)):
+    notices = await db.member_notices.find({"user_id": current_user.id}).sort("created_at", -1).to_list(100)
+    return [MemberNotice(**notice) for notice in notices]
+
+@api_router.patch("/member-notices/{notice_id}/acknowledge")
+async def acknowledge_notice(notice_id: str, current_user: User = Depends(get_current_user)):
+    await db.member_notices.update_one(
+        {"id": notice_id, "user_id": current_user.id},
+        {"$set": {"status": "acknowledged", "updated_at": datetime.utcnow()}}
+    )
+    return {"message": "Notice acknowledged"}
+
+# Rules System API
+@api_router.get("/rules", response_model=RulesDoc)
+async def get_active_rules():
+    rules = await db.rules.find_one({"is_active": True})
+    if not rules:
+        raise HTTPException(status_code=404, detail="No active rules found")
+    return RulesDoc(**rules)
+
+@api_router.post("/rules", response_model=RulesDoc)
+async def create_rules(rules_data: RulesCreate, current_user: User = Depends(get_admin_user)):
+    # Deactivate all existing rules
+    await db.rules.update_many({}, {"$set": {"is_active": False}})
+    
+    rules = RulesDoc(
+        created_by=current_user.id,
+        **rules_data.dict()
+    )
+    
+    await db.rules.insert_one(rules.dict())
+    return rules
+
+@api_router.post("/rules/acknowledge", response_model=RuleAcknowledgement)
+async def acknowledge_rules(acknowledge_data: AcknowledgeRules, current_user: User = Depends(get_current_user)):
+    # Check if already acknowledged
+    existing = await db.rule_acknowledgements.find_one({
+        "rule_id": acknowledge_data.rule_id,
+        "user_id": current_user.id
+    })
+    
+    if existing:
+        return RuleAcknowledgement(**existing)
+    
+    acknowledgement = RuleAcknowledgement(
+        rule_id=acknowledge_data.rule_id,
+        user_id=current_user.id
+    )
+    
+    await db.rule_acknowledgements.insert_one(acknowledgement.dict())
+    return acknowledgement
+
+@api_router.get("/rules/acknowledgements")
+async def get_rule_acknowledgements(rule_id: Optional[str] = None, current_user: User = Depends(get_admin_user)):
+    query = {}
+    if rule_id:
+        query["rule_id"] = rule_id
+    
+    acknowledgements = await db.rule_acknowledgements.find(query).sort("acknowledged_at", -1).to_list(1000)
+    return acknowledgements
+
+@api_router.get("/rules/my-acknowledgement")
+async def get_my_rule_acknowledgement(rule_id: str, current_user: User = Depends(get_current_user)):
+    acknowledgement = await db.rule_acknowledgements.find_one({
+        "rule_id": rule_id,
+        "user_id": current_user.id
+    })
+    
+    if not acknowledgement:
+        return {"acknowledged": False}
+    
+    return {"acknowledged": True, "acknowledgement": acknowledgement}
+
+# Documents System API
+@api_router.get("/documents", response_model=List[UserDocument])
+async def get_user_documents(current_user: User = Depends(get_current_user)):
+    documents = await db.user_documents.find({"user_id": current_user.id}).sort("created_at", -1).to_list(100)
+    return [UserDocument(**doc) for doc in documents]
+
+@api_router.post("/documents/upload", response_model=UserDocument)
+async def upload_document(document_data: DocumentUpload, current_user: User = Depends(get_current_user)):
+    # Parse expires_at if provided
+    expires_at = None
+    if document_data.expires_at:
+        try:
+            expires_at = datetime.fromisoformat(document_data.expires_at.replace('Z', '+00:00'))
+        except:
+            pass
+    
+    document = UserDocument(
+        user_id=current_user.id,
+        uploaded_by_user_id=current_user.id,
+        file_url=f"placeholder_url_{uuid.uuid4()}",  # In real implementation, this would be actual file URL
+        expires_at=expires_at,
+        **document_data.dict(exclude={'expires_at'})
+    )
+    
+    await db.user_documents.insert_one(document.dict())
+    return document
+
+@api_router.get("/admin/documents")
+async def get_all_user_documents(current_user: User = Depends(get_admin_user)):
+    # Get all users with their documents
+    pipeline = [
+        {
+            "$lookup": {
+                "from": "user_documents",
+                "localField": "id",
+                "foreignField": "user_id",
+                "as": "documents"
+            }
+        },
+        {
+            "$project": {
+                "id": 1,
+                "username": 1,
+                "email": 1,
+                "plot_number": 1,
+                "documents": 1
+            }
+        }
+    ]
+    
+    users_with_docs = await db.users.aggregate(pipeline).to_list(1000)
+    return users_with_docs
+
+@api_router.delete("/documents/{document_id}")
+async def delete_document(document_id: str, current_user: User = Depends(get_current_user)):
+    # Check if user owns the document or is admin
+    document = await db.user_documents.find_one({"id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    if document["user_id"] != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Permission denied")
+    
+    await db.user_documents.delete_one({"id": document_id})
+    return {"message": "Document deleted"}
+
 @api_router.get("/")
 async def root():
     return {"message": "Growing Together API", "version": "1.0"}
