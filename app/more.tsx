@@ -40,6 +40,13 @@ export default function MoreScreen() {
     hasPermission 
   } = useNotificationPermissions();
 
+  const {
+    settings: accessibilitySettings,
+    updateSettings: updateAccessibilitySettings,
+  } = useAccessibilitySettings();
+
+  const { data: userProfile } = useUserProfile();
+
   const handleSignOut = () => {
     Alert.alert(
       'Sign Out',
