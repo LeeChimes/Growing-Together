@@ -1,15 +1,317 @@
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { 
+  Card, 
+  Button, 
+  Tag, 
+  Avatar, 
+  ListItem, 
+  EmptyState, 
+  useTheme 
+} from '../src/design';
+import { useAuthStore } from '../src/store/authStore';
 
 export default function HomeScreen() {
+  const theme = useTheme();
+  const router = useRouter();
+  const { profile } = useAuthStore();
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Mock data - will be replaced with real data from hooks
+  const weather = {
+    temperature: 15,
+    condition: 'Partly Cloudy',
+    humidity: 68,
+    windSpeed: 12,
+  };
+
+  const weeklyTasks = [
+    { id: '1', title: 'Water greenhouse plants', dueDate: '2024-01-15', priority: 'high' },
+    { id: '2', title: 'Check compost bins', dueDate: '2024-01-16', priority: 'medium' },
+    { id: '3', title: 'Plot inspection', dueDate: '2024-01-17', priority: 'low' },
+  ];
+
+  const nextEvent = {
+    id: '1',
+    title: 'Weekend Work Day',
+    date: '2024-01-20',
+    time: '09:00',
+    attendees: 12,
+  };
+
+  const latestPosts = [
+    {
+      id: '1',
+      author: 'John Smith',
+      content: 'Great turnout at today\'s composting workshop! Thanks everyone who came.',
+      timestamp: '2 hours ago',
+      likes: 8,
+    },
+    {
+      id: '2',
+      author: 'Mary Johnson',
+      content: 'My tomatoes are finally starting to ripen! Any tips for extending the season?',
+      timestamp: '4 hours ago',
+      likes: 5,
+    },
+  ];
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Refresh data
+    setTimeout(() => setRefreshing(false), 2000);
+  }, []);
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'error';
+      case 'medium': return 'warning';
+      case 'low': return 'success';
+      default: return 'default';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Home</Text>
-        <Text style={styles.subtitle}>Building as per repair plan...</Text>
-      </View>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Admin Announcement Banner */}
+        <View style={[styles.banner, { backgroundColor: theme.colors.warning + '20' }]}>
+          <Ionicons name="megaphone" size={20} color={theme.colors.warning} />
+          <View style={styles.bannerContent}>
+            <Text style={[styles.bannerTitle, { color: theme.colors.warning }]}>
+              Admin Announcement
+            </Text>
+            <Text style={[styles.bannerText, { color: theme.colors.charcoal }]}>
+              Weekend work day this Saturday 9am - bring gloves and water bottle!
+            </Text>
+          </View>
+        </View>
+
+        {/* Welcome Section */}
+        <View style={styles.welcome}>
+          <Text style={[styles.welcomeTitle, { color: theme.colors.charcoal }]}>
+            Welcome back, {profile?.full_name?.split(' ')[0] || 'Member'}!
+          </Text>
+          <Text style={[styles.welcomeSubtitle, { color: theme.colors.gray }]}>
+            Here's what's happening in your allotment community
+          </Text>
+        </View>
+
+        {/* Weather Widget */}
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="partly-sunny" size={24} color={theme.colors.sky} />
+              <Text style={[styles.cardTitle, { color: theme.colors.charcoal }]}>
+                Today's Weather
+              </Text>
+            </View>
+            <Text style={[styles.temperature, { color: theme.colors.charcoal }]}>
+              {weather.temperature}°C
+            </Text>
+          </View>
+          <Text style={[styles.weatherCondition, { color: theme.colors.gray }]}>
+            {weather.condition} • Humidity {weather.humidity}% • Wind {weather.windSpeed} km/h
+          </Text>
+        </Card>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.charcoal }]}>
+            Quick Actions
+          </Text>
+          <View style={styles.actionGrid}>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.green }]}
+              onPress={() => router.push('/diary')}
+            >
+              <Ionicons name="book" size={24} color={theme.colors.paper} />
+              <Text style={[styles.actionText, { color: theme.colors.paper }]}>
+                Add Diary
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.sky }]}
+              onPress={() => router.push('/events')}
+            >
+              <Ionicons name="calendar" size={24} color={theme.colors.paper} />
+              <Text style={[styles.actionText, { color: theme.colors.paper }]}>
+                View Events
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.sunflower }]}
+              onPress={() => router.push('/community')}
+            >
+              <Ionicons name="people" size={24} color={theme.colors.charcoal} />
+              <Text style={[styles.actionText, { color: theme.colors.charcoal }]}>
+                Community
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.soil }]}
+              onPress={() => router.push('/gallery')}
+            >
+              <Ionicons name="images" size={24} color={theme.colors.paper} />
+              <Text style={[styles.actionText, { color: theme.colors.paper }]}>
+                Gallery
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Weekly Tasks */}
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="checkmark-circle" size={24} color={theme.colors.green} />
+              <Text style={[styles.cardTitle, { color: theme.colors.charcoal }]}>
+                This Week's Tasks
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push('/more')}>
+              <Text style={[styles.seeAll, { color: theme.colors.green }]}>
+                See All
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {weeklyTasks.length > 0 ? (
+            <View style={styles.taskList}>
+              {weeklyTasks.slice(0, 3).map((task) => (
+                <View key={task.id} style={styles.taskItem}>
+                  <View style={styles.taskContent}>
+                    <Text style={[styles.taskTitle, { color: theme.colors.charcoal }]}>
+                      {task.title}
+                    </Text>
+                    <Text style={[styles.taskDate, { color: theme.colors.gray }]}>
+                      Due {new Date(task.dueDate).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <Tag 
+                    label={task.priority} 
+                    variant={getPriorityColor(task.priority) as any}
+                    size="small"
+                  />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <EmptyState
+              title="No tasks this week"
+              description="All caught up! Check back later."
+            />
+          )}
+        </Card>
+
+        {/* Next Event */}
+        {nextEvent && (
+          <Card style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardTitleRow}>
+                <Ionicons name="calendar" size={24} color={theme.colors.sky} />
+                <Text style={[styles.cardTitle, { color: theme.colors.charcoal }]}>
+                  Next Event
+                </Text>
+              </View>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.eventItem}
+              onPress={() => router.push('/events')}
+            >
+              <View>
+                <Text style={[styles.eventTitle, { color: theme.colors.charcoal }]}>
+                  {nextEvent.title}
+                </Text>
+                <Text style={[styles.eventDate, { color: theme.colors.gray }]}>
+                  {new Date(nextEvent.date).toLocaleDateString()} at {nextEvent.time}
+                </Text>
+                <Text style={[styles.eventAttendees, { color: theme.colors.green }]}>
+                  {nextEvent.attendees} people going
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.gray} />
+            </TouchableOpacity>
+          </Card>
+        )}
+
+        {/* Latest Posts */}
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardTitleRow}>
+              <Ionicons name="chatbubbles" size={24} color={theme.colors.green} />
+              <Text style={[styles.cardTitle, { color: theme.colors.charcoal }]}>
+                Latest Posts
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push('/community')}>
+              <Text style={[styles.seeAll, { color: theme.colors.green }]}>
+                See All
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {latestPosts.length > 0 ? (
+            <View style={styles.postList}>
+              {latestPosts.map((post) => (
+                <TouchableOpacity 
+                  key={post.id} 
+                  style={styles.postItem}
+                  onPress={() => router.push('/community')}
+                >
+                  <Avatar name={post.author} size="small" />
+                  <View style={styles.postContent}>
+                    <View style={styles.postHeader}>
+                      <Text style={[styles.postAuthor, { color: theme.colors.charcoal }]}>
+                        {post.author}
+                      </Text>
+                      <Text style={[styles.postTime, { color: theme.colors.gray }]}>
+                        {post.timestamp}
+                      </Text>
+                    </View>
+                    <Text style={[styles.postText, { color: theme.colors.charcoal }]}>
+                      {post.content}
+                    </Text>
+                    <View style={styles.postStats}>
+                      <View style={styles.postStat}>
+                        <Ionicons name="heart" size={14} color={theme.colors.error} />
+                        <Text style={[styles.postStatText, { color: theme.colors.gray }]}>
+                          {post.likes}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <EmptyState
+              title="No recent posts"
+              description="Be the first to share something with the community!"
+            />
+          )}
+        </Card>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -19,17 +321,178 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0fdf4',
   },
-  content: {
+  scrollView: {
+    flex: 1,
+  },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     padding: 16,
+    margin: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fbbf24',
+  },
+  bannerContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  bannerTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  bannerText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  welcome: {
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  card: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  temperature: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  weatherCondition: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  seeAll: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  quickActions: {
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  actionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    width: '48%',
+    aspectRatio: 1.5,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  taskList: {
     gap: 12,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1f2937',
+  taskItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  subtitle: {
+  taskContent: {
+    flex: 1,
+  },
+  taskTitle: {
     fontSize: 16,
-    color: '#6b7280',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  taskDate: {
+    fontSize: 14,
+  },
+  eventItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  eventDate: {
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  eventAttendees: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  postList: {
+    gap: 16,
+  },
+  postItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  postContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  postAuthor: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  postTime: {
+    fontSize: 12,
+  },
+  postText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  postStats: {
+    flexDirection: 'row',
+  },
+  postStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  postStatText: {
+    fontSize: 12,
+    marginLeft: 4,
   },
 });
