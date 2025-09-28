@@ -390,255 +390,130 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0fdf4',
   },
+  scrollContainer: {
+    flex: 1,
+  },
   header: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingBottom: 8,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
-    flex: 1,
+    marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 14,
-    position: 'absolute',
-    top: 45,
-    left: 16,
-  },
-  globalAiButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-  },
-  globalAiButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  searchContainer: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
     fontSize: 16,
   },
-  filtersContainer: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  filterSection: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 6,
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  seasonalCard: {
+  profileCard: {
     marginHorizontal: 16,
-    marginTop: 16,
+    marginBottom: 24,
   },
-  seasonalHeader: {
+  profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
   },
-  seasonalTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  seasonalPlant: {
-    padding: 12,
-    borderWidth: 1,
-    borderRadius: 8,
-    marginRight: 8,
-    alignItems: 'center',
-    minWidth: 100,
-  },
-  seasonalPlantName: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  listContent: {
-    padding: 16,
-  },
-  plantCard: {
-    marginBottom: 12,
-  },
-  card: {
-    // Card styling handled by Card component
-  },
-  plantHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  plantInfo: {
+  profileInfo: {
     flex: 1,
   },
-  plantName: {
-    fontSize: 18,
-    fontWeight: '600',
+  profileName: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 14,
     marginBottom: 2,
   },
-  scientificName: {
+  profileRole: {
     fontSize: 14,
-    fontStyle: 'italic',
-  },
-  aiButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 4,
-  },
-  aiButtonText: {
-    fontSize: 12,
     fontWeight: '600',
   },
-  plantMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
+  settingsContainer: {
+    paddingHorizontal: 16,
   },
-  sunRequirement: {
-    marginLeft: 'auto',
-  },
-  plantDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  sowingHarvest: {
-    gap: 4,
-  },
-  monthsContainer: {
-    flexDirection: 'row',
-  },
-  monthsLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  // Detail view styles
-  detailContainer: {
+  // Notification Settings Styles
+  settingsSection: {
     flex: 1,
   },
-  detailHeader: {
+  backHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+    gap: 16,
   },
-  backButton: {
-    marginRight: 16,
-  },
-  detailTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    flex: 1,
-  },
-  detailCard: {
-    margin: 16,
-  },
-  detailMeta: {
-    flexDirection: 'row',
-    gap: 8,
-    marginVertical: 12,
-  },
-  detailDescription: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  detailSection: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
+  backHeaderTitle: {
+    fontSize: 20,
     fontWeight: '600',
-    marginBottom: 12,
   },
-  infoGrid: {
+  settingsContent: {
+    flex: 1,
+    padding: 16,
+  },
+  permissionCard: {
+    marginBottom: 16,
+  },
+  permissionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
-  infoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
+  permissionText: {
+    flex: 1,
+  },
+  permissionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  permissionSubtitle: {
+    fontSize: 14,
+  },
+  settingsCard: {
+    marginBottom: 16,
+  },
+  settingsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  infoLabel: {
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f9fafb',
+  },
+  settingInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  settingDescription: {
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  timeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  timeButtonText: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  infoValue: {
-    fontSize: 14,
-    flex: 1,
-    textAlign: 'right',
-  },
-  instructionItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-    gap: 8,
-  },
-  instructionText: {
-    fontSize: 14,
-    lineHeight: 20,
-    flex: 1,
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-    gap: 8,
-  },
-  tipText: {
-    fontSize: 14,
-    lineHeight: 20,
-    flex: 1,
-  },
-  companionList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
   },
 });
