@@ -457,6 +457,18 @@ export default function GalleryScreen() {
         photos={selectedPhoto?.photos}
         initialIndex={selectedPhoto?.initialIndex}
       />
+
+      {/* Photo Caption Modal */}
+      <PhotoCaptionModal
+        visible={showCaptionModal}
+        onClose={() => {
+          setShowCaptionModal(false);
+          setPendingPhotos([]);
+        }}
+        photos={pendingPhotos}
+        onSubmit={handlePhotosWithCaptions}
+        loading={uploadMutation.isPending}
+      />
     </SafeAreaView>
   );
 }
