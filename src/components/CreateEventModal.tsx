@@ -97,32 +97,25 @@ export function CreateEventModal({ visible, onClose, event }: CreateEventModalPr
     }
   };
 
-  const handleDateTimeChange = (
-    event: any, 
-    selectedDate: Date | undefined, 
-    field: string,
-    type: 'date' | 'time'
-  ) => {
-    if (selectedDate) {
-      const currentDate = new Date(watch(field as keyof EventFormData) as string);
-      
-      if (type === 'date') {
-        currentDate.setFullYear(selectedDate.getFullYear());
-        currentDate.setMonth(selectedDate.getMonth());
-        currentDate.setDate(selectedDate.getDate());
-      } else {
-        currentDate.setHours(selectedDate.getHours());
-        currentDate.setMinutes(selectedDate.getMinutes());
-      }
-      
-      setValue(field as keyof EventFormData, currentDate.toISOString() as any);
+  const handleDateChange = (field: string, dateStr: string) => {
+    if (dateStr) {
+      const currentDateTime = new Date(watch(field as keyof EventFormData) as string);
+      const [year, month, day] = dateStr.split('-').map(Number);
+      currentDateTime.setFullYear(year);
+      currentDateTime.setMonth(month - 1); // Month is 0-indexed
+      currentDateTime.setDate(day);
+      setValue(field as keyof EventFormData, currentDateTime.toISOString() as any);
     }
-    
-    // Hide pickers
-    setShowStartDatePicker(false);
-    setShowStartTimePicker(false);
-    setShowEndDatePicker(false);
-    setShowEndTimePicker(false);
+  };
+
+  const handleTimeChange = (field: string, timeStr: string) => {
+    if (timeStr) {
+      const currentDateTime = new Date(watch(field as keyof EventFormData) as string);
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      currentDateTime.setHours(hours);
+      currentDateTime.setMinutes(minutes);
+      setValue(field as keyof EventFormData, currentDateTime.toISOString() as any);
+    }
   };
 
   const addBringItem = () => {
