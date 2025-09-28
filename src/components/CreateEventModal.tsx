@@ -439,18 +439,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  dateTimeButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
+  dateInput: {
     borderWidth: 1,
     borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
     backgroundColor: 'white',
-    gap: 8,
-  },
-  dateTimeText: {
-    fontSize: 14,
   },
   bringItemInput: {
     flexDirection: 'row',
