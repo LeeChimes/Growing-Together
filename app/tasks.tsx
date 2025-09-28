@@ -28,6 +28,7 @@ import {
   useDeleteTask, 
   useTaskStats 
 } from '../src/hooks/useTasks';
+import { useTaskNotifications } from '../src/hooks/useNotifications';
 import { CreateTaskModal } from '../src/components/CreateTaskModal';
 import { useAuthStore } from '../src/store/authStore';
 import { Database } from '../src/lib/database.types';
