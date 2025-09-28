@@ -157,5 +157,6 @@ export default function RootLayout() {
       </Tabs>
       </ThemeProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
