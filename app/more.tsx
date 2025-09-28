@@ -713,4 +713,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
+  // Accessibility Settings Styles
+  themeButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  themeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  themeButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  fontSizeButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  fontSizeButton: {
+    width: 40,
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fontSizeButtonText: {
+    fontWeight: '600',
+  },
 });
