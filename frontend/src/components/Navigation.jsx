@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -12,9 +12,16 @@ import {
   Shield
 } from 'lucide-react';
 
+const AuthContext = React.createContext();
+const useAuth = () => useContext(AuthContext);
+
 const Navigation = () => {
   const location = useLocation();
-  const { user, isAdmin } = useAuth();
+  const auth = useAuth();
+  
+  if (!auth) return null;
+  
+  const { user, isAdmin } = auth;
 
   if (!user || location.pathname === '/auth') return null;
 
