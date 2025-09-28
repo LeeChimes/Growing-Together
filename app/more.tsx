@@ -25,6 +25,7 @@ import { QADashboard } from '../src/components/QADashboard';
 
 export default function MoreScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { user, signOut } = useAuthStore();
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
