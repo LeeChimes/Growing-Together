@@ -506,6 +506,38 @@ export default function MoreScreen() {
 
         {/* Settings Sections */}
         <View style={styles.settingsContainer}>
+          {/* Plot Inspections - Only show for admin users */}
+          {user?.role === 'admin' && (
+            <ListItem
+              icon={<Ionicons name="clipboard" size={24} color={theme.colors.warning} />}
+              title="Plot Inspections"
+              subtitle="Manage plot inspections and assessments"
+              onPress={() => router.push('/inspections')}
+              showChevron
+              style={{ marginBottom: 8, backgroundColor: theme.colors.warning + '10' }}
+            />
+          )}
+
+          {/* Rules for all users */}
+          <ListItem
+            icon={<Ionicons name="document-text" size={24} color={theme.colors.info} />}
+            title="Community Rules"
+            subtitle="View and acknowledge community rules"
+            onPress={() => router.push('/rules')}
+            showChevron
+            style={{ marginBottom: 8 }}
+          />
+
+          {/* My Documents for all users */}
+          <ListItem
+            icon={<Ionicons name="folder" size={24} color={theme.colors.success} />}
+            title="My Documents"
+            subtitle="Upload and manage your documents"
+            onPress={() => router.push('/documents')}
+            showChevron
+            style={{ marginBottom: 16 }}
+          />
+
           {/* Admin Dashboard - Only show for admin users */}
           {user?.role === 'admin' && (
             <ListItem
