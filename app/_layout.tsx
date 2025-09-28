@@ -16,6 +16,9 @@ import { View, ActivityIndicator } from 'react-native';
 export default function RootLayout() {
   const { user, isLoading, isInitialized, initialize } = useAuthStore();
   const [dbInitialized, setDbInitialized] = useState(false);
+  
+  // Initialize notifications
+  const { isInitialized: notificationsInitialized } = useNotifications();
 
   useEffect(() => {
     const initApp = async () => {
