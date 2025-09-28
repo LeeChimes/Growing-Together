@@ -51,24 +51,25 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <StatusBar style="dark" />
-      <Tabs 
-        screenOptions={{
-          headerTitle: () => <Logo width={160} />,
-          tabBarActiveTintColor: '#22c55e',
-          tabBarInactiveTintColor: '#6b7280',
-          tabBarStyle: {
-            paddingBottom: 8,
-            paddingTop: 8,
-            height: 64,
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '500',
-          },
-        }}
-      >
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <StatusBar style="dark" />
+        <Tabs 
+          screenOptions={{
+            headerTitle: () => <Logo width={160} />,
+            tabBarActiveTintColor: '#22c55e',
+            tabBarInactiveTintColor: '#6b7280',
+            tabBarStyle: {
+              paddingBottom: 8,
+              paddingTop: 8,
+              height: 64,
+            },
+            tabBarLabelStyle: {
+              fontSize: 12,
+              fontWeight: '500',
+            },
+          }}
+        >
         <Tabs.Screen 
           name="home" 
           options={{ 
