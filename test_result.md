@@ -414,11 +414,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Plot Inspections System (Add-on Feature)"
-    - "Rules & Member Documents System (Add-on Feature)"
     - "New navigation integration and screen functionality"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
