@@ -177,11 +177,41 @@ export const useUploadPhotos = () => {
         const photo = photos[i];
         const caption = captions?.[i] || '';
 
-        // In a real implementation, you would upload to Supabase storage first
-        // For now, we'll simulate this by using the local URI
+        let photoUrl = photo;
+
+        if (await syncManager.isOnline()) {
+          try {
+            // Upload to Supabase Storage
+            const fileName = `${user!.id}/${Date.now()}-${i}.jpg`;
+            const response = await fetch(photo);
+            const blob = await response.blob();
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('photos')
+              .upload(fileName, blob, {
+                contentType: 'image/jpeg',
+                upsert: false
+              });
+
+            if (uploadError) {
+              console.warn('Storage upload failed, using local URI:', uploadError);
+              // Fall back to local URI if storage upload fails
+            } else {
+              // Get public URL
+              const { data: urlData } = supabase.storage
+                .from('photos')
+                .getPublicUrl(uploadData.path);
+              
+              photoUrl = urlData.publicUrl;
+            }
+          } catch (error) {
+            console.warn('Storage upload error, using local URI:', error);
+          }
+        }
+
         const photoData = {
           id: crypto.randomUUID(),
-          url: photo, // In real app, this would be the uploaded URL
+          url: photoUrl,
           album_id: albumId || null,
           caption: caption || null,
           uploaded_by: user!.id,
