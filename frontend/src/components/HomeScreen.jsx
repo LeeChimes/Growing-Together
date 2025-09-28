@@ -4,6 +4,8 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import EnhancedDiaryModal from './EnhancedDiaryModal';
+import WeatherService from './WeatherService';
+import { QuickActionBar, ScrollToTop, OfflineIndicator } from './MobileOptimizations';
 import { 
   Cloud, 
   Thermometer, 
