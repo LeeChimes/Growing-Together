@@ -154,9 +154,10 @@ export default function RootLayout() {
             ),
           }} 
         />
-      </Tabs>
-      </ThemeProvider>
-    </QueryClientProvider>
+            </Tabs>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </ErrorBoundary>
   );
 }
