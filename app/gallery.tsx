@@ -174,12 +174,12 @@ export default function GalleryScreen() {
     </TouchableOpacity>
   );
 
-  const renderPhotoTile = ({ item }: { item: any }) => (
+  const renderPhotoTile = ({ item, index }: { item: any; index: number }) => (
     <TouchableOpacity
       style={styles.photoTile}
       onPress={() => {
-        // TODO: Open photo viewer modal
-        Alert.alert('Photo Viewer', 'Photo viewer coming soon!');
+        setSelectedPhoto({ photo: item, photos: filteredPhotos, initialIndex: index });
+        setShowPhotoViewer(true);
       }}
     >
       <ImageTile
