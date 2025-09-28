@@ -116,6 +116,15 @@ export default function RootLayout() {
           }} 
         />
         <Tabs.Screen 
+          name="tasks" 
+          options={{ 
+            title: 'Tasks',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="checkmark-circle" size={size} color={color} />
+            ),
+          }} 
+        />
+        <Tabs.Screen 
           name="more" 
           options={{ 
             title: 'More',
