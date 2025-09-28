@@ -158,13 +158,25 @@ export default function GalleryScreen() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8,
+        quality: 1, // We'll compress afterwards
       });
 
       if (!result.canceled) {
         const imageUri = result.assets[0].uri;
-        setPendingPhotos([imageUri]);
+        
+        // Compress the image to meet Step 16 requirements (≤1600px edge)
+        const compressedUri = await ImageCompressionService.compressImage(imageUri, {
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.8,
+        });
+        
+        setPendingPhotos([compressedUri]);
         setShowCaptionModal(true);
+        
+        if (compressedUri !== imageUri) {
+          console.log('📸 Image compressed for optimal upload');
+        }
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to upload photo');
