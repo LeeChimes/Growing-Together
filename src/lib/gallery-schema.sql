@@ -90,7 +90,44 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_albums_updated_at BEFORE UPDATE ON albums
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Join codes table for admin functionality
+CREATE TABLE IF NOT EXISTS join_codes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(20) NOT NULL UNIQUE,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'member', 'guest')),
+    created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ,
+    max_uses INTEGER,
+    current_uses INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for join codes
+CREATE INDEX IF NOT EXISTS idx_join_codes_code ON join_codes(code);
+CREATE INDEX IF NOT EXISTS idx_join_codes_active ON join_codes(is_active);
+CREATE INDEX IF NOT EXISTS idx_join_codes_created_by ON join_codes(created_by);
+
+-- Join codes RLS policies
+ALTER TABLE join_codes ENABLE ROW LEVEL SECURITY;
+
+-- Only admins can manage join codes
+CREATE POLICY "Only admins can manage join codes" ON join_codes
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE profiles.id = auth.uid() 
+            AND profiles.role = 'admin'
+        )
+    );
+
+-- Anyone can view active join codes for registration
+CREATE POLICY "Anyone can view active join codes" ON join_codes
+    FOR SELECT USING (is_active = true AND (expires_at IS NULL OR expires_at > NOW()));
+
 -- Grant permissions to authenticated users
 GRANT ALL ON albums TO authenticated;
 GRANT ALL ON photos TO authenticated;
+GRANT ALL ON join_codes TO authenticated;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
