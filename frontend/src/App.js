@@ -20,6 +20,9 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+// Export useAuth for components
+export { useAuth };
+
 // Components
 import Navigation from './components/Navigation';
 import AuthScreen from './components/AuthScreen';
