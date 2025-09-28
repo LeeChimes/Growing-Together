@@ -13,6 +13,7 @@ const EventsScreen = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [rsvpLoading, setRsvpLoading] = useState({});
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
 
   useEffect(() => {
     loadEvents();
