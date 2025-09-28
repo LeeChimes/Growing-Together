@@ -564,6 +564,18 @@ export default function MoreScreen() {
             showChevron
           />
 
+          {/* QA Dashboard - Only show in development or for admin users */}
+          {(__DEV__ || user?.role === 'admin') && (
+            <ListItem
+              icon={<Ionicons name="bug" size={24} color={theme.colors.warning} />}
+              title="QA Dashboard"
+              subtitle="Testing, performance, and quality assurance"
+              onPress={() => setShowQADashboard(true)}
+              showChevron
+              style={{ marginTop: 16, backgroundColor: theme.colors.warning + '10' }}
+            />
+          )}
+
           <ListItem
             icon={<Ionicons name="log-out" size={24} color={theme.colors.error} />}
             title="Sign Out"
