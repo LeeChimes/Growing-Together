@@ -32,7 +32,7 @@
         {
           "icon": "./assets/icons/growing-logo-64.png",
           "color": "#22c55e",
-          "sounds": ["./assets/notification.wav"],
+          "sounds": [],
           "defaultChannel": "default"
         }
       ]
