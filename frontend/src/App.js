@@ -193,7 +193,7 @@ function App() {
             <Route path="/gallery" element={
               <ProtectedRoute>
                 <AppLayout>
-                  <GalleryScreen />
+                  <EnhancedGalleryScreen />
                 </AppLayout>
               </ProtectedRoute>
             } />
