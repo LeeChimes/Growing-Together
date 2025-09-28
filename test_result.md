@@ -357,9 +357,9 @@ frontend:
 
   - task: "Rules & Member Documents System (Add-on Feature)"
     implemented: true
-    working: true
+    working: false
     file: "backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high" 
     needs_retesting: false
     status_history:
@@ -372,6 +372,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ RULES & DOCUMENTS SYSTEM FULLY WORKING: Comprehensive testing confirms all backend endpoints are now implemented and functional. RULES: GET /api/rules returns active rules (default v1.0 initialized), POST /api/rules creates new versions with proper versioning (deactivates old versions), POST /api/rules/acknowledge creates acknowledgements (prevents duplicates), GET /api/rules/acknowledgements (admin-only) returns all acknowledgements, GET /api/rules/my-acknowledgement checks user's acknowledgement status. DOCUMENTS: GET /api/documents returns user's documents, POST /api/documents/upload creates document records with metadata (title, type, file_name, size, mime_type, expiry), GET /api/admin/documents (admin-only) returns all users' documents with aggregation, DELETE /api/documents/{id} removes documents with proper authorization. MongoDB integration successful with proper data models, role-based access control, and ObjectId serialization fixes applied."
+      - working: false
+        agent: "testing"
+        comment: "❌ FRONTEND INTEGRATION MISSING: Backend endpoints working but frontend routes not properly integrated. Testing reveals /rules and /documents routes redirect to home page instead of showing feature interfaces. Routes exist but React Router configuration missing. Implementation exists only in Expo React Native app (/app/app/rules.tsx, /app/app/documents.tsx) but not integrated into web React app (/app/frontend/). Need to implement web React components and routes for Rules & Documents features to be accessible via web interface."
 
   - task: "Tasks Screen"
     implemented: true
