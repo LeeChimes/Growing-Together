@@ -25,6 +25,9 @@ export default function RootLayout() {
   useEffect(() => {
     const initApp = async () => {
       try {
+        // Initialize performance monitoring
+        PerformanceMonitor.startMonitoring();
+        
         // Initialize SQLite database
         await initializeDatabase();
         setDbInitialized(true);
