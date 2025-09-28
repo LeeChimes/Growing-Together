@@ -17,7 +17,9 @@ import {
   ListItem 
 } from '../src/design';
 import { useNotificationPreferences, useNotificationPermissions } from '../src/hooks/useNotifications';
+import { useAccessibilitySettings, useUserProfile, useUpdateProfile } from '../src/hooks/useSettings';
 import { useAuthStore } from '../src/store/authStore';
+import { AdminDashboard } from '../src/components/AdminDashboard';
 
 export default function MoreScreen() {
   const theme = useTheme();
