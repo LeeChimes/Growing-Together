@@ -402,11 +402,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "QA & Performance System (New Expo App) - Step 16 FINAL implementation"
-    - "16-Step Repair Plan COMPLETED"
+    - "Plot Inspections System (Add-on Feature)"
+    - "Rules & Member Documents System (Add-on Feature)"
+    - "New navigation integration and screen functionality"
   stuck_tasks: []
   test_all: true
-  test_priority: "completed"
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
