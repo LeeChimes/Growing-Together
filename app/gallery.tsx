@@ -352,7 +352,9 @@ export default function GalleryScreen() {
       ) : hasData ? (
         <FlatList
           data={currentData}
-          renderItem={viewMode === 'albums' ? renderAlbumCard : renderPhotoTile}
+          renderItem={({ item, index }) => 
+            viewMode === 'albums' ? renderAlbumCard({ item }) : renderPhotoTile({ item, index })
+          }
           keyExtractor={(item) => item.id}
           numColumns={viewMode === 'albums' ? 2 : 3}
           contentContainerStyle={styles.listContent}
