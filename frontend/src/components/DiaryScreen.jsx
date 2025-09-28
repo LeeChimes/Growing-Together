@@ -322,7 +322,7 @@ const DiaryScreen = () => {
               <SelectValue placeholder="All plots" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Plots</SelectItem>
+              <SelectItem value="all">All Plots</SelectItem>
               {plotNumbers.map((plot) => (
                 <SelectItem key={plot} value={plot}>
                   Plot {plot}
