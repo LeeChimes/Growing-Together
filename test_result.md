@@ -353,10 +353,10 @@ frontend:
         comment: "✅ PLOT INSPECTIONS SYSTEM FULLY WORKING: Comprehensive testing confirms all backend endpoints are now implemented and functional. GET /api/plots returns 20 sample plots, GET /api/inspections (admin-only) working, POST /api/inspections creates inspections with proper scoring (0-100 based on use_status and upkeep), GET /api/inspections/my-plot returns user's plot inspections, GET /api/member-notices retrieves notifications, PATCH /api/member-notices/{id}/acknowledge works correctly. Inspection creation automatically generates member notices when action is required. Score calculation working (active+good=100, partial+poor=30). Role-based access control properly implemented. MongoDB integration successful with proper data models and relationships."
 
   - task: "Rules & Member Documents System (Add-on Feature)"
-    implemented: false
-    working: false
-    file: "app/rules.tsx"
-    stuck_count: 1
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
     priority: "high" 
     needs_retesting: false
     status_history:
@@ -366,6 +366,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL: BACKEND ENDPOINTS MISSING - Comprehensive testing reveals Rules & Documents system is NOT implemented in backend. All API endpoints return 404: GET /api/rules, POST /api/rules, POST /api/rules/acknowledge, GET /api/rules/acknowledgements, GET /api/documents, POST /api/documents/upload, GET /api/admin/documents. Frontend components exist but backend API layer is completely missing. Database schema designed for Supabase PostgreSQL but current backend uses MongoDB. Core issue: Implementation is incomplete - only frontend exists without corresponding backend endpoints."
+      - working: true
+        agent: "testing"
+        comment: "✅ RULES & DOCUMENTS SYSTEM FULLY WORKING: Comprehensive testing confirms all backend endpoints are now implemented and functional. RULES: GET /api/rules returns active rules (default v1.0 initialized), POST /api/rules creates new versions with proper versioning (deactivates old versions), POST /api/rules/acknowledge creates acknowledgements (prevents duplicates), GET /api/rules/acknowledgements (admin-only) returns all acknowledgements, GET /api/rules/my-acknowledgement checks user's acknowledgement status. DOCUMENTS: GET /api/documents returns user's documents, POST /api/documents/upload creates document records with metadata (title, type, file_name, size, mime_type, expiry), GET /api/admin/documents (admin-only) returns all users' documents with aggregation, DELETE /api/documents/{id} removes documents with proper authorization. MongoDB integration successful with proper data models, role-based access control, and ObjectId serialization fixes applied."
 
   - task: "Tasks Screen"
     implemented: true
