@@ -129,51 +129,8 @@ const HomeScreen = () => {
         </Button>
       </div>
 
-      {/* Weather Widget */}
-      {weather && (
-        <Card className="weather-card" data-testid="weather-widget">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center space-x-2">
-              <Cloud size={24} />
-              <span>Weather at {weather.location}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-white">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="weather-icon mb-2">
-                  <Thermometer />
-                </div>
-                <p className="text-2xl font-bold">{weather.current.temperature}°C</p>
-                <p className="text-sm opacity-90">{weather.current.condition}</p>
-              </div>
-              <div className="text-center">
-                <div className="weather-icon mb-2">
-                  <Droplets />
-                </div>
-                <p className="text-lg font-semibold">{weather.current.humidity}%</p>
-                <p className="text-sm opacity-90">Humidity</p>
-              </div>
-              <div className="text-center">
-                <div className="weather-icon mb-2">
-                  <Wind />
-                </div>
-                <p className="text-lg font-semibold">{weather.current.wind}</p>
-                <p className="text-sm opacity-90">Wind</p>
-              </div>
-              <div className="text-center">
-                <div className="weather-icon mb-2">
-                  <TrendingUp />
-                </div>
-                <p className="text-lg font-semibold">
-                  {weather.forecast[0].high}°/{weather.forecast[0].low}°
-                </p>
-                <p className="text-sm opacity-90">Today's Range</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Enhanced Weather Widget */}
+      <WeatherService compact={true} />
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Upcoming Events */}
