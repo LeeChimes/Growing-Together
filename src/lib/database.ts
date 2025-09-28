@@ -12,24 +12,24 @@ export const initializeDatabase = async (): Promise<void> => {
       PRAGMA journal_mode = WAL;
       PRAGMA foreign_keys = ON;
     `);
-      // Profiles cache
-      tx.executeSql(`
-        CREATE TABLE IF NOT EXISTS profiles_cache (
-          id TEXT PRIMARY KEY,
-          email TEXT NOT NULL,
-          full_name TEXT,
-          avatar_url TEXT,
-          role TEXT NOT NULL,
-          plot_number TEXT,
-          phone TEXT,
-          emergency_contact TEXT,
-          join_date TEXT NOT NULL,
-          is_approved BOOLEAN NOT NULL,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          sync_status TEXT DEFAULT 'synced'
-        );
-      `);
+    // Profiles cache
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS profiles_cache (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        full_name TEXT,
+        avatar_url TEXT,
+        role TEXT NOT NULL,
+        plot_number TEXT,
+        phone TEXT,
+        emergency_contact TEXT,
+        join_date TEXT NOT NULL,
+        is_approved BOOLEAN NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        sync_status TEXT DEFAULT 'synced'
+      );
+    `);
 
       // Diary entries cache
       tx.executeSql(`
