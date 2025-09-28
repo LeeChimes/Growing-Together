@@ -255,6 +255,23 @@ class DocumentUpload(BaseModel):
     mime_type: Optional[str] = None
     expires_at: Optional[str] = None
 
+# Inspection utilities
+def calculate_inspection_score(use_status: str, upkeep: str) -> int:
+    """Calculate inspection score based on use status and upkeep"""
+    use_points = {
+        "active": 60,
+        "partial": 30,
+        "not_used": 0,
+    }
+    
+    upkeep_points = {
+        "good": 40,
+        "fair": 20,
+        "poor": 0,
+    }
+    
+    return use_points.get(use_status, 0) + upkeep_points.get(upkeep, 0)
+
 # Auth utilities
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
