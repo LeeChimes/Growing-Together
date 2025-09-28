@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import EnhancedDiaryModal from './EnhancedDiaryModal';
 import { 
   Cloud, 
   Thermometer, 
