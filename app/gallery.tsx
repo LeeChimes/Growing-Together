@@ -435,6 +435,18 @@ export default function GalleryScreen() {
         visible={showCreateAlbum}
         onClose={() => setShowCreateAlbum(false)}
       />
+
+      {/* Photo Viewer Modal */}
+      <PhotoViewerModal
+        visible={showPhotoViewer}
+        onClose={() => {
+          setShowPhotoViewer(false);
+          setSelectedPhoto(null);
+        }}
+        photo={selectedPhoto?.photo}
+        photos={selectedPhoto?.photos}
+        initialIndex={selectedPhoto?.initialIndex}
+      />
     </SafeAreaView>
   );
 }
