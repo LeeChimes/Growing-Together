@@ -58,6 +58,9 @@ export default function TasksScreen() {
 
   const { data: tasks = [], isLoading, refetch } = useTasks(getTaskFilters());
   const { data: stats } = useTaskStats();
+  
+  // Initialize task notifications
+  useTaskNotifications();
   const completeTaskMutation = useCompleteTask();
   const deleteTaskMutation = useDeleteTask();
 
