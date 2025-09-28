@@ -502,11 +502,31 @@ export default function MoreScreen() {
 
         {/* Settings Sections */}
         <View style={styles.settingsContainer}>
+          {/* Admin Dashboard - Only show for admin users */}
+          {user?.role === 'admin' && (
+            <ListItem
+              icon={<Ionicons name="shield-checkmark" size={24} color={theme.colors.error} />}
+              title="Admin Dashboard"
+              subtitle="Manage members, join codes, and content"
+              onPress={() => setShowAdminDashboard(true)}
+              showChevron
+              style={{ marginBottom: 16, backgroundColor: theme.colors.error + '10' }}
+            />
+          )}
+
           <ListItem
             icon={<Ionicons name="notifications" size={24} color={theme.colors.sky} />}
             title="Notifications"
             subtitle="Manage reminders and alerts"
             onPress={() => setShowNotificationSettings(true)}
+            showChevron
+          />
+
+          <ListItem
+            icon={<Ionicons name="accessibility" size={24} color={theme.colors.success} />}
+            title="Accessibility"
+            subtitle="Theme, text size, and display options"
+            onPress={() => setShowAccessibilitySettings(true)}
             showChevron
           />
 
