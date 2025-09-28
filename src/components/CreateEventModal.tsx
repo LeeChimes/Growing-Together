@@ -235,56 +235,70 @@ export function CreateEventModal({ visible, onClose, event }: CreateEventModalPr
             <View style={styles.dateTimeContainer}>
               <View style={styles.dateTimeField}>
                 <Text style={[styles.label, { color: theme.colors.charcoal }]}>
-                  Start Date & Time *
+                  Start Date *
                 </Text>
-                <View style={styles.dateTimeRow}>
-                  <TouchableOpacity
-                    style={[styles.dateTimeButton, { borderColor: theme.colors.grayLight }]}
-                    onPress={() => setShowStartDatePicker(true)}
-                  >
-                    <Ionicons name="calendar" size={16} color={theme.colors.green} />
-                    <Text style={[styles.dateTimeText, { color: theme.colors.charcoal }]}>
-                      {formatDateTime(watchStartDate).date}
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.dateTimeButton, { borderColor: theme.colors.grayLight }]}
-                    onPress={() => setShowStartTimePicker(true)}
-                  >
-                    <Ionicons name="time" size={16} color={theme.colors.green} />
-                    <Text style={[styles.dateTimeText, { color: theme.colors.charcoal }]}>
-                      {formatDateTime(watchStartDate).time}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                <TextInput
+                  style={[styles.dateInput, { borderColor: theme.colors.grayLight, color: theme.colors.charcoal }]}
+                  value={new Date(watchStartDate).toISOString().split('T')[0]}
+                  onChangeText={(text) => handleDateChange('start_date', text)}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={theme.colors.gray}
+                />
               </View>
 
               <View style={styles.dateTimeField}>
                 <Text style={[styles.label, { color: theme.colors.charcoal }]}>
-                  End Date & Time (Optional)
+                  Start Time *
                 </Text>
-                <View style={styles.dateTimeRow}>
-                  <TouchableOpacity
-                    style={[styles.dateTimeButton, { borderColor: theme.colors.grayLight }]}
-                    onPress={() => setShowEndDatePicker(true)}
-                  >
-                    <Ionicons name="calendar" size={16} color={theme.colors.green} />
-                    <Text style={[styles.dateTimeText, { color: theme.colors.charcoal }]}>
-                      {watchEndDate ? formatDateTime(watchEndDate).date : 'Select date'}
-                    </Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.dateTimeButton, { borderColor: theme.colors.grayLight }]}
-                    onPress={() => setShowEndTimePicker(true)}
-                  >
-                    <Ionicons name="time" size={16} color={theme.colors.green} />
-                    <Text style={[styles.dateTimeText, { color: theme.colors.charcoal }]}>
-                      {watchEndDate ? formatDateTime(watchEndDate).time : 'Select time'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                <TextInput
+                  style={[styles.dateInput, { borderColor: theme.colors.grayLight, color: theme.colors.charcoal }]}
+                  value={new Date(watchStartDate).toTimeString().slice(0, 5)}
+                  onChangeText={(text) => handleTimeChange('start_date', text)}
+                  placeholder="HH:MM"
+                  placeholderTextColor={theme.colors.gray}
+                />
+              </View>
+
+              <View style={styles.dateTimeField}>
+                <Text style={[styles.label, { color: theme.colors.charcoal }]}>
+                  End Date (Optional)
+                </Text>
+                <TextInput
+                  style={[styles.dateInput, { borderColor: theme.colors.grayLight, color: theme.colors.charcoal }]}
+                  value={watchEndDate ? new Date(watchEndDate).toISOString().split('T')[0] : ''}
+                  onChangeText={(text) => {
+                    if (text) {
+                      if (!watchEndDate) {
+                        // If no end date set, create one based on start date
+                        const startDate = new Date(watchStartDate);
+                        startDate.setHours(startDate.getHours() + 2); // Default 2 hours later
+                        setValue('end_date', startDate.toISOString());
+                      }
+                      handleDateChange('end_date', text);
+                    } else {
+                      setValue('end_date', '');
+                    }
+                  }}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={theme.colors.gray}
+                />
+              </View>
+
+              <View style={styles.dateTimeField}>
+                <Text style={[styles.label, { color: theme.colors.charcoal }]}>
+                  End Time (Optional)
+                </Text>
+                <TextInput
+                  style={[styles.dateInput, { borderColor: theme.colors.grayLight, color: theme.colors.charcoal }]}
+                  value={watchEndDate ? new Date(watchEndDate).toTimeString().slice(0, 5) : ''}
+                  onChangeText={(text) => {
+                    if (text && watchEndDate) {
+                      handleTimeChange('end_date', text);
+                    }
+                  }}
+                  placeholder="HH:MM"
+                  placeholderTextColor={theme.colors.gray}
+                />
               </View>
             </View>
           </View>
