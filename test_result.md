@@ -342,7 +342,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All major functionality tested and working"
+    - "Gallery Screen (New Expo App) - Step 13 implementation"
   stuck_tasks: []
   test_all: true
   test_priority: "completed"
