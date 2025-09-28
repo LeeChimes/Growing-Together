@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
+import NotificationCenter from './NotificationCenter';
 import { 
   Home, 
   Book, 
