@@ -24,6 +24,9 @@ import {
   useTheme,
   Avatar 
 } from '../src/design';
+import { ImageCompressionService, pickAndCompressImages } from '../src/lib/imageCompression';
+import { OptimizedGridList } from '../src/components/OptimizedList';
+import { ErrorBoundary, ScreenErrorBoundary } from '../src/components/ErrorBoundary';
 import {
   useAlbums,
   usePhotos,
