@@ -110,18 +110,40 @@ const EventsScreen = () => {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto mt-16 md:mt-20">
+    <div className="p-4 max-w-6xl mx-auto mt-16 md:mt-20">
       <div className="mb-8">
         <h1 className="heading-primary mb-2">Community Events</h1>
         <p className="text-gray-600">Join fellow allotment members at upcoming events</p>
       </div>
 
-      {/* Upcoming Events */}
-      <div className="mb-8">
-        <h2 className="heading-secondary mb-4 flex items-center">
-          <Calendar className="mr-2" size={24} />
-          Upcoming Events
-        </h2>
+      {/* Add Event Button for Admins */}
+      <div className="mb-6 flex justify-end">
+        <Button className="bg-green-600 hover:bg-green-700 text-white">
+          <Plus className="mr-2" size={16} />
+          Create Event
+        </Button>
+      </div>
+
+      {/* List/Calendar View Toggle */}
+      <Tabs value={viewMode} onValueChange={setViewMode} className="mb-6">
+        <TabsList className="grid w-fit grid-cols-2">
+          <TabsTrigger value="list" className="flex items-center space-x-2">
+            <List size={16} />
+            <span>List View</span>
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center space-x-2">
+            <Calendar size={16} />
+            <span>Calendar View</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* List View */}
+        <TabsContent value="list">
+          <div className="mb-8">
+            <h2 className="heading-secondary mb-4 flex items-center">
+              <Calendar className="mr-2" size={24} />
+              Upcoming Events
+            </h2>
         
         {upcomingEvents.length > 0 ? (
           <div className="space-y-4" data-testid="upcoming-events-list">
