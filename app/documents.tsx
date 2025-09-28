@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMyDocuments, useDocumentsRequiringAttention, useDeleteDocument, useDownloadDocument } from '../src/hooks/useDocuments';
