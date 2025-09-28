@@ -420,8 +420,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "New navigation integration and screen functionality"
-  stuck_tasks: []
+    - "Frontend integration of new add-on features"
+    - "React Router configuration for new feature routes"
+  stuck_tasks: 
+    - "Plot Inspections System (Add-on Feature)"
+    - "Rules & Member Documents System (Add-on Feature)"
   test_all: false
   test_priority: "high_first"
 
