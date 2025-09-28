@@ -310,6 +310,18 @@ frontend:
         agent: "main"
         comment: "✅ Step 14 Notifications System implemented with full feature set: Local reminders for events (24h and 1h before), daily task reminders (configurable time and days), announcement notifications, community notifications, sound/vibration preferences. Components: NotificationService class, useNotifications hooks, settings screen integration, permission handling. Features: Auto-scheduling for events/tasks, comprehensive preferences (all adjustable in settings), notification categories with actions, offline notification queue. Integrated with Events and Tasks screens for automatic scheduling."
 
+  - task: "Admin & Settings System (New Expo App)"
+    implemented: true
+    working: true
+    file: "src/hooks/useAdmin.ts"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ Step 15 Admin & Settings System implemented with comprehensive admin tools and accessibility features: Admin Dashboard (admin-role only) with member management, join code system with expiration/usage limits, data export (JSON format for all content types), content moderation tools. User Settings: Accessibility settings (light/dark/system theme, text size scaling, high contrast, reduce motion), profile management, privacy controls. Components: AdminDashboard, CreateJoinCodeModal, enhanced More screen with role-based access. Features: Member approval/role management, shareable join codes, comprehensive data export options, full accessibility compliance. Database schema updated with join_codes table and proper RLS policies."
+
   - task: "Tasks Screen"
     implemented: true
     working: true
