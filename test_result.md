@@ -336,9 +336,9 @@ frontend:
 
   - task: "Plot Inspections System (Add-on Feature)"
     implemented: true
-    working: true
+    working: false
     file: "backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -351,6 +351,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ PLOT INSPECTIONS SYSTEM FULLY WORKING: Comprehensive testing confirms all backend endpoints are now implemented and functional. GET /api/plots returns 20 sample plots, GET /api/inspections (admin-only) working, POST /api/inspections creates inspections with proper scoring (0-100 based on use_status and upkeep), GET /api/inspections/my-plot returns user's plot inspections, GET /api/member-notices retrieves notifications, PATCH /api/member-notices/{id}/acknowledge works correctly. Inspection creation automatically generates member notices when action is required. Score calculation working (active+good=100, partial+poor=30). Role-based access control properly implemented. MongoDB integration successful with proper data models and relationships."
+      - working: false
+        agent: "testing"
+        comment: "❌ FRONTEND INTEGRATION MISSING: Backend endpoints working but frontend routes not properly integrated. Testing reveals /inspections route redirects to home page instead of showing inspection interface. Route exists but React Router configuration missing. Implementation exists only in Expo React Native app (/app/app/inspections.tsx) but not integrated into web React app (/app/frontend/). Need to implement web React components and routes for Plot Inspections feature to be accessible via web interface."
 
   - task: "Rules & Member Documents System (Add-on Feature)"
     implemented: true
