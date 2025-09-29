@@ -240,7 +240,7 @@ export function AdminDashboard({ visible, onClose }: AdminDashboardProps) {
             <View style={styles.memberHeader}>
               <Avatar
                 name={member.full_name || 'Unknown'}
-                imageUri={member.avatar_url}
+                imageUri={member.avatar_url ?? undefined}
                 size="medium"
               />
               <View style={styles.memberInfo}>

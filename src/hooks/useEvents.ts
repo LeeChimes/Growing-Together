@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
+import { enqueueMutation } from '../lib/queue';
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 
@@ -139,10 +140,8 @@ export const useCreateEvent = () => {
           bring_list: JSON.stringify(eventWithUser.bring_list || []),
           sync_status: 'pending',
         };
-        
         await cacheOperations.upsertCache('events_cache', [cacheEntry]);
-        await cacheOperations.addToMutationQueue('events', 'INSERT', eventWithUser);
-        
+        enqueueMutation({ type: 'event.create', payload: eventWithUser });
         return eventWithUser as Event;
       }
     },
@@ -194,10 +193,8 @@ export const useUpdateEventRSVP = () => {
           bringing_items: JSON.stringify(bringingItems),
           sync_status: 'pending',
         };
-        
         await cacheOperations.upsertCache('event_rsvps_cache', [cacheEntry]);
-        await cacheOperations.addToMutationQueue('event_rsvps', 'INSERT', rsvpData as any);
-        
+        enqueueMutation({ type: 'event.rsvp', payload: rsvpData });
         return { ...cacheEntry, bringing_items: bringingItems } as any as EventRSVP;
       }
     },

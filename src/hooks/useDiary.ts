@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
+import { enqueueMutation } from '../lib/queue';
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 
@@ -40,7 +41,7 @@ export const useDiaryEntries = (filters: {
           query = query.lte('created_at', filters.endDate);
         }
 
-        const { data, error } = await query;
+        let { data, error } = await query;
         
         if (error) throw error;
         
@@ -118,16 +119,14 @@ export const useCreateDiaryEntry = () => {
         if (error) throw error;
         return data;
       } else {
-        // Store in cache and mutation queue
+        // Unified mutation queue path
         const cacheEntry = {
           ...entryWithUser,
           photos: JSON.stringify(entryWithUser.photos || []),
           sync_status: 'pending',
         };
-        
         await cacheOperations.upsertCache('diary_entries_cache', [cacheEntry]);
-        await cacheOperations.addToMutationQueue('diary_entries', 'INSERT', entryWithUser);
-        
+        enqueueMutation({ type: 'diary.create', payload: entryWithUser });
         return entryWithUser as DiaryEntry;
       }
     },

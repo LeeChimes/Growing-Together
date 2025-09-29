@@ -5,6 +5,8 @@ import { useAuthStore } from '../store/authStore';
 import { InspectionT, InspectionFormDataT, PlotT, MemberNoticeT, calculateInspectionScore } from '../types/inspections';
 import { ImageCompressionService } from '../lib/imageCompression';
 import { notificationService } from '../lib/notifications';
+import { enqueueMutation } from '../lib/queue';
+import * as Notifications from 'expo-notifications';
 
 // Plots hooks
 export const usePlots = () => {
@@ -457,6 +459,52 @@ export const useExportInspections = () => {
     },
   });
 };
+
+// Batch helper: plot iterator and draft save
+export function usePlotIterator(allPlots: number[], completedPlotIds: number[]) {
+  const completed = new Set(completedPlotIds);
+  const getNext = (current?: number) => {
+    if (!allPlots?.length) return undefined;
+    if (current == null) return allPlots.find(p => !completed.has(p));
+    const idx = allPlots.indexOf(current);
+    if (idx === -1) return allPlots.find(p => !completed.has(p));
+    for (let i = idx + 1; i < allPlots.length; i++) {
+      if (!completed.has(allPlots[i])) return allPlots[i];
+    }
+    return undefined;
+  };
+  return { getNext };
+}
+
+export type InspectionDraft = {
+  plotNumber: number;
+  useStatus?: 'active'|'partial'|'not_used';
+  upkeep?: 'good'|'fair'|'poor';
+  issues?: string[];
+  notes?: string;
+  photos?: string[];
+  action?: 'none'|'advisory'|'warning'|'final_warning'|'recommend_removal';
+  reinspectBy?: string;
+};
+
+export async function saveInspectionDraftAndSync(draft: InspectionDraft) {
+  return enqueueMutation({
+    type: 'inspection.create',
+    payload: draft,
+  });
+}
+
+export async function scheduleReinspectNotification(plotNumber: number, reinspectISO: string) {
+  const trigger = new Date(reinspectISO);
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: `Re-inspect Plot ${plotNumber}`,
+      body: `Time to re-check plot ${plotNumber}.`,
+    },
+    // @ts-ignore Expo types accept Date object or scheduling object
+    trigger: trigger as any,
+  });
+}
 
 // Helper function to convert inspections to CSV
 const convertToCSV = (inspections: any[]): string => {

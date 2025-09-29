@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
+import { ImageCompressionService } from '../lib/imageCompression';
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 
@@ -177,13 +178,15 @@ export const useUploadPhotos = () => {
         const photo = photos[i];
         const caption = captions?.[i] || '';
 
-        let photoUrl = photo;
+        // Enforce compression before any upload
+        const compressedPhoto = await ImageCompressionService.compressImage(photo, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+        let photoUrl = compressedPhoto;
 
         if (await syncManager.isOnline()) {
           try {
             // Upload to Supabase Storage
             const fileName = `${user!.id}/${Date.now()}-${i}.jpg`;
-            const response = await fetch(photo);
+            const response = await fetch(compressedPhoto);
             const blob = await response.blob();
             
             const { data: uploadData, error: uploadError } = await supabase.storage

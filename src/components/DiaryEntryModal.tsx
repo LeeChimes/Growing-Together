@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageCompressionService } from '../lib/imageCompression';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -171,7 +172,8 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
 
       if (!result.canceled) {
         const newPhotos = result.assets.map(asset => asset.uri);
-        setPhotos(prev => [...prev, ...newPhotos]);
+        const compressed = await ImageCompressionService.compressImages(newPhotos, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+        setPhotos(prev => [...prev, ...compressed]);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');

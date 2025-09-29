@@ -37,6 +37,8 @@ export function FAB({
       style={[fabStyle, style]}
       onPress={onPress}
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={typeof icon === 'string' ? icon : 'Floating action button'}
     >
       {icon}
     </TouchableOpacity>
