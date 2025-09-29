@@ -40,6 +40,8 @@ export const initializeDatabase = async (): Promise<void> => {
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         template_type TEXT NOT NULL,
+        plant_id TEXT,
+        tags TEXT,
         weather TEXT,
         temperature REAL,
         photos TEXT,

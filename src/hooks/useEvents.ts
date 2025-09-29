@@ -261,3 +261,64 @@ export const useDeleteEvent = () => {
     },
   });
 };
+
+// Simplified event comments using the shared comments table
+type Comment = Database['public']['Tables']['comments']['Row'];
+type CommentInsert = Database['public']['Tables']['comments']['Insert'];
+
+export const useEventComments = (eventId: string) => {
+  return useQuery({
+    queryKey: ['event-comments', eventId],
+    queryFn: async (): Promise<Comment[]> => {
+      if (await syncManager.isOnline()) {
+        const { data, error } = await supabase
+          .from('comments')
+          .select('*')
+          .eq('parent_type', 'event')
+          .eq('parent_id', eventId)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        return data || [];
+      } else {
+        // No local cache table yet; return empty offline fallback
+        return [];
+      }
+    },
+    enabled: !!eventId,
+  });
+};
+
+export const useCreateEventComment = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
+  return useMutation({
+    mutationFn: async ({ eventId, text }: { eventId: string; text: string }): Promise<Comment> => {
+      const payload: CommentInsert = {
+        parent_type: 'event',
+        parent_id: eventId,
+        user_id: user!.id,
+        text,
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+      } as any;
+
+      if (await syncManager.isOnline()) {
+        const { data, error } = await supabase
+          .from('comments')
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        return data as Comment;
+      } else {
+        await cacheOperations.addToMutationQueue('comments', 'INSERT', payload);
+        return payload as Comment;
+      }
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['event-comments', vars.eventId] });
+    },
+  });
+};

@@ -12,6 +12,8 @@ export const useDiaryEntries = (filters: {
   templateType?: string;
   startDate?: string;
   endDate?: string;
+  plantId?: string;
+  tag?: string;
 } = {}) => {
   const { user } = useAuthStore();
 
@@ -38,15 +40,23 @@ export const useDiaryEntries = (filters: {
           query = query.lte('created_at', filters.endDate);
         }
 
-        const { data, error } = await query;
+        let { data, error } = await query;
         
         if (error) throw error;
         
-        // Cache the results
+        // Client-side filter for plant/tag until backend fields exist
         if (data) {
+          if (filters.plantId) {
+            data = data.filter((e: any) => e.plant_id === filters.plantId);
+          }
+          if (filters.tag) {
+            data = data.filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
+          }
+
           const processedData = data.map(item => ({
             ...item,
             photos: Array.isArray(item.photos) ? JSON.stringify(item.photos) : item.photos,
+            tags: Array.isArray((item as any).tags) ? JSON.stringify((item as any).tags) : (item as any).tags,
             sync_status: 'synced'
           }));
           await cacheOperations.upsertCache('diary_entries_cache', processedData);
@@ -65,10 +75,19 @@ export const useDiaryEntries = (filters: {
         
         const cachedData = await cacheOperations.getCache('diary_entries_cache', whereClause, params);
         
-        return cachedData.map(item => ({
+        let mapped = cachedData.map(item => ({
           ...item,
           photos: typeof item.photos === 'string' ? JSON.parse(item.photos || '[]') : item.photos,
+          tags: typeof item.tags === 'string' ? JSON.parse(item.tags || '[]') : item.tags,
         }));
+
+        if (filters.plantId) {
+          mapped = mapped.filter((e: any) => e.plant_id === filters.plantId);
+        }
+        if (filters.tag) {
+          mapped = mapped.filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
+        }
+        return mapped as any;
       }
     },
     enabled: !!user,
@@ -173,7 +192,6 @@ export const useDeleteDiaryEntry = () => {
         if (error) throw error;
       } else {
         // Remove from cache and add to mutation queue
-        await cacheOperations.getCache('diary_entries_cache', 'id != ?', [id]);
         await cacheOperations.addToMutationQueue('diary_entries', 'DELETE', { id });
       }
     },
