@@ -22,6 +22,22 @@ if (typeof window === 'undefined') {
           }
         }
       })
+    }),
+    openDatabaseSync: (name: string) => ({
+      transaction: (fn: any) => fn({
+        executeSql: (sql: string, params: any[], success: any, error: any) => {
+          try {
+            if (sql.includes('SELECT')) {
+              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
+              success(null, { rows: { _array: JSON.parse(data) } });
+            } else {
+              success(null, { rowsAffected: 1 });
+            }
+          } catch (e) {
+            error(e);
+          }
+        }
+      })
     })
   };
 }
