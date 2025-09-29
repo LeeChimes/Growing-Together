@@ -41,7 +41,7 @@ export const useDiaryEntries = (filters: {
           query = query.lte('created_at', filters.endDate);
         }
 
-        let { data, error } = await query;
+        const { data, error } = await query;
         
         if (error) throw error;
         

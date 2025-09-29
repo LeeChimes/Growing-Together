@@ -194,7 +194,7 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
     <Modal visible={visible} animationType="slide" presentationStyle="formSheet">
       <SafeAreaView style={styles.container}>
         <View style={[styles.header, { borderBottomColor: theme.colors.grayLight }]}>
-          <TouchableOpacity onPress={handleClose}>
+          <TouchableOpacity onPress={handleClose} accessibilityRole="button" accessibilityLabel="Close diary entry">
             <Ionicons name="close" size={24} color={theme.colors.charcoal} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.charcoal }]}>
@@ -362,7 +362,7 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
               <Text style={[styles.sectionTitle, { color: theme.colors.charcoal }]}>
                 Photos
               </Text>
-              <TouchableOpacity onPress={pickImage}>
+              <TouchableOpacity onPress={pickImage} accessibilityRole="button" accessibilityLabel="Add photos from camera or library">
                 <Ionicons name="camera" size={24} color={theme.colors.green} />
               </TouchableOpacity>
             </View>
@@ -375,6 +375,8 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
                     <TouchableOpacity
                       style={[styles.removePhoto, { backgroundColor: theme.colors.error }]}
                       onPress={() => removePhoto(index)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove photo ${index + 1}`}
                     >
                       <Ionicons name="close" size={12} color={theme.colors.paper} />
                     </TouchableOpacity>

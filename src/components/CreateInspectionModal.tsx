@@ -178,7 +178,9 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
           reinspectBy: data.reinspect_by || undefined,
         };
         if (draft.reinspectBy && draft.plotNumber) {
-          try { await scheduleReinspectNotification(draft.plotNumber, draft.reinspectBy); } catch {}
+          await scheduleReinspectNotification(draft.plotNumber, draft.reinspectBy).catch((e) => {
+            console.warn('Failed to schedule reinspection notification:', e);
+          });
         }
         if (onSaveAndNext) {
           await onSaveAndNext(draft);
@@ -191,7 +193,9 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
           photos: selectedPhotos,
         });
         if (data.reinspect_by && selectedPlot?.number) {
-          try { await scheduleReinspectNotification(Number(selectedPlot.number), data.reinspect_by); } catch {}
+          await scheduleReinspectNotification(Number(selectedPlot.number), data.reinspect_by).catch((e) => {
+            console.warn('Failed to schedule reinspection notification:', e);
+          });
         }
         Alert.alert('Success', 'Inspection created successfully!', [
           { text: 'OK', onPress: handleClose }

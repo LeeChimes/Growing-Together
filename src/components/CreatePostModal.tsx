@@ -23,7 +23,7 @@ import { useCreatePost } from '../hooks/useCommunity';
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 
-type Post = Database['public']['Tables']['posts']['Row'];
+type Post = Database['public']['Tables']['posts']['Row'] & { is_announcement?: boolean };
 
 const postSchema = z.object({
   content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
@@ -158,7 +158,7 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
     <Modal visible={visible} animationType="slide" presentationStyle="formSheet">
       <SafeAreaView style={styles.container}>
         <View style={[styles.header, { borderBottomColor: theme.colors.grayLight }]}>
-          <TouchableOpacity onPress={handleClose}>
+          <TouchableOpacity onPress={handleClose} accessibilityRole="button" accessibilityLabel="Close post composer">
             <Ionicons name="close" size={24} color={theme.colors.charcoal} />
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.charcoal }]}>
@@ -285,6 +285,8 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
                     <TouchableOpacity
                       style={[styles.removePhoto, { backgroundColor: theme.colors.error }]}
                       onPress={() => removePhoto(index)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove photo ${index + 1}`}
                     >
                       <Ionicons name="close" size={16} color={theme.colors.paper} />
                     </TouchableOpacity>
