@@ -48,7 +48,7 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
     reset,
     formState: { errors },
   } = useForm<InspectionFormDataT>({
-    resolver: zodResolver(InspectionFormData),
+    resolver: zodResolver(InspectionFormData) as any,
     defaultValues: {
       plot_id: plotId || '',
       use_status: 'active',
@@ -407,7 +407,7 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
         <View style={styles.footer}>
           <Button
             title={isSubmitting ? 'Creating...' : 'Create Inspection'}
-            onPress={handleSubmit(onSubmit)}
+            onPress={handleSubmit(onSubmit as any)}
             loading={isSubmitting}
             disabled={!selectedPlotId}
           />

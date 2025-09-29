@@ -19,7 +19,8 @@ import {
   EmptyState,
   useTheme,
 } from '../src/design';
-import { useEvents, useEventRSVPs, useUpdateEventRSVP, useMyRSVPs } from '../src/hooks/useEvents';
+import { TextInput } from 'react-native';
+import { useEvents, useEventRSVPs, useUpdateEventRSVP, useMyRSVPs, useEventComments, useCreateEventComment } from '../src/hooks/useEvents';
 import { useEventNotifications } from '../src/hooks/useNotifications';
 import { CreateEventModal } from '../src/components/CreateEventModal';
 import { Database } from '../src/lib/database.types';
@@ -141,7 +142,7 @@ export default function EventsScreen() {
 
     return (
       <TouchableOpacity onPress={() => setSelectedEvent(event)}>
-        <Card style={[styles.eventCard, isPastEvent && styles.pastEventCard]}>
+        <Card style={[styles.eventCard as any, isPastEvent ? (styles.pastEventCard as any) : undefined]}>
           <View style={styles.eventHeader}>
             <View style={styles.eventInfo}>
               <Text style={[styles.eventTitle, { color: theme.colors.charcoal }]}>
@@ -405,6 +406,9 @@ export default function EventsScreen() {
 // Placeholder for Event Detail View
 function EventDetailView({ event, onBack }: { event: Event; onBack: () => void }) {
   const theme = useTheme();
+  const { data: comments = [] } = useEventComments(event.id);
+  const createComment = useCreateEventComment();
+  const [commentText, setCommentText] = useState('');
   
   return (
     <SafeAreaView style={styles.container}>
@@ -432,6 +436,55 @@ function EventDetailView({ event, onBack }: { event: Event; onBack: () => void }
             <Text style={[styles.label, { color: theme.colors.charcoal }]}>
               Where: {event.location}
             </Text>
+          </View>
+        </Card>
+
+        {/* Bring list */}
+        {event.bring_list && event.bring_list.length > 0 && (
+          <Card style={{ marginTop: 12 }}>
+            <Text style={[styles.label, { color: theme.colors.charcoal, marginBottom: 8 }]}>Bring list</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {event.bring_list.map((item, i) => (
+                <Tag key={i} label={item} size="small" />
+              ))}
+            </View>
+          </Card>
+        )}
+
+        {/* Comments */}
+        <Card style={{ marginTop: 12 }}>
+          <Text style={[styles.label, { color: theme.colors.charcoal, marginBottom: 8 }]}>Comments</Text>
+          {comments.length === 0 ? (
+            <Text style={{ color: theme.colors.gray }}>No comments yet.</Text>
+          ) : (
+            <View style={{ gap: 12 }}>
+              {comments.map((c) => (
+                <View key={c.id} style={{ gap: 4 }}>
+                  <Text style={{ color: theme.colors.charcoal, fontWeight: '600' }}>{c.user_id?.slice(0, 6)}</Text>
+                  <Text style={{ color: theme.colors.gray }}>{c.text}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          <View style={{ flexDirection: 'row', marginTop: 12, gap: 8 }}>
+            <View style={{ flex: 1 }}>
+              <TextInput
+                style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.charcoal }}
+                value={commentText}
+                onChangeText={setCommentText}
+                placeholder="Add a comment"
+                placeholderTextColor={theme.colors.gray}
+              />
+            </View>
+            <Button
+              title="Post"
+              onPress={async () => {
+                if (!commentText.trim()) return;
+                await createComment.mutateAsync({ eventId: event.id, text: commentText.trim() });
+                setCommentText('');
+              }}
+              size="small"
+            />
           </View>
         </Card>
       </ScrollView>

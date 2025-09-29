@@ -176,11 +176,11 @@ export const AdminDocumentsModal: React.FC<AdminDocumentsModalProps> = ({
                     <View style={styles.documentHeader}>
                       <Text style={styles.documentTitle}>{doc.title}</Text>
                       {doc.expires_at && (
-                        <Tag
-                          text={status === 'expired' ? 'Expired' : status === 'expiring' ? 'Expires Soon' : 'Valid'}
-                          variant={status === 'expired' ? 'danger' : status === 'expiring' ? 'warning' : 'success'}
-                          size="small"
-                        />
+                <Tag
+                  label={status === 'expired' ? 'Expired' : status === 'expiring' ? 'Expires Soon' : 'Valid'}
+                  variant={status === 'expired' ? 'error' : status === 'expiring' ? 'warning' : 'success'}
+                  size="small"
+                />
                       )}
                     </View>
                     

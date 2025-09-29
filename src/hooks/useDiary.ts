@@ -12,6 +12,8 @@ export const useDiaryEntries = (filters: {
   templateType?: string;
   startDate?: string;
   endDate?: string;
+  plantId?: string;
+  tag?: string;
 } = {}) => {
   const { user } = useAuthStore();
 
@@ -42,11 +44,19 @@ export const useDiaryEntries = (filters: {
         
         if (error) throw error;
         
-        // Cache the results
+        // Client-side filter for plant/tag until backend fields exist
         if (data) {
-          const processedData = data.map(item => ({
+          if (filters.plantId) {
+            data = (data as any[]).filter((e: any) => e.plant_id === filters.plantId);
+          }
+          if (filters.tag) {
+            data = (data as any[]).filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
+          }
+
+          const processedData = (data as any[]).map((item: any) => ({
             ...item,
             photos: Array.isArray(item.photos) ? JSON.stringify(item.photos) : item.photos,
+            tags: Array.isArray(item.tags) ? JSON.stringify(item.tags) : item.tags,
             sync_status: 'synced'
           }));
           await cacheOperations.upsertCache('diary_entries_cache', processedData);
@@ -56,7 +66,7 @@ export const useDiaryEntries = (filters: {
       } else {
         // Fallback to cached data
         let whereClause = `user_id = ?`;
-        let params = [user!.id];
+        const params = [user!.id];
         
         if (filters.templateType) {
           whereClause += ` AND template_type = ?`;
@@ -65,10 +75,19 @@ export const useDiaryEntries = (filters: {
         
         const cachedData = await cacheOperations.getCache('diary_entries_cache', whereClause, params);
         
-        return cachedData.map(item => ({
+        let mapped = cachedData.map(item => ({
           ...item,
           photos: typeof item.photos === 'string' ? JSON.parse(item.photos || '[]') : item.photos,
+          tags: typeof item.tags === 'string' ? JSON.parse(item.tags || '[]') : item.tags,
         }));
+
+        if (filters.plantId) {
+          mapped = mapped.filter((e: any) => e.plant_id === filters.plantId);
+        }
+        if (filters.tag) {
+          mapped = mapped.filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
+        }
+        return mapped as any;
       }
     },
     enabled: !!user,
@@ -80,11 +99,11 @@ export const useCreateDiaryEntry = () => {
   const { user } = useAuthStore();
 
   return useMutation({
-    mutationFn: async (entry: DiaryEntryInsert): Promise<DiaryEntry> => {
+    mutationFn: async (entry: Omit<DiaryEntryInsert, 'user_id' | 'id' | 'created_at' | 'updated_at'>): Promise<DiaryEntry> => {
       const entryWithUser = {
         ...entry,
         user_id: user!.id,
-        id: entry.id || crypto.randomUUID(),
+        id: crypto.randomUUID(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -92,7 +111,7 @@ export const useCreateDiaryEntry = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('diary_entries')
-          .insert(entryWithUser)
+          .insert(entryWithUser as any)
           .select()
           .single();
 
@@ -132,7 +151,7 @@ export const useUpdateDiaryEntry = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('diary_entries')
-          .update(updatedEntry)
+          .update(updatedEntry as any)
           .eq('id', id)
           .select()
           .single();
@@ -173,7 +192,6 @@ export const useDeleteDiaryEntry = () => {
         if (error) throw error;
       } else {
         // Remove from cache and add to mutation queue
-        await cacheOperations.getCache('diary_entries_cache', 'id != ?', [id]);
         await cacheOperations.addToMutationQueue('diary_entries', 'DELETE', { id });
       }
     },

@@ -22,6 +22,8 @@ export const colors = {
   warning: '#f59e0b',
   error: '#ef4444',
   info: '#3b82f6',
+  // Extended
+  background: '#f0fdf4',
 };
 
 export const radii = { 
@@ -49,6 +51,8 @@ export const typography = {
     bold: 'System',
   },
   sizes: { 
+    xl: 22,
+    lg: 18,
     h1: 28, 
     h2: 24, 
     h3: 20, 
@@ -90,5 +94,43 @@ export const shadows = {
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
+  },
+};
+
+// Backwards-compatible tokens object used by some screens/components
+export const tokens = {
+  colors: {
+    // Base colors
+    ...colors,
+    danger: colors.error,
+    background: '#f0fdf4',
+    surface: '#ffffff',
+    primary: colors.green,
+    white: '#ffffff',
+    border: '#e5e7eb',
+    text: {
+      primary: colors.charcoal,
+      secondary: colors.gray,
+    },
+  },
+  spacing,
+  typography: {
+    ...typography,
+    weights: {
+      regular: '400',
+      medium: '500',
+      semiBold: '600',
+      bold: '700',
+    } as const,
+    sizes: {
+      ...typography.sizes,
+      md: 16,
+      sm: 14,
+      xs: 12,
+      lg: 18,
+    } as const,
+  },
+  borderRadius: {
+    ...radii,
   },
 };

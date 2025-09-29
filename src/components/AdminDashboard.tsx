@@ -268,7 +268,7 @@ export function AdminDashboard({ visible, onClose }: AdminDashboardProps) {
             <View style={styles.memberActions}>
               <Button
                 title={member.is_approved ? 'Approved' : 'Approve'}
-                variant={member.is_approved ? 'success' : 'outline'}
+                variant={member.is_approved ? 'secondary' : 'outline'}
                 size="small"
                 onPress={() => handleApprovalToggle(member.id, member.is_approved)}
                 disabled={approveMemberMutation.isPending}

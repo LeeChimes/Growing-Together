@@ -1,10 +1,11 @@
 import React, { ReactNode } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
+import type { StyleProp } from 'react-native';
 import { useTheme } from './ThemeProvider';
 
 interface CardProps {
   children: ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   variant?: 'default' | 'elevated' | 'outlined';
   padding?: keyof typeof import('./tokens').spacing;
 }

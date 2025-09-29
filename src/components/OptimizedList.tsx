@@ -20,6 +20,7 @@ interface OptimizedListProps<T> extends Omit<FlatListProps<T>, 'renderItem'> {
   estimatedItemSize?: number;
   loadingComponent?: React.ReactElement;
   emptyComponent?: React.ReactElement;
+  loading?: boolean; // back-compat prop used by some screens
   onEndReachedThreshold?: number;
   maxToRenderPerBatch?: number;
   updateCellsBatchingPeriod?: number;
@@ -40,6 +41,7 @@ export function OptimizedList<T>({
   estimatedItemSize = 100,
   loadingComponent,
   emptyComponent,
+  loading,
   onEndReachedThreshold = 0.1,
   maxToRenderPerBatch = 10,
   updateCellsBatchingPeriod = 50,
@@ -86,7 +88,7 @@ export function OptimizedList<T>({
   }, [itemHeight]);
 
   // Loading state
-  if (!data && loadingComponent) {
+  if (loading && loadingComponent) {
     return loadingComponent;
   }
 
@@ -96,7 +98,7 @@ export function OptimizedList<T>({
   }
 
   // Default loading component
-  if (!data) {
+  if (loading) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.green} />

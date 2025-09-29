@@ -26,7 +26,7 @@ import { QADashboard } from '../src/components/QADashboard';
 export default function MoreScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, signOut } = useAuthStore();
+  const { user, profile, signOut } = useAuthStore();
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
@@ -492,13 +492,13 @@ export default function MoreScreen() {
           <View style={styles.profileHeader}>
             <View style={styles.profileInfo}>
               <Text style={[styles.profileName, { color: theme.colors.charcoal }]}>
-                {user?.full_name || 'Growing Together Member'}
+                {profile?.full_name || 'Growing Together Member'}
               </Text>
               <Text style={[styles.profileEmail, { color: theme.colors.gray }]}>
-                {user?.email}
+                {profile?.email || user?.email}
               </Text>
               <Text style={[styles.profileRole, { color: theme.colors.green }]}>
-                {user?.role || 'Member'} • Plot {user?.plot_number || 'N/A'}
+                {profile?.role || 'member'} • Plot {profile?.plot_number || 'N/A'}
               </Text>
             </View>
           </View>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -21,56 +21,38 @@ import {
   useTheme 
 } from '../src/design';
 import { useAuthStore } from '../src/store/authStore';
+import { useTasks } from '../src/hooks/useTasks';
+import { useEvents } from '../src/hooks/useEvents';
+import { usePosts } from '../src/hooks/useCommunity';
+import { fetchWeatherSnapshot, WeatherSnapshot } from '../src/lib/weather';
 
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { profile } = useAuthStore();
   const [refreshing, setRefreshing] = useState(false);
+  const [weather, setWeather] = useState<WeatherSnapshot | null>(null);
 
-  // Mock data - will be replaced with real data from hooks
-  const weather = {
-    temperature: 15,
-    condition: 'Partly Cloudy',
-    humidity: 68,
-    windSpeed: 12,
-  };
+  // Data hooks
+  const { data: siteTasks = [] } = useTasks({ type: 'site', completed: false });
+  const { data: events = [] } = useEvents({});
+  const { data: posts = [] } = usePosts({ limit: 3 });
 
-  const weeklyTasks = [
-    { id: '1', title: 'Water greenhouse plants', dueDate: '2024-01-15', priority: 'high' },
-    { id: '2', title: 'Check compost bins', dueDate: '2024-01-16', priority: 'medium' },
-    { id: '3', title: 'Plot inspection', dueDate: '2024-01-17', priority: 'low' },
-  ];
+  const nextEvent = events?.find(e => !e.is_cancelled) || null;
+  const latestPosts = posts || [];
 
-  const nextEvent = {
-    id: '1',
-    title: 'Weekend Work Day',
-    date: '2024-01-20',
-    time: '09:00',
-    attendees: 12,
-  };
-
-  const latestPosts = [
-    {
-      id: '1',
-      author: 'John Smith',
-      content: 'Great turnout at today\'s composting workshop! Thanks everyone who came.',
-      timestamp: '2 hours ago',
-      likes: 8,
-    },
-    {
-      id: '2',
-      author: 'Mary Johnson',
-      content: 'My tomatoes are finally starting to ripen! Any tips for extending the season?',
-      timestamp: '4 hours ago',
-      likes: 5,
-    },
-  ];
+  useEffect(() => {
+    const loadWeather = async () => {
+      const snapshot = await fetchWeatherSnapshot();
+      setWeather(snapshot);
+    };
+    loadWeather();
+  }, []);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Refresh data
-    setTimeout(() => setRefreshing(false), 2000);
+    // Re-fetch weather
+    fetchWeatherSnapshot().then(setWeather).finally(() => setRefreshing(false));
   }, []);
 
   const getPriorityColor = (priority: string) => {
@@ -90,18 +72,20 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Admin Announcement Banner */}
-        <View style={[styles.banner, { backgroundColor: theme.colors.warning + '20' }]}>
-          <Ionicons name="megaphone" size={20} color={theme.colors.warning} />
-          <View style={styles.bannerContent}>
-            <Text style={[styles.bannerTitle, { color: theme.colors.warning }]}>
-              Admin Announcement
-            </Text>
-            <Text style={[styles.bannerText, { color: theme.colors.charcoal }]}>
-              Weekend work day this Saturday 9am - bring gloves and water bottle!
-            </Text>
+        {/* Announcement Banner: show if there is a pinned post */}
+        {latestPosts?.some(p => (p as any).is_pinned) && (
+          <View style={[styles.banner, { backgroundColor: theme.colors.warning + '20' }]}>
+            <Ionicons name="megaphone" size={20} color={theme.colors.warning} />
+            <View style={styles.bannerContent}>
+              <Text style={[styles.bannerTitle, { color: theme.colors.warning }]}> 
+                Announcement
+              </Text>
+              <Text style={[styles.bannerText, { color: theme.colors.charcoal }]}> 
+                {(latestPosts.find(p => (p as any).is_pinned) as any)?.text || 'Pinned update'}
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Welcome Section */}
         <View style={styles.welcome}>
@@ -113,7 +97,7 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        {/* Weather Widget */}
+        {/* Weather Widget (cached) */}
         <Card style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardTitleRow}>
@@ -123,11 +107,11 @@ export default function HomeScreen() {
               </Text>
             </View>
             <Text style={[styles.temperature, { color: theme.colors.charcoal }]}>
-              {weather.temperature}°C
+              {weather?.temperatureC ?? '--'}°C
             </Text>
           </View>
           <Text style={[styles.weatherCondition, { color: theme.colors.gray }]}>
-            {weather.condition} • Humidity {weather.humidity}% • Wind {weather.windSpeed} km/h
+            {weather?.condition ?? '—'}{weather?.humidityPct != null ? ` • Humidity ${weather.humidityPct}%` : ''}{weather?.windKph != null ? ` • Wind ${weather.windKph} km/h` : ''}
           </Text>
         </Card>
 
@@ -195,23 +179,21 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           
-          {weeklyTasks.length > 0 ? (
+          {siteTasks.length > 0 ? (
             <View style={styles.taskList}>
-              {weeklyTasks.slice(0, 3).map((task) => (
+              {siteTasks
+                .filter(t => !t.due_date || (new Date(t.due_date) <= new Date(Date.now() + 7*24*60*60*1000)))
+                .slice(0, 3)
+                .map((task: any) => (
                 <View key={task.id} style={styles.taskItem}>
                   <View style={styles.taskContent}>
                     <Text style={[styles.taskTitle, { color: theme.colors.charcoal }]}>
                       {task.title}
                     </Text>
                     <Text style={[styles.taskDate, { color: theme.colors.gray }]}>
-                      Due {new Date(task.dueDate).toLocaleDateString()}
+                      {task.due_date ? `Due ${new Date(task.due_date).toLocaleDateString()}` : 'No due date'}
                     </Text>
                   </View>
-                  <Tag 
-                    label={task.priority} 
-                    variant={getPriorityColor(task.priority) as any}
-                    size="small"
-                  />
                 </View>
               ))}
             </View>
@@ -244,10 +226,7 @@ export default function HomeScreen() {
                   {nextEvent.title}
                 </Text>
                 <Text style={[styles.eventDate, { color: theme.colors.gray }]}>
-                  {new Date(nextEvent.date).toLocaleDateString()} at {nextEvent.time}
-                </Text>
-                <Text style={[styles.eventAttendees, { color: theme.colors.green }]}>
-                  {nextEvent.attendees} people going
+                  {new Date(nextEvent.start_date).toLocaleDateString()}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={theme.colors.gray} />
@@ -273,31 +252,26 @@ export default function HomeScreen() {
           
           {latestPosts.length > 0 ? (
             <View style={styles.postList}>
-              {latestPosts.map((post) => (
+              {latestPosts.map((post: any) => (
                 <TouchableOpacity 
                   key={post.id} 
                   style={styles.postItem}
                   onPress={() => router.push('/community')}
                 >
-                  <Avatar name={post.author} size="small" />
+                  <Avatar name={post.author?.full_name || 'Member'} size="small" />
                   <View style={styles.postContent}>
                     <View style={styles.postHeader}>
                       <Text style={[styles.postAuthor, { color: theme.colors.charcoal }]}>
-                        {post.author}
-                      </Text>
-                      <Text style={[styles.postTime, { color: theme.colors.gray }]}>
-                        {post.timestamp}
+                        {post.author?.full_name || 'Member'}
                       </Text>
                     </View>
                     <Text style={[styles.postText, { color: theme.colors.charcoal }]}>
-                      {post.content}
+                      {post.text}
                     </Text>
                     <View style={styles.postStats}>
                       <View style={styles.postStat}>
                         <Ionicons name="heart" size={14} color={theme.colors.error} />
-                        <Text style={[styles.postStatText, { color: theme.colors.gray }]}>
-                          {post.likes}
-                        </Text>
+                        <Text style={[styles.postStatText, { color: theme.colors.gray }]}>0</Text>
                       </View>
                     </View>
                   </View>

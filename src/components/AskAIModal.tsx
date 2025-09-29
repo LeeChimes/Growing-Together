@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Button, Card, Tag, useTheme } from '../design';
+import { useCreateTask } from '../hooks/useTasks';
 import { useAIPlantAdvice, useAIPlantIdentification } from '../hooks/useAI';
 import { Plant } from '../data/plants';
 
@@ -48,6 +49,7 @@ export function AskAIModal({ visible, onClose, plant }: AskAIModalProps) {
 
   const adviceMutation = useAIPlantAdvice();
   const identifyMutation = useAIPlantIdentification();
+  const createTask = useCreateTask();
 
   const handleClose = () => {
     setQuestion('');
@@ -115,6 +117,12 @@ export function AskAIModal({ visible, onClose, plant }: AskAIModalProps) {
       };
       setChatHistory(prev => [...prev, aiMessage]);
 
+      // If suggestions returned, show an action to add them as tasks
+      if (response.suggestions && response.suggestions.length > 0) {
+        // create lightweight tasks when user taps a button below
+        setPendingSuggestions(response.suggestions);
+      }
+
     } catch (error) {
       Alert.alert('Error', 'Failed to get AI response');
     }
@@ -158,6 +166,27 @@ export function AskAIModal({ visible, onClose, plant }: AskAIModalProps) {
       hour: '2-digit', 
       minute: '2-digit' 
     });
+  };
+
+  const [pendingSuggestions, setPendingSuggestions] = useState<string[] | null>(null);
+
+  const handleAddSuggestionsAsTasks = async () => {
+    if (!pendingSuggestions || pendingSuggestions.length === 0) return;
+    try {
+      for (const suggestion of pendingSuggestions) {
+        await createTask.mutateAsync({
+          title: suggestion,
+          description: plant ? `AI task for ${plant.name}` : 'AI-generated task',
+          type: 'personal',
+          due_date: null,
+          assigned_to: undefined,
+        } as any);
+      }
+      setPendingSuggestions(null);
+      Alert.alert('Tasks created', 'AI suggestions added to your tasks');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to create tasks');
+    }
   };
 
   return (
@@ -313,6 +342,24 @@ export function AskAIModal({ visible, onClose, plant }: AskAIModalProps) {
 
           {/* Input Area */}
           <View style={[styles.inputContainer, { borderTopColor: theme.colors.grayLight }]}>
+            {pendingSuggestions && pendingSuggestions.length > 0 && (
+              <View style={{ marginBottom: 12 }}>
+                <Text style={{ color: theme.colors.charcoal, marginBottom: 8, fontWeight: '600' }}>
+                  Suggested steps
+                </Text>
+                {pendingSuggestions.map((s, i) => (
+                  <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                    <Ionicons name="checkmark-circle" size={16} color={theme.colors.green} />
+                    <Text style={{ marginLeft: 8, color: theme.colors.charcoal, flex: 1 }}>{s}</Text>
+                  </View>
+                ))}
+                <Button 
+                  title="Add as tasks"
+                  onPress={handleAddSuggestionsAsTasks}
+                  loading={createTask.isPending}
+                />
+              </View>
+            )}
             {mode === 'advice' ? (
               <View style={styles.inputRow}>
                 <TouchableOpacity

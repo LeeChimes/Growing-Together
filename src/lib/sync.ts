@@ -111,7 +111,18 @@ class SyncManagerImpl implements SyncManager {
           
         } catch (error) {
           console.error(`Failed to process mutation ${mutation.id}:`, error);
-          // Could implement retry logic here
+          const errMessage = error instanceof Error ? error.message : String(error);
+          // Retry with exponential backoff until max_retries is reached
+          if (typeof mutation.max_retries === 'number' && mutation.retry_count >= mutation.max_retries) {
+            // Give up on this mutation; remove to avoid blocking the queue
+            await cacheOperations.removeMutation(mutation.id);
+          } else {
+            await cacheOperations.bumpMutationRetryWithBackoff(
+              mutation.id,
+              mutation.retry_count || 0,
+              errMessage
+            );
+          }
         }
       }
     } catch (error) {

@@ -259,7 +259,7 @@ export default function RulesScreen() {
               
               {hasAcknowledged && (
                 <View style={styles.acknowledgedSection}>
-                  <Tag text="✓ Acknowledged" variant="success" />
+                  <Tag label="✓ Acknowledged" variant="success" />
                   <Text style={styles.acknowledgedDate}>
                     {new Date(acknowledgmentStatus!.acknowledgment!.acknowledged_at).toLocaleDateString()}
                   </Text>

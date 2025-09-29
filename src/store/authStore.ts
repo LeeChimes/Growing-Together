@@ -27,56 +27,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signIn: async (email: string, password: string) => {
     set({ isLoading: true });
-    try {
-      const { user } = await authHelpers.signIn(email, password);
-      set({ user });
-      await get().refreshProfile();
-    } catch (error) {
-      throw error;
-    } finally {
-      set({ isLoading: false });
-    }
+    const { user } = await authHelpers.signIn(email, password);
+    set({ user });
+    await get().refreshProfile();
+    set({ isLoading: false });
   },
 
   signUp: async (email: string, password: string, joinCode: string, fullName: string) => {
     set({ isLoading: true });
-    try {
-      const { user } = await authHelpers.signUpWithJoinCode(email, password, joinCode);
-      
-      if (user) {
-        // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email!,
-            full_name: fullName,
-            role: user.user_metadata.role || 'member',
-            is_approved: false,
-          });
-          
-        if (profileError) throw profileError;
+    const { user } = await authHelpers.signUpWithJoinCode(email, password, joinCode);
+    
+    if (user) {
+      // Create profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          full_name: fullName,
+          role: user.user_metadata.role || 'member',
+          is_approved: false,
+        });
         
-        set({ user });
-        await get().refreshProfile();
-      }
-    } catch (error) {
-      throw error;
-    } finally {
-      set({ isLoading: false });
+      if (profileError) throw profileError;
+      
+      set({ user });
+      await get().refreshProfile();
     }
+    set({ isLoading: false });
   },
 
   signOut: async () => {
     set({ isLoading: true });
-    try {
-      await authHelpers.signOut();
-      set({ user: null, profile: null });
-    } catch (error) {
-      throw error;
-    } finally {
-      set({ isLoading: false });
-    }
+    await authHelpers.signOut();
+    set({ user: null, profile: null });
+    set({ isLoading: false });
   },
 
   refreshProfile: async () => {

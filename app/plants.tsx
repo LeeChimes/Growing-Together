@@ -44,9 +44,10 @@ export default function PlantLibraryScreen() {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'difficulty':
-          const difficultyOrder = { 'beginner': 1, 'intermediate': 2, 'advanced': 3 };
+        case 'difficulty': {
+          const difficultyOrder = { 'beginner': 1, 'intermediate': 2, 'advanced': 3 } as const;
           return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+        }
         case 'season':
           return Math.min(...a.sowingMonths) - Math.min(...b.sowingMonths);
         default:
