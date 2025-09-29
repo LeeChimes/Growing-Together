@@ -96,8 +96,8 @@ export default function DocumentsScreen() {
               </Text>
               <View style={styles.documentMeta}>
                 <Tag 
-                  text={DOCUMENT_TYPE_LABELS[document.type]} 
-                  variant="outline" 
+                  label={DOCUMENT_TYPE_LABELS[document.type]} 
+                  variant="default" 
                   size="small"
                 />
                 <Text style={styles.documentSize}>
@@ -180,8 +180,8 @@ export default function DocumentsScreen() {
                   {document.title}
                 </Text>
                 <Tag 
-                  text={doc.status === 'expired' ? 'Expired' : 'Expires Soon'} 
-                  variant={doc.status === 'expired' ? 'danger' : 'warning'} 
+                  label={doc.status === 'expired' ? 'Expired' : 'Expires Soon'} 
+                  variant={doc.status === 'expired' ? 'error' : 'warning'} 
                   size="small"
                 />
               </View>
@@ -358,11 +358,11 @@ const DocumentActionsModal: React.FC<DocumentActionsModalProps> = ({
               <Text style={styles.documentPreviewTitle}>{document.title}</Text>
               <Text style={styles.documentPreviewFileName}>{document.file_name}</Text>
               <View style={styles.documentPreviewMeta}>
-                <Tag text={DOCUMENT_TYPE_LABELS[document.type]} variant="outline" size="small" />
+                <Tag label={DOCUMENT_TYPE_LABELS[document.type]} variant="default" size="small" />
                 {document.expires_at && (
                   <Tag 
-                    text={status === 'expired' ? 'Expired' : status === 'expiring' ? 'Expires Soon' : 'Valid'} 
-                    variant={status === 'expired' ? 'danger' : status === 'expiring' ? 'warning' : 'success'} 
+                    label={status === 'expired' ? 'Expired' : status === 'expiring' ? 'Expires Soon' : 'Valid'} 
+                    variant={status === 'expired' ? 'error' : status === 'expiring' ? 'warning' : 'success'} 
                     size="small"
                   />
                 )}
@@ -374,15 +374,13 @@ const DocumentActionsModal: React.FC<DocumentActionsModalProps> = ({
             <Button
               title="View/Download"
               onPress={onDownload}
-              icon="download-outline"
               style={styles.actionButton}
             />
             
             <Button
               title="Delete Document"
               onPress={onDelete}
-              variant="danger"
-              icon="trash-outline"
+              variant="outline"
               style={styles.actionButton}
             />
           </View>

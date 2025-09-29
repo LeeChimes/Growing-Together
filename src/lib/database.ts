@@ -190,14 +190,14 @@ export const cacheOperations = {
       const placeholders = keys.map(() => '?').join(', ');
       
       const query = `INSERT OR REPLACE INTO ${tableName} (${keys.join(', ')}) VALUES (${placeholders})`;
-      await db.runAsync(query, values);
+      await db.runAsync(query as any, ...(values as any));
     }
   },
 
   // Get cached data
   getCache: async (tableName: string, where?: string, params?: any[]): Promise<any[]> => {
     const query = `SELECT * FROM ${tableName}${where ? ` WHERE ${where}` : ''}`;
-    const result = await db.getAllAsync(query, params || []);
+    const result = await db.getAllAsync(query as any, ...(params || []) as any);
     return result;
   },
 

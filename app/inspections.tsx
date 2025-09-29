@@ -83,13 +83,13 @@ export default function InspectionsScreen() {
 
           <View style={styles.statusRow}>
             <Tag
-              text={USE_STATUS_LABELS[inspection.use_status as keyof typeof USE_STATUS_LABELS]}
-              variant="outline"
+              label={USE_STATUS_LABELS[inspection.use_status as keyof typeof USE_STATUS_LABELS]}
+              variant="default"
               size="small"
             />
             <Tag
-              text={UPKEEP_LABELS[inspection.upkeep as keyof typeof UPKEEP_LABELS]}
-              variant="outline"
+              label={UPKEEP_LABELS[inspection.upkeep as keyof typeof UPKEEP_LABELS]}
+              variant="default"
               size="small"
             />
           </View>
@@ -97,8 +97,8 @@ export default function InspectionsScreen() {
           {inspection.action !== 'none' && (
             <View style={styles.actionRow}>
               <Tag
-                text={ACTION_LABELS[inspection.action as keyof typeof ACTION_LABELS]}
-                variant={actionSeverity === 'critical' ? 'danger' : actionSeverity === 'high' ? 'warning' : 'default'}
+                label={ACTION_LABELS[inspection.action as keyof typeof ACTION_LABELS]}
+                variant={actionSeverity === 'critical' ? 'error' : actionSeverity === 'high' ? 'warning' : 'default'}
                 size="small"
               />
             </View>

@@ -4,9 +4,8 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  ViewStyle,
-  TextStyle,
 } from 'react-native';
+import type { ViewStyle, TextStyle, StyleProp } from 'react-native';
 import { useTheme } from './ThemeProvider';
 
 interface ListItemProps {
@@ -15,7 +14,9 @@ interface ListItemProps {
   onPress?: () => void;
   leftContent?: ReactNode;
   rightContent?: ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  showChevron?: boolean;
+  icon?: React.ReactNode;
   disabled?: boolean;
 }
 
@@ -27,6 +28,8 @@ export function ListItem({
   rightContent,
   style,
   disabled = false,
+  showChevron = false,
+  icon,
 }: ListItemProps) {
   const theme = useTheme();
 
@@ -59,7 +62,7 @@ export function ListItem({
     lineHeight: theme.typography.lineHeights.normal * theme.typography.sizes.small,
   };
 
-  const Container = onPress ? TouchableOpacity : View;
+  const Container: any = onPress ? TouchableOpacity : View;
 
   return (
     <Container
@@ -68,7 +71,7 @@ export function ListItem({
       disabled={disabled}
       activeOpacity={onPress ? 0.7 : 1}
     >
-      {leftContent}
+      {leftContent ?? icon}
       
       <View style={contentStyle}>
         <Text style={titleStyle}>{title}</Text>
@@ -76,6 +79,9 @@ export function ListItem({
       </View>
       
       {rightContent}
+      {showChevron && (
+        <Text style={{ color: theme.colors.gray }}>{'>'}</Text>
+      )}
     </Container>
   );
 }

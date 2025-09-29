@@ -19,6 +19,7 @@ import {
   EmptyState,
   useTheme,
 } from '../src/design';
+import { TextInput } from 'react-native';
 import { useEvents, useEventRSVPs, useUpdateEventRSVP, useMyRSVPs, useEventComments, useCreateEventComment } from '../src/hooks/useEvents';
 import { useEventNotifications } from '../src/hooks/useNotifications';
 import { CreateEventModal } from '../src/components/CreateEventModal';
@@ -141,7 +142,7 @@ export default function EventsScreen() {
 
     return (
       <TouchableOpacity onPress={() => setSelectedEvent(event)}>
-        <Card style={[styles.eventCard, isPastEvent && styles.pastEventCard]}>
+        <Card style={[styles.eventCard as any, isPastEvent ? (styles.pastEventCard as any) : undefined]}>
           <View style={styles.eventHeader}>
             <View style={styles.eventInfo}>
               <Text style={[styles.eventTitle, { color: theme.colors.charcoal }]}>

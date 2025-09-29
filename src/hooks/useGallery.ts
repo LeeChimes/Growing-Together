@@ -124,11 +124,11 @@ export const useCreateAlbum = () => {
   const { user } = useAuthStore();
 
   return useMutation({
-    mutationFn: async (album: AlbumInsert): Promise<Album> => {
+    mutationFn: async (album: Omit<AlbumInsert, 'created_by' | 'id' | 'created_at' | 'updated_at'>): Promise<Album> => {
       const albumWithUser = {
         ...album,
         created_by: user!.id,
-        id: album.id || crypto.randomUUID(),
+        id: crypto.randomUUID(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -136,7 +136,7 @@ export const useCreateAlbum = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('albums')
-          .insert(albumWithUser)
+          .insert(albumWithUser as any)
           .select()
           .single();
 
@@ -356,13 +356,14 @@ export const useGalleryStats = () => {
   return useQuery({
     queryKey: ['gallery-stats', user?.id],
     queryFn: async () => {
-      const { data: albums } = await useAlbums().queryFn();
-      const { data: photos } = await usePhotos().queryFn();
+      // Prefer caches for a quick stats snapshot; callers also render albums/photos separately
+      const albums = await cacheOperations.getCache('albums_cache');
+      const photos = await cacheOperations.getCache('photos_cache');
 
-      const myAlbums = albums.filter(album => album.created_by === user?.id);
-      const myPhotos = photos.filter(photo => photo.uploaded_by === user?.id);
+      const myAlbums = albums.filter((album: any) => album.created_by === user?.id);
+      const myPhotos = photos.filter((photo: any) => photo.uploaded_by === user?.id);
       const totalPhotos = photos.length;
-      const publicAlbums = albums.filter(album => !album.is_private);
+      const publicAlbums = albums.filter((album: any) => !album.is_private);
 
       return {
         myAlbums: myAlbums.length,

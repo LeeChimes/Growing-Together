@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from './ThemeProvider';
 
 interface TagProps {
-  label: string;
+  label?: string;
+  text?: string; // backwards-compat
   variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
   size?: 'small' | 'medium';
   style?: ViewStyle;
@@ -11,6 +12,7 @@ interface TagProps {
 
 export function Tag({ 
   label, 
+  text,
   variant = 'default', 
   size = 'medium',
   style 
@@ -98,7 +100,7 @@ export function Tag({
 
   return (
     <View style={[getTagStyle(), style]}>
-      <Text style={getTextStyle()}>{label}</Text>
+      <Text style={getTextStyle()}>{label ?? text}</Text>
     </View>
   );
 }

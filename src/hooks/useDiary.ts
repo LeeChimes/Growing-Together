@@ -40,23 +40,23 @@ export const useDiaryEntries = (filters: {
           query = query.lte('created_at', filters.endDate);
         }
 
-        let { data, error } = await query;
+        const { data, error } = await query;
         
         if (error) throw error;
         
         // Client-side filter for plant/tag until backend fields exist
         if (data) {
           if (filters.plantId) {
-            data = data.filter((e: any) => e.plant_id === filters.plantId);
+            data = (data as any[]).filter((e: any) => e.plant_id === filters.plantId);
           }
           if (filters.tag) {
-            data = data.filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
+            data = (data as any[]).filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
           }
 
-          const processedData = data.map(item => ({
+          const processedData = (data as any[]).map((item: any) => ({
             ...item,
             photos: Array.isArray(item.photos) ? JSON.stringify(item.photos) : item.photos,
-            tags: Array.isArray((item as any).tags) ? JSON.stringify((item as any).tags) : (item as any).tags,
+            tags: Array.isArray(item.tags) ? JSON.stringify(item.tags) : item.tags,
             sync_status: 'synced'
           }));
           await cacheOperations.upsertCache('diary_entries_cache', processedData);
@@ -66,7 +66,7 @@ export const useDiaryEntries = (filters: {
       } else {
         // Fallback to cached data
         let whereClause = `user_id = ?`;
-        let params = [user!.id];
+        const params = [user!.id];
         
         if (filters.templateType) {
           whereClause += ` AND template_type = ?`;
@@ -99,11 +99,11 @@ export const useCreateDiaryEntry = () => {
   const { user } = useAuthStore();
 
   return useMutation({
-    mutationFn: async (entry: DiaryEntryInsert): Promise<DiaryEntry> => {
+    mutationFn: async (entry: Omit<DiaryEntryInsert, 'user_id' | 'id' | 'created_at' | 'updated_at'>): Promise<DiaryEntry> => {
       const entryWithUser = {
         ...entry,
         user_id: user!.id,
-        id: entry.id || crypto.randomUUID(),
+        id: crypto.randomUUID(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -111,7 +111,7 @@ export const useCreateDiaryEntry = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('diary_entries')
-          .insert(entryWithUser)
+          .insert(entryWithUser as any)
           .select()
           .single();
 
@@ -151,7 +151,7 @@ export const useUpdateDiaryEntry = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('diary_entries')
-          .update(updatedEntry)
+          .update(updatedEntry as any)
           .eq('id', id)
           .select()
           .single();

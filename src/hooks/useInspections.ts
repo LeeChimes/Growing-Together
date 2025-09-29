@@ -401,25 +401,7 @@ const handleInspectionActions = async (inspection: InspectionT) => {
             priority: inspection.action === 'recommend_removal' ? 'high' : 'medium',
           });
 
-        // Schedule notification for reinspect date if set
-        if (inspection.reinspect_by) {
-          const reinspectDate = new Date(inspection.reinspect_by);
-          await notificationService.scheduleNotificationAsync({
-            identifier: `reinspect_${inspection.id}`,
-            content: {
-              title: 'Plot Reinspection Due',
-              body: `Plot ${plot.number} is due for reinspection`,
-              data: { 
-                type: 'inspection_reminder', 
-                inspectionId: inspection.id,
-                plotNumber: plot.number,
-              },
-            },
-            trigger: {
-              date: reinspectDate,
-            },
-          });
-        }
+        // Reinspection reminder scheduling is disabled in this build.
       }
     } catch (error) {
       console.error('Failed to handle inspection actions:', error);

@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     padding: tokens.spacing.md,
   },
   previewH1: {
-    fontSize: tokens.typography.sizes.xxl,
+          fontSize: tokens.typography.sizes.xl,
     fontWeight: tokens.typography.weights.bold,
     color: tokens.colors.text.primary,
     marginVertical: tokens.spacing.md,

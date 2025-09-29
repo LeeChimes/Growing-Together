@@ -39,7 +39,7 @@ export const usePosts = (filters: {
         
         // Cache the results
         if (data) {
-          const processedData = data.map(item => ({
+          const processedData = (data as any[]).map((item: any) => ({
             ...item,
             photos: Array.isArray(item.photos) ? JSON.stringify(item.photos) : item.photos,
             sync_status: 'synced'
@@ -47,7 +47,7 @@ export const usePosts = (filters: {
           await cacheOperations.upsertCache('posts_cache', processedData);
         }
         
-        return data?.map(post => ({
+        return (data as any[])?.map((post: any) => ({
           ...post,
           author: post.profiles,
         })) || [];
@@ -73,11 +73,11 @@ export const useCreatePost = () => {
   const { user } = useAuthStore();
 
   return useMutation({
-    mutationFn: async (post: PostInsert): Promise<Post> => {
+    mutationFn: async (post: Omit<PostInsert, 'user_id' | 'id' | 'created_at' | 'updated_at' | 'is_pinned'>): Promise<Post> => {
       const postWithUser = {
         ...post,
         user_id: user!.id,
-        id: post.id || crypto.randomUUID(),
+        id: crypto.randomUUID(),
         is_pinned: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -86,7 +86,7 @@ export const useCreatePost = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('posts')
-          .insert(postWithUser)
+          .insert(postWithUser as any)
           .select()
           .single();
 
@@ -126,7 +126,7 @@ export const useUpdatePost = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('posts')
-          .update(updatedPost)
+          .update(updatedPost as any)
           .eq('id', id)
           .select()
           .single();

@@ -103,7 +103,7 @@ export const RulesStatsModal: React.FC<RulesStatsModalProps> = ({
               <View style={styles.rulesInfo}>
                 <View style={styles.rulesInfoRow}>
                   <Text style={styles.rulesInfoLabel}>Version:</Text>
-                  <Tag text={`v${rules.version}`} variant="primary" size="small" />
+                  <Tag label={`v${rules.version}`} variant="default" size="small" />
                 </View>
                 
                 <View style={styles.rulesInfoRow}>

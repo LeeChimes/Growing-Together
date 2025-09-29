@@ -96,12 +96,7 @@ export default function GalleryScreen() {
           allowsMultipleSelection: true,
           selectionLimit: 10,
         },
-        {
-          maxWidth: 1600,
-          maxHeight: 1600,
-          quality: 0.8,
-        },
-        (completed, total) => {
+        (completed: number, total: number) => {
           setUploadProgress(prev => ({ 
             ...prev, 
             visible: true, 

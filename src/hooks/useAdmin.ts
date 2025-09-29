@@ -80,7 +80,7 @@ export const useCreateJoinCode = () => {
       if (await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('join_codes')
-          .insert(newJoinCode)
+          .insert(newJoinCode as any)
           .select()
           .single();
 
@@ -115,7 +115,7 @@ export const useToggleJoinCode = () => {
       if (await syncManager.isOnline()) {
         const { error } = await supabase
           .from('join_codes')
-          .update({ is_active: isActive })
+          .update({ is_active: isActive } as any)
           .eq('id', id);
 
         if (error) throw error;
@@ -141,7 +141,7 @@ export const useApproveMember = () => {
       if (await syncManager.isOnline()) {
         const { error } = await supabase
           .from('profiles')
-          .update({ is_approved: approved })
+          .update({ is_approved: approved } as any)
           .eq('id', userId);
 
         if (error) throw error;
@@ -167,7 +167,7 @@ export const useUpdateMemberRole = () => {
       if (await syncManager.isOnline()) {
         const { error } = await supabase
           .from('profiles')
-          .update({ role })
+          .update({ role } as any)
           .eq('id', userId);
 
         if (error) throw error;
@@ -195,8 +195,7 @@ export const useExportData = () => {
       const exportData: any = {};
 
       switch (dataType) {
-        case 'all':
-          // Export all data
+        case 'all': {
           const [members, posts, events, tasks, diary] = await Promise.all([
             supabase.from('profiles').select('*'),
             supabase.from('posts').select('*, profiles(full_name, email)'),
@@ -211,39 +210,45 @@ export const useExportData = () => {
           exportData.tasks = tasks.data;
           exportData.diary_entries = diary.data;
           break;
+        }
 
-        case 'members':
+        case 'members': {
           const { data: membersData } = await supabase.from('profiles').select('*');
           exportData.members = membersData;
           break;
+        }
 
-        case 'posts':
+        case 'posts': {
           const { data: postsData } = await supabase
             .from('posts')
             .select('*, profiles(full_name, email)');
           exportData.posts = postsData;
           break;
+        }
 
-        case 'events':
+        case 'events': {
           const { data: eventsData } = await supabase
             .from('events')
             .select('*, profiles(full_name, email)');
           exportData.events = eventsData;
           break;
+        }
 
-        case 'tasks':
+        case 'tasks': {
           const { data: tasksData } = await supabase
             .from('tasks')
             .select('*, profiles(full_name, email)');
           exportData.tasks = tasksData;
           break;
+        }
 
-        case 'diary':
+        case 'diary': {
           const { data: diaryData } = await supabase
             .from('diary_entries')
             .select('*, profiles(full_name, email)');
           exportData.diary_entries = diaryData;
           break;
+        }
       }
 
       // Add metadata
@@ -339,9 +344,9 @@ export const useAdminStats = () => {
       ]);
 
       return {
-        totalMembers: members.data?.length || 0,
-        pendingApprovals: members.data?.filter(m => !m.is_approved).length || 0,
-        activeJoinCodes: joinCodes.data?.filter(j => j.is_active).length || 0,
+        totalMembers: (members.data as any)?.length || 0,
+        pendingApprovals: (members.data as any)?.filter((m: any) => !m.is_approved).length || 0,
+        activeJoinCodes: (joinCodes.data as any)?.filter((j: any) => j.is_active).length || 0,
         totalPosts: posts.data?.length || 0,
         totalEvents: events.data?.length || 0,
         totalTasks: tasks.data?.length || 0,

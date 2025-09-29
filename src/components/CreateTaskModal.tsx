@@ -139,7 +139,7 @@ export function CreateTaskModal({ visible, onClose, task, defaultType }: CreateT
         type: selectedType,
         assigned_to: selectedType === 'personal' ? profile?.id : null,
         due_date: data.due_date || null,
-      };
+      } as any;
 
       await createMutation.mutateAsync(taskData);
       handleClose();

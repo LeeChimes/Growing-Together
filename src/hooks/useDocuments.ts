@@ -85,23 +85,23 @@ export const useUsersWithDocuments = () => {
           email,
           plot_number,
           user_documents(id, type, expires_at)
-        `)
+        ` as any)
         .order('full_name', { ascending: true });
 
       if (error) throw error;
 
       // Process the data to include document statistics
-      return (data || []).map(profile => {
-        const documents = profile.user_documents || [];
-        const contractDoc = documents.find(doc => doc.type === 'contract');
-        const idDoc = documents.find(doc => doc.type === 'id');
-        const otherDocs = documents.filter(doc => doc.type === 'other');
+      return (data as any[] || []).map((profile: any) => {
+        const documents: any[] = profile.user_documents || [];
+        const contractDoc = documents.find((doc: any) => doc.type === 'contract');
+        const idDoc = documents.find((doc: any) => doc.type === 'id');
+        const otherDocs = documents.filter((doc: any) => doc.type === 'other');
 
         // Check expiry status
-        const expiringDocs = documents.filter(doc => 
+        const expiringDocs = documents.filter((doc: any) => 
           doc.expires_at && getDocumentStatus(doc.expires_at) === 'expiring'
         );
-        const expiredDocs = documents.filter(doc => 
+        const expiredDocs = documents.filter((doc: any) => 
           doc.expires_at && getDocumentStatus(doc.expires_at) === 'expired'
         );
 
@@ -189,7 +189,7 @@ export const useUploadDocument = () => {
 
         const { data: result, error } = await supabase
           .from('user_documents')
-          .insert(documentRecord)
+          .insert(documentRecord as any)
           .select()
           .single();
 

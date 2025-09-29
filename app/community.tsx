@@ -137,8 +137,8 @@ export default function CommunityScreen() {
         <View style={styles.postHeader}>
           <View style={styles.authorInfo}>
             <Avatar 
-              name={post.author?.full_name} 
-              imageUri={post.author?.avatar_url} 
+              name={post.author?.full_name || 'Member'} 
+              imageUri={post.author?.avatar_url || null} 
               size="medium" 
             />
             <View style={styles.authorDetails}>

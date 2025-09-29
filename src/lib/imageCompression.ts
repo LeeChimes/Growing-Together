@@ -191,7 +191,7 @@ export class ImageCompressionService {
       
       // Determine compression settings based on image characteristics
       let quality = 0.8;
-      let maxDimension = 1600;
+      const maxDimension = 1600;
       
       // Higher compression for very large images
       if (originalInfo.width > 2000 || originalInfo.height > 2000) {

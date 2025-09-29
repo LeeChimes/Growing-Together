@@ -26,7 +26,7 @@ export const useTasks = (filters: {
             assignee:profiles!tasks_assigned_to_fkey(full_name, avatar_url),
             creator:profiles!tasks_created_by_fkey(full_name)
           `)
-          .order('due_date', { ascending: true, nullsLast: true })
+          .order('due_date', { ascending: true })
           .order('created_at', { ascending: false });
 
         if (filters.type) {
@@ -59,7 +59,7 @@ export const useTasks = (filters: {
       } else {
         // Fallback to cached data
         let whereClause = '1=1';
-        let params: any[] = [];
+        const params: any[] = [];
         
         if (filters.type) {
           whereClause += ' AND type = ?';
@@ -224,18 +224,15 @@ export const useMyTasks = () => {
 
 export const useTaskStats = () => {
   const { user } = useAuthStore();
+  const { data: tasks = [] } = useTasks();
 
   return useQuery({
-    queryKey: ['task-stats', user?.id],
+    queryKey: ['task-stats', user?.id, tasks?.length],
     queryFn: async () => {
-      const { data: allTasks } = await useTasks().queryFn();
-      
-      const myTasks = allTasks.filter(task => task.assigned_to === user?.id);
-      const completed = myTasks.filter(task => task.is_completed);
-      const pending = myTasks.filter(task => !task.is_completed);
-      const overdue = pending.filter(task => 
-        task.due_date && new Date(task.due_date) < new Date()
-      );
+      const myTasks = tasks.filter((task: any) => task.assigned_to === user?.id);
+      const completed = myTasks.filter((task: any) => task.is_completed);
+      const pending = myTasks.filter((task: any) => !task.is_completed);
+      const overdue = pending.filter((task: any) => task.due_date && new Date(task.due_date) < new Date());
 
       return {
         total: myTasks.length,
@@ -245,5 +242,6 @@ export const useTaskStats = () => {
         completionRate: myTasks.length > 0 ? Math.round((completed.length / myTasks.length) * 100) : 0,
       };
     },
+    enabled: !!user,
   });
 };

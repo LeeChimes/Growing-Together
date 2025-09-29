@@ -146,7 +146,7 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
         ...data,
         photos,
         template_type: selectedTemplate,
-      };
+      } as any;
 
       if (entry) {
         await updateMutation.mutateAsync({ id: entry.id, updates: entryData });

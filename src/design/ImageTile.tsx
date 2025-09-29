@@ -43,7 +43,7 @@ export function ImageTile({
     resizeMode: 'cover',
   };
 
-  const Container = onPress ? TouchableOpacity : View;
+  const Container: any = onPress ? TouchableOpacity : View;
 
   return (
     <Container

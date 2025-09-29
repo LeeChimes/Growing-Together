@@ -106,7 +106,7 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
       const postData = {
         ...data,
         photos,
-      };
+      } as any;
 
       await createMutation.mutateAsync(postData);
       handleClose();

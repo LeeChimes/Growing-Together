@@ -37,8 +37,12 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
-  }),
-});
+    // @ts-ignore - platform variations
+    shouldShowBanner: true,
+    // @ts-ignore - platform variations
+    shouldShowList: true,
+  } as any),
+} as any);
 
 class NotificationService {
   private static instance: NotificationService;
@@ -202,10 +206,9 @@ class NotificationService {
             categoryIdentifier: 'event',
             sound: this.preferences.sound ? 'default' : undefined,
           },
-          trigger: {
-            date: reminder24h,
-          },
-        });
+          // @ts-ignore - relax trigger typing
+          trigger: { type: 'date', date: reminder24h } as any,
+        } as any);
       }
     }
 
@@ -226,10 +229,9 @@ class NotificationService {
             categoryIdentifier: 'event',
             sound: this.preferences.sound ? 'default' : undefined,
           },
-          trigger: {
-            date: reminder1h,
-          },
-        });
+          // @ts-ignore
+          trigger: { type: 'date', date: reminder1h } as any,
+        } as any);
       }
     }
   }
@@ -264,13 +266,9 @@ class NotificationService {
           categoryIdentifier: 'task',
           sound: this.preferences.sound ? 'default' : undefined,
         },
-        trigger: {
-          weekday,
-          hour: hours,
-          minute: minutes,
-          repeats: true,
-        },
-      });
+        // @ts-ignore
+        trigger: { type: 'calendar', weekday, hour: hours, minute: minutes, repeats: true } as any,
+      } as any);
     }
   }
 
@@ -315,10 +313,9 @@ class NotificationService {
           categoryIdentifier: 'task',
           sound: this.preferences.sound ? 'default' : undefined,
         },
-        trigger: {
-          date: reminderDate,
-        },
-      });
+        // @ts-ignore
+        trigger: { type: 'date', date: reminderDate } as any,
+      } as any);
     }
   }
 

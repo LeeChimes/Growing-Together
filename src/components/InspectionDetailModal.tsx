@@ -162,16 +162,16 @@ ${inspection.reinspect_by ? `Reinspect by: ${new Date(inspection.reinspect_by).t
                 <View style={styles.assessmentItem}>
                   <Text style={styles.assessmentLabel}>Use Status</Text>
                   <Tag
-                    text={USE_STATUS_LABELS[inspection.use_status as keyof typeof USE_STATUS_LABELS]}
-                    variant={inspection.use_status === 'active' ? 'success' : inspection.use_status === 'partial' ? 'warning' : 'danger'}
+                    label={USE_STATUS_LABELS[inspection.use_status as keyof typeof USE_STATUS_LABELS]}
+                    variant={inspection.use_status === 'active' ? 'success' : inspection.use_status === 'partial' ? 'warning' : 'error'}
                   />
                 </View>
                 
                 <View style={styles.assessmentItem}>
                   <Text style={styles.assessmentLabel}>Upkeep</Text>
                   <Tag
-                    text={UPKEEP_LABELS[inspection.upkeep as keyof typeof UPKEEP_LABELS]}
-                    variant={inspection.upkeep === 'good' ? 'success' : inspection.upkeep === 'fair' ? 'warning' : 'danger'}
+                    label={UPKEEP_LABELS[inspection.upkeep as keyof typeof UPKEEP_LABELS]}
+                    variant={inspection.upkeep === 'good' ? 'success' : inspection.upkeep === 'fair' ? 'warning' : 'error'}
                   />
                 </View>
               </View>
@@ -180,9 +180,9 @@ ${inspection.reinspect_by ? `Reinspect by: ${new Date(inspection.reinspect_by).t
                 <View style={styles.actionSection}>
                   <Text style={styles.assessmentLabel}>Action Required</Text>
                   <Tag
-                    text={ACTION_LABELS[inspection.action as keyof typeof ACTION_LABELS]}
+                    label={ACTION_LABELS[inspection.action as keyof typeof ACTION_LABELS]}
                     variant={
-                      actionSeverity === 'critical' ? 'danger' : 
+                      actionSeverity === 'critical' ? 'error' : 
                       actionSeverity === 'high' ? 'warning' : 
                       'default'
                     }
@@ -273,7 +273,7 @@ ${inspection.reinspect_by ? `Reinspect by: ${new Date(inspection.reinspect_by).t
                     <Button
                       title={isDeleting ? 'Deleting...' : 'Delete Inspection'}
                       onPress={handleDelete}
-                      variant="danger"
+                      variant="secondary"
                       loading={isDeleting}
                       style={styles.deleteButton}
                     />
