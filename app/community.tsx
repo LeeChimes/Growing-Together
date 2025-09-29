@@ -250,7 +250,7 @@ export default function CommunityScreen() {
         {showCommentsForPost && (
           <View style={[styles.commentsSection, { borderTopColor: theme.colors.grayLight }]}>
             <View style={styles.commentInput}>
-              <Avatar name={profile?.full_name} size="small" />
+              <Avatar name={profile?.full_name ?? undefined} size="small" />
               <View style={[styles.commentInputField, { borderColor: theme.colors.grayLight }]}>
                 <Text style={[styles.commentPlaceholder, { color: theme.colors.gray }]}>
                   Write a comment...

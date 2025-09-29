@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useInspections, usePlots, useMyPlotInspections } from '../src/hooks/useInspections';
+import { useInspections, usePlots, useMyPlotInspections, usePlotIterator, saveInspectionDraftAndSync } from '../src/hooks/useInspections';
 import { useAuthStore } from '../src/store/authStore';
 import { CreateInspectionModal } from '../src/components/CreateInspectionModal';
 import { InspectionDetailModal } from '../src/components/InspectionDetailModal';
@@ -57,6 +57,33 @@ export default function InspectionsScreen() {
 
   const displayData = isAdmin ? inspections : myPlotInspections;
   const isLoading = isAdmin ? loadingInspections : loadingMyInspections;
+
+  // Batch flow
+  const plotNumbers = useMemo(() =>
+    plots.map(p => Number(p.number)).filter(n => !Number.isNaN(n)).sort((a,b)=>a-b)
+  , [plots]);
+  const completedPlotNumbers = useMemo(() =>
+    inspections.map(i => Number(plots.find(p=>p.id===i.plot_id)?.number)).filter(n=>!Number.isNaN(n))
+  , [inspections, plots]);
+  const { getNext } = usePlotIterator(plotNumbers, completedPlotNumbers);
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [currentPlot, setCurrentPlot] = useState<number|undefined>(undefined);
+
+  const startBatch = () => {
+    setCurrentPlot(getNext());
+    setBatchOpen(true);
+  };
+
+  const handleSave = async (draft: any) => {
+    await saveInspectionDraftAndSync(draft);
+  };
+
+  const handleSaveAndNext = async (draft: any) => {
+    await saveInspectionDraftAndSync(draft);
+    const next = getNext(draft.plotNumber);
+    if (next) setCurrentPlot(next);
+    else setBatchOpen(false);
+  };
 
   const renderInspectionCard = ({ item: inspection }: { item: InspectionT }) => {
     const plot = plots.find(p => p.id === inspection.plot_id);
@@ -243,9 +270,26 @@ export default function InspectionsScreen() {
           />
         )}
 
+        {isAdmin && (
+          <View style={{ position: 'absolute', bottom: 24, left: 24 }}>
+            <TouchableOpacity onPress={startBatch} accessibilityRole="button" accessibilityLabel="Start walk-through inspections" style={{ backgroundColor:'#33663F', padding:12, borderRadius:10, minWidth: 160 }}>
+              <Text style={{ color: '#fff', fontWeight: '700', textAlign:'center' }}>Start Walk-Through</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <CreateInspectionModal
           visible={showCreateModal}
           onClose={() => setShowCreateModal(false)}
+        />
+
+        <CreateInspectionModal
+          visible={batchOpen}
+          mode="batch"
+          initialPlotNumber={currentPlot}
+          onClose={() => setBatchOpen(false)}
+          onSave={handleSave}
+          onSaveAndNext={handleSaveAndNext}
         />
 
         <InspectionDetailModal

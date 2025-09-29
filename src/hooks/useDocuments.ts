@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { UserDocumentT, DocumentFormDataT, DocumentUploadDataT, validateDocumentUpload, getDocumentStatus } from '../types/documents';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
+import { ImageCompressionService } from '../lib/imageCompression';
 import { Alert, Share } from 'react-native';
 
 // Get user's documents
@@ -154,7 +155,11 @@ export const useUploadDocument = () => {
         const fileUri = data.file.uri;
 
         // Read file as blob
-        const response = await fetch(fileUri);
+        // Compress images before upload when applicable
+        const uploadUri = (data.file.type?.startsWith('image/')) 
+          ? await ImageCompressionService.compressImage(fileUri, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 })
+          : fileUri;
+        const response = await fetch(uploadUri);
         const blob = await response.blob();
 
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -305,10 +310,16 @@ export const useDownloadDocument = () => {
           throw new Error('Document download requires internet connection');
         }
 
-        // For now, we'll use the Share API to let users handle the document
-        // In a more advanced implementation, you might download and open with a viewer
+        // Use signed URL for secure access
+        const path = document.file_url?.split('/').slice(-1)[0];
+        if (!path) throw new Error('Invalid document path');
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(`documents/${document.user_id}/${path}`, 600);
+        if (error) throw error;
+
         await Share.share({
-          url: document.file_url,
+          url: data.signedUrl,
           title: document.title,
         });
       } catch (error) {

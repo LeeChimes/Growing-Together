@@ -9,15 +9,18 @@ import {
   TextInput,
   Image,
   Alert,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { ImageCompressionService } from '../lib/imageCompression';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, useTheme } from '../design';
 import { useCreatePost } from '../hooks/useCommunity';
+import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 
 type Post = Database['public']['Tables']['posts']['Row'];
@@ -71,6 +74,8 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
   const theme = useTheme();
   const [photos, setPhotos] = useState<string[]>(post?.photos || []);
   const [characterCount, setCharacterCount] = useState(0);
+  const [isAnnouncement, setIsAnnouncement] = useState(false);
+  const { profile } = useAuthStore();
 
   const createMutation = useCreatePost();
 
@@ -106,6 +111,7 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
       const postData = {
         ...data,
         photos,
+        is_announcement: profile?.role === 'admin' ? isAnnouncement : false,
       } as any;
 
       await createMutation.mutateAsync(postData);
@@ -126,7 +132,8 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
 
       if (!result.canceled) {
         const newPhotos = result.assets.map(asset => asset.uri);
-        setPhotos(prev => [...prev, ...newPhotos].slice(0, 5)); // Max 5 photos
+        const compressed = await ImageCompressionService.compressImages(newPhotos, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+        setPhotos(prev => [...prev, ...compressed].slice(0, 5)); // Max 5 photos
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick images');
@@ -229,6 +236,14 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
               )}
             />
           </View>
+
+          {/* Announcement Toggle (Admins only) */}
+          {profile?.role === 'admin' && (
+            <View style={[styles.section, { flexDirection:'row', alignItems:'center', gap: 8 }]}> 
+              <Switch value={isAnnouncement} onValueChange={setIsAnnouncement} />
+              <Text style={{ color: theme.colors.charcoal }}>Show as announcement banner on Home</Text>
+            </View>
+          )}
 
           {/* Photos */}
           <View style={styles.section}>

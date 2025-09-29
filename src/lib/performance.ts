@@ -345,8 +345,8 @@ export class PerformanceTestUtil {
     compressedSize: number;
     compressionRatio: number;
   }> {
-    // Static import at top is preferred; fall back to dynamic if needed
-    const { ImageCompressionService } = await import('./imageCompression');
+    // Use direct import to avoid dynamic import restriction
+    const { ImageCompressionService } = require('./imageCompression');
     
     const startTime = performance.now();
     const result = await ImageCompressionService.smartCompress(imageUri);

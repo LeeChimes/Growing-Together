@@ -22,6 +22,7 @@ import { useAccessibilitySettings, useUserProfile, useUpdateProfile } from '../s
 import { useAuthStore } from '../src/store/authStore';
 import { AdminDashboard } from '../src/components/AdminDashboard';
 import { QADashboard } from '../src/components/QADashboard';
+import { DevOfflineHarness } from '../src/components/DevOfflineHarness';
 
 export default function MoreScreen() {
   const theme = useTheme();
@@ -31,6 +32,7 @@ export default function MoreScreen() {
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showQADashboard, setShowQADashboard] = useState(false);
+  const [showDevOffline, setShowDevOffline] = useState(false);
   
   const { 
     preferences, 
@@ -610,6 +612,17 @@ export default function MoreScreen() {
             />
           )}
 
+          {(__DEV__ || user?.role === 'admin') && (
+            <ListItem
+              icon={<Ionicons name="cloud-offline" size={24} color={theme.colors.info} />}
+              title="Offline Dev Harness"
+              subtitle="Enqueue and process offline mutations"
+              onPress={() => setShowDevOffline(true)}
+              showChevron
+              style={{ marginTop: 8, backgroundColor: theme.colors.info + '10' }}
+            />
+          )}
+
           <ListItem
             icon={<Ionicons name="log-out" size={24} color={theme.colors.error} />}
             title="Sign Out"
@@ -631,6 +644,11 @@ export default function MoreScreen() {
       <QADashboard
         visible={showQADashboard}
         onClose={() => setShowQADashboard(false)}
+      />
+
+      <DevOfflineHarness
+        visible={showDevOffline}
+        onClose={() => setShowDevOffline(false)}
       />
     </SafeAreaView>
   );

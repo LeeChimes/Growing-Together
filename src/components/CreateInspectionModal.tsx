@@ -13,7 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as ImagePicker from 'expo-image-picker';
-import { usePlots, useCreateInspection } from '../hooks/useInspections';
+import { ImageCompressionService } from '../lib/imageCompression';
+import { usePlots, useCreateInspection, scheduleReinspectNotification } from '../hooks/useInspections';
 import { InspectionFormData, InspectionFormDataT, INSPECTION_ISSUES, INSPECTION_ISSUE_LABELS, calculateInspectionScore } from '../types/inspections';
 import { Button } from '../design/Button';
 import { FormField } from '../design/FormField';
@@ -26,12 +27,20 @@ interface CreateInspectionModalProps {
   visible: boolean;
   onClose: () => void;
   plotId?: string; // Pre-select plot if provided
+  mode?: 'single' | 'batch';
+  initialPlotNumber?: number;
+  onSave?: (draft: any) => Promise<void>;
+  onSaveAndNext?: (draft: any) => Promise<void>;
 }
 
 export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
   visible,
   onClose,
   plotId,
+  mode = 'single',
+  initialPlotNumber,
+  onSave,
+  onSaveAndNext,
 }) => {
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [showPlotPicker, setShowPlotPicker] = useState(false);
@@ -100,8 +109,9 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
 
       if (!result.canceled && result.assets) {
         const newPhotos = result.assets.map(asset => asset.uri);
-        setSelectedPhotos(prev => [...prev, ...newPhotos]);
-        setValue('photos', [...selectedPhotos, ...newPhotos]);
+        const compressed = await ImageCompressionService.compressImages(newPhotos, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+        setSelectedPhotos(prev => [...prev, ...compressed]);
+        setValue('photos', [...selectedPhotos, ...compressed]);
       }
     } catch (error) {
       console.error('Photo selection error:', error);
@@ -124,8 +134,9 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
 
       if (!result.canceled && result.assets?.[0]) {
         const newPhoto = result.assets[0].uri;
-        setSelectedPhotos(prev => [...prev, newPhoto]);
-        setValue('photos', [...selectedPhotos, newPhoto]);
+        const compressed = await ImageCompressionService.compressImage(newPhoto, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
+        setSelectedPhotos(prev => [...prev, compressed]);
+        setValue('photos', [...selectedPhotos, compressed]);
       }
     } catch (error) {
       console.error('Camera capture error:', error);
@@ -154,14 +165,38 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
 
     try {
       setIsSubmitting(true);
-      await createInspectionMutation.mutateAsync({
-        ...data,
-        photos: selectedPhotos,
-      });
-      
-      Alert.alert('Success', 'Inspection created successfully!', [
-        { text: 'OK', onPress: handleClose }
-      ]);
+      if (mode === 'batch' && (onSave || onSaveAndNext)) {
+        const plot = plots.find(p => p.id === data.plot_id);
+        const draft = {
+          plotNumber: Number(plot?.number),
+          useStatus: data.use_status,
+          upkeep: data.upkeep,
+          issues: data.issues,
+          notes: data.notes,
+          photos: selectedPhotos,
+          action: data.action,
+          reinspectBy: data.reinspect_by || undefined,
+        };
+        if (draft.reinspectBy && draft.plotNumber) {
+          try { await scheduleReinspectNotification(draft.plotNumber, draft.reinspectBy); } catch {}
+        }
+        if (onSaveAndNext) {
+          await onSaveAndNext(draft);
+        } else if (onSave) {
+          await onSave(draft);
+        }
+      } else {
+        await createInspectionMutation.mutateAsync({
+          ...data,
+          photos: selectedPhotos,
+        });
+        if (data.reinspect_by && selectedPlot?.number) {
+          try { await scheduleReinspectNotification(Number(selectedPlot.number), data.reinspect_by); } catch {}
+        }
+        Alert.alert('Success', 'Inspection created successfully!', [
+          { text: 'OK', onPress: handleClose }
+        ]);
+      }
     } catch (error) {
       console.error('Create inspection error:', error);
       Alert.alert('Error', 'Failed to create inspection. Please try again.');
@@ -405,12 +440,31 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
         </ScrollView>
 
         <View style={styles.footer}>
-          <Button
-            title={isSubmitting ? 'Creating...' : 'Create Inspection'}
-            onPress={handleSubmit(onSubmit as any)}
-            loading={isSubmitting}
-            disabled={!selectedPlotId}
-          />
+          {mode === 'batch' ? (
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Button
+                title={isSubmitting ? 'Saving...' : 'Save'}
+                onPress={handleSubmit(onSubmit as any)}
+                loading={isSubmitting}
+                disabled={!selectedPlotId}
+              />
+              {onSaveAndNext && (
+                <Button
+                  title={isSubmitting ? 'Saving...' : 'Save & Next Plot'}
+                  onPress={handleSubmit(onSubmit as any)}
+                  loading={isSubmitting}
+                  disabled={!selectedPlotId}
+                />
+              )}
+            </View>
+          ) : (
+            <Button
+              title={isSubmitting ? 'Creating...' : 'Create Inspection'}
+              onPress={handleSubmit(onSubmit as any)}
+              loading={isSubmitting}
+              disabled={!selectedPlotId}
+            />
+          )}
         </View>
 
         {/* Plot Picker Modal */}

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
+import { enqueueMutation } from '../lib/queue';
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 
@@ -114,16 +115,13 @@ export const useCreateTask = () => {
         if (error) throw error;
         return data;
       } else {
-        // Store in cache and mutation queue
         const cacheEntry = {
           ...taskWithUser,
           proof_photos: JSON.stringify(taskWithUser.proof_photos || []),
           sync_status: 'pending',
         };
-        
         await cacheOperations.upsertCache('tasks_cache', [cacheEntry]);
-        await cacheOperations.addToMutationQueue('tasks', 'INSERT', taskWithUser);
-        
+        enqueueMutation({ type: 'task.create', payload: taskWithUser });
         return taskWithUser as Task;
       }
     },

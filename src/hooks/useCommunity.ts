@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
+import { enqueueMutation } from '../lib/queue';
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 
-type Post = Database['public']['Tables']['posts']['Row'];
-type PostInsert = Database['public']['Tables']['posts']['Insert'];
-type PostUpdate = Database['public']['Tables']['posts']['Update'];
+type Post = Database['public']['Tables']['posts']['Row'] & { is_announcement?: boolean };
+type PostInsert = (Database['public']['Tables']['posts']['Insert'] & { is_announcement?: boolean });
+type PostUpdate = (Database['public']['Tables']['posts']['Update'] & { is_announcement?: boolean });
 
 export const usePosts = (filters: {
   limit?: number;
@@ -68,6 +69,12 @@ export const usePosts = (filters: {
   });
 };
 
+export function useAnnouncementBanner() {
+  const { data: posts } = usePosts();
+  const banner = posts?.find((p: any) => p.is_announcement) ?? null;
+  return { banner };
+}
+
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -93,16 +100,13 @@ export const useCreatePost = () => {
         if (error) throw error;
         return data;
       } else {
-        // Store in cache and mutation queue
         const cacheEntry = {
           ...postWithUser,
           photos: JSON.stringify(postWithUser.photos || []),
           sync_status: 'pending',
         };
-        
         await cacheOperations.upsertCache('posts_cache', [cacheEntry]);
-        await cacheOperations.addToMutationQueue('posts', 'INSERT', postWithUser);
-        
+        enqueueMutation({ type: 'post.create', payload: postWithUser });
         return postWithUser as Post;
       }
     },
