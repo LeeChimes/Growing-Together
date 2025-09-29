@@ -1,4 +1,30 @@
-import * as SQLite from 'expo-sqlite';
+// Conditional import for web compatibility
+let SQLite: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  SQLite = require('expo-sqlite');
+} else {
+  // Web platform - use localStorage mock
+  SQLite = {
+    openDatabase: (name: string) => ({
+      transaction: (fn: any) => fn({
+        executeSql: (sql: string, params: any[], success: any, error: any) => {
+          try {
+            if (sql.includes('SELECT')) {
+              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
+              success(null, { rows: { _array: JSON.parse(data) } });
+            } else {
+              success(null, { rowsAffected: 1 });
+            }
+          } catch (e) {
+            error(e);
+          }
+        }
+      })
+    })
+  };
+}
 import { Database } from './database.types';
 
 // Initialize SQLite database

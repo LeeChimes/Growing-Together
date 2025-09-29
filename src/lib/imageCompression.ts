@@ -1,18 +1,46 @@
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
-import * as ImagePicker from 'expo-image-picker';
+// Conditional imports for web compatibility
+let ImageManipulator: any;
+let ImagePicker: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  const { manipulateAsync, SaveFormat } = require('expo-image-manipulator');
+  ImageManipulator = { manipulateAsync, SaveFormat };
+  ImagePicker = require('expo-image-picker');
+} else {
+  // Web platform - use mocks
+  ImageManipulator = {
+    manipulateAsync: async (uri: string, actions: any[], options: any) => ({
+      uri: uri,
+      width: 100,
+      height: 100,
+    }),
+    SaveFormat: {
+      JPEG: 'jpeg',
+      PNG: 'png',
+    },
+  };
+  ImagePicker = {
+    MediaTypeOptions: { Images: 'Images' },
+    requestMediaLibraryPermissionsAsync: async () => ({ status: 'granted' }),
+    requestCameraPermissionsAsync: async () => ({ status: 'granted' }),
+    launchImageLibraryAsync: async () => ({ canceled: true }),
+    launchCameraAsync: async () => ({ canceled: true }),
+  };
+}
 
 export interface ImageCompressionOptions {
   maxWidth?: number;
   maxHeight?: number;
   quality?: number;
-  format?: SaveFormat;
+  format?: any;
 }
 
 const DEFAULT_OPTIONS: Required<ImageCompressionOptions> = {
   maxWidth: 1600,
   maxHeight: 1600,
   quality: 0.8,
-  format: SaveFormat.JPEG,
+  format: ImageManipulator.SaveFormat.JPEG,
 };
 
 export class ImageCompressionService {
@@ -66,7 +94,7 @@ export class ImageCompressionService {
         return imageUri;
       }
       
-      const result = await manipulateAsync(
+      const result = await ImageManipulator.manipulateAsync(
         imageUri,
         actions,
         {
@@ -117,7 +145,7 @@ export class ImageCompressionService {
     size?: number;
   }> {
     try {
-      const result = await manipulateAsync(imageUri, [], { format: SaveFormat.JPEG });
+      const result = await ImageManipulator.manipulateAsync(imageUri, [], { format: SaveFormat.JPEG });
       
       // Try to get file size (not always available)
       let size: number | undefined;
