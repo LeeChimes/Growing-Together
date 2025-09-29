@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as Notifications from 'expo-notifications';
+// Conditional import for web compatibility
+let Notifications: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  Notifications = require('expo-notifications');
+} else {
+  // Web platform - use mocks
+  Notifications = {
+    requestPermissionsAsync: async () => ({ status: 'granted' }),
+    scheduleNotificationAsync: async (notification: any) => 'mock-id',
+    cancelAllScheduledNotificationsAsync: async () => {},
+    setNotificationHandler: (handler: any) => {},
+  };
+}
 import { notificationService, NotificationPreferences } from '../lib/notifications';
 import { useEvents } from './useEvents';
 import { useTasks } from './useTasks';

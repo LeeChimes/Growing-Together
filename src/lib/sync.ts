@@ -1,4 +1,19 @@
-import * as Network from 'expo-network';
+// Conditional import for web compatibility
+let Network: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  Network = require('expo-network');
+} else {
+  // Web platform - use navigator.onLine
+  Network = {
+    getNetworkStateAsync: async () => ({
+      isConnected: navigator.onLine,
+      isInternetReachable: navigator.onLine,
+      type: 'wifi',
+    }),
+  };
+}
 import { supabase } from './supabase';
 import { cacheOperations } from './database';
 

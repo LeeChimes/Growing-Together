@@ -6,7 +6,21 @@ import { InspectionT, InspectionFormDataT, PlotT, MemberNoticeT, calculateInspec
 import { ImageCompressionService } from '../lib/imageCompression';
 import { notificationService } from '../lib/notifications';
 import { enqueueMutation } from '../lib/queue';
-import * as Notifications from 'expo-notifications';
+// Conditional import for web compatibility
+let Notifications: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  Notifications = require('expo-notifications');
+} else {
+  // Web platform - use mocks
+  Notifications = {
+    requestPermissionsAsync: async () => ({ status: 'granted' }),
+    scheduleNotificationAsync: async (notification: any) => 'mock-id',
+    cancelAllScheduledNotificationsAsync: async () => {},
+    setNotificationHandler: (handler: any) => {},
+  };
+}
 
 // Plots hooks
 export const usePlots = () => {

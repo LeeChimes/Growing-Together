@@ -14,7 +14,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+// Conditional import for web compatibility
+let ImagePicker: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  ImagePicker = require('expo-image-picker');
+} else {
+  // Web platform - use mocks
+  ImagePicker = {
+    MediaTypeOptions: { Images: 'Images' },
+    requestMediaLibraryPermissionsAsync: async () => ({ status: 'granted' }),
+    requestCameraPermissionsAsync: async () => ({ status: 'granted' }),
+    launchImageLibraryAsync: async () => ({ canceled: true }),
+    launchCameraAsync: async () => ({ canceled: true }),
+  };
+}
 import { Button, Card, Tag, useTheme } from '../design';
 import { useCreateTask } from '../hooks/useTasks';
 import { useAIPlantAdvice, useAIPlantIdentification } from '../hooks/useAI';

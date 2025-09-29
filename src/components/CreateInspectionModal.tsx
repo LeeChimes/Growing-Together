@@ -12,7 +12,22 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as ImagePicker from 'expo-image-picker';
+// Conditional import for web compatibility
+let ImagePicker: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  ImagePicker = require('expo-image-picker');
+} else {
+  // Web platform - use mocks
+  ImagePicker = {
+    MediaTypeOptions: { Images: 'Images' },
+    requestMediaLibraryPermissionsAsync: async () => ({ status: 'granted' }),
+    requestCameraPermissionsAsync: async () => ({ status: 'granted' }),
+    launchImageLibraryAsync: async () => ({ canceled: true }),
+    launchCameraAsync: async () => ({ canceled: true }),
+  };
+}
 import { ImageCompressionService } from '../lib/imageCompression';
 import { usePlots, useCreateInspection, scheduleReinspectNotification } from '../hooks/useInspections';
 import { InspectionFormData, InspectionFormDataT, INSPECTION_ISSUES, INSPECTION_ISSUE_LABELS, calculateInspectionScore } from '../types/inspections';

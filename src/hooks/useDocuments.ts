@@ -3,8 +3,33 @@ import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
 import { useAuthStore } from '../store/authStore';
 import { UserDocumentT, DocumentFormDataT, DocumentUploadDataT, validateDocumentUpload, getDocumentStatus } from '../types/documents';
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+// Conditional imports for web compatibility
+let DocumentPicker: any;
+let FileSystem: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  DocumentPicker = require('expo-document-picker');
+  FileSystem = require('expo-file-system');
+} else {
+  // Web platform - use mocks
+  DocumentPicker = {
+    getDocumentAsync: async () => ({ canceled: true }),
+  };
+  FileSystem = {
+    documentDirectory: 'file:///mock/',
+    readAsStringAsync: async (uri: string) => 'mock file content',
+    writeAsStringAsync: async (uri: string, content: string) => {},
+    deleteAsync: async (uri: string) => {},
+    makeDirectoryAsync: async (uri: string) => {},
+    getInfoAsync: async (uri: string) => ({
+      exists: true,
+      uri,
+      size: 1024,
+      isDirectory: false,
+    }),
+  };
+}
 import { ImageCompressionService } from '../lib/imageCompression';
 import { Alert, Share } from 'react-native';
 

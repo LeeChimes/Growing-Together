@@ -1,5 +1,27 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+// Conditional imports for web compatibility
+let Notifications: any;
+let Device: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  Notifications = require('expo-notifications');
+  Device = require('expo-device');
+} else {
+  // Web platform - use mocks
+  Notifications = {
+    requestPermissionsAsync: async () => ({ status: 'granted' }),
+    scheduleNotificationAsync: async (notification: any) => 'mock-id',
+    cancelAllScheduledNotificationsAsync: async () => {},
+    setNotificationHandler: (handler: any) => {},
+  };
+  Device = {
+    isDevice: true,
+    brand: 'Web',
+    modelName: 'Browser',
+    osName: 'Web',
+    osVersion: '1.0.0',
+  };
+}
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
