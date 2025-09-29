@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import NetInfo from '@react-native-community/netinfo';
+import { ImageCompressionService } from './imageCompression';
 
 export interface PerformanceMetrics {
   renderTime: number;
@@ -345,9 +346,6 @@ export class PerformanceTestUtil {
     compressedSize: number;
     compressionRatio: number;
   }> {
-    // Use direct import to avoid dynamic import restriction
-    import { ImageCompressionService } from './imageCompression';
-    
     const startTime = performance.now();
     const result = await ImageCompressionService.smartCompress(imageUri);
     const compressionTime = performance.now() - startTime;
