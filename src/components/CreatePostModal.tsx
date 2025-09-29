@@ -21,9 +21,7 @@ import { z } from 'zod';
 import { Button, useTheme } from '../design';
 import { useCreatePost } from '../hooks/useCommunity';
 import { useAuthStore } from '../store/authStore';
-import { Database } from '../lib/database.types';
-
-type Post = Database['public']['Tables']['posts']['Row'] & { is_announcement?: boolean };
+import { Post } from '../types/posts';
 
 const postSchema = z.object({
   content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),

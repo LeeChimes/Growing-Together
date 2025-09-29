@@ -3,11 +3,7 @@ import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
 import { enqueueMutation } from '../lib/queue';
 import { useAuthStore } from '../store/authStore';
-import { Database } from '../lib/database.types';
-
-type Post = Database['public']['Tables']['posts']['Row'] & { is_announcement?: boolean };
-type PostInsert = (Database['public']['Tables']['posts']['Insert'] & { is_announcement?: boolean });
-type PostUpdate = (Database['public']['Tables']['posts']['Update'] & { is_announcement?: boolean });
+import { Post, PostInsert, PostUpdate } from '../types/posts';
 
 export const usePosts = (filters: {
   limit?: number;
