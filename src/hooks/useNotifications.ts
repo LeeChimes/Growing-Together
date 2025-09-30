@@ -10,9 +10,22 @@ if (typeof window === 'undefined') {
   // Web platform - use mocks
   Notifications = {
     requestPermissionsAsync: async () => ({ status: 'granted' }),
+    getPermissionsAsync: async () => ({ status: 'granted', canAskAgain: true, granted: true }),
     scheduleNotificationAsync: async (notification: any) => 'mock-id',
     cancelAllScheduledNotificationsAsync: async () => {},
+    cancelScheduledNotificationAsync: async (id: string) => {},
     setNotificationHandler: (handler: any) => {},
+    setNotificationCategoryAsync: async (identifier: string, actions: any[], options: any) => {},
+    getNotificationCategoriesAsync: async () => [],
+    deleteNotificationCategoryAsync: async (identifier: string) => {},
+    addNotificationReceivedListener: (listener: any) => ({ remove: () => {} }),
+    addNotificationResponseReceivedListener: (listener: any) => ({ remove: () => {} }),
+    removeNotificationSubscription: (subscription: any) => {},
+    dismissAllNotificationsAsync: async () => {},
+    dismissNotificationAsync: async (id: string) => {},
+    getPresentedNotificationsAsync: async () => [],
+    setBadgeCountAsync: async (count: number) => {},
+    getBadgeCountAsync: async () => 0,
   };
 }
 import { notificationService, NotificationPreferences } from '../lib/notifications';
