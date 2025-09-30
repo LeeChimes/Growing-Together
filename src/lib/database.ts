@@ -37,7 +37,29 @@ if (typeof window === 'undefined') {
             error(e);
           }
         }
-      })
+      }),
+      execAsync: async (query: string) => {
+        console.log('[SQLite Mock] execAsync:', query);
+        return { rows: [] };
+      },
+      runAsync: async (query: string, params: any[] = []) => {
+        console.log('[SQLite Mock] runAsync:', query, params);
+        return { lastInsertRowId: 1, changes: 1 };
+      },
+      getAllAsync: async (query: string, params: any[] = []) => {
+        console.log('[SQLite Mock] getAllAsync:', query, params);
+        try {
+          // Return empty array for SELECT queries
+          return [];
+        } catch (e) {
+          console.error('[SQLite Mock] getAllAsync error:', e);
+          return [];
+        }
+      },
+      getFirstAsync: async (query: string, params: any[] = []) => {
+        console.log('[SQLite Mock] getFirstAsync:', query, params);
+        return null;
+      },
     })
   };
 }

@@ -15,11 +15,11 @@ import { PerformanceMonitor } from '../src/lib/performance';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { View, ActivityIndicator } from 'react-native';
 
-export default function RootLayout() {
+function RootLayoutContent() {
   const { user, isLoading, isInitialized, initialize } = useAuthStore();
   const [dbInitialized, setDbInitialized] = useState(false);
   
-  // Initialize notifications
+  // Initialize notifications - now safe because QueryClientProvider is above
   const { isInitialized: notificationsInitialized } = useNotifications();
 
   useEffect(() => {
@@ -60,12 +60,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary onError={(error, errorInfo) => {
-      console.error('Root level error:', error, errorInfo);
-    }}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <StatusBar style="dark" />
+    <ThemeProvider>
           <Tabs 
             screenOptions={{
               headerTitle: () => <Logo width={160} />,
@@ -137,9 +132,20 @@ export default function RootLayout() {
             ),
           }} 
         />
-            </Tabs>
-          </ThemeProvider>
-        </QueryClientProvider>
+          </Tabs>
+          <StatusBar style="dark" />
+        </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ErrorBoundary onError={(error, errorInfo) => {
+      console.error('Root level error:', error, errorInfo);
+    }}>
+      <QueryClientProvider client={queryClient}>
+        <RootLayoutContent />
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }
