@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Tabs, Redirect } from 'expo-router';
+import { Tabs, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -18,6 +18,8 @@ import { View, ActivityIndicator } from 'react-native';
 function RootLayoutContent() {
   const { user, isLoading, isInitialized, initialize } = useAuthStore();
   const [dbInitialized, setDbInitialized] = useState(false);
+  const router = useRouter();
+  const segments = useSegments();
   
   // Initialize notifications - now safe because QueryClientProvider is above
   const { isInitialized: notificationsInitialized } = useNotifications();
@@ -45,6 +47,21 @@ function RootLayoutContent() {
     initApp();
   }, []);
 
+  // Handle navigation after initialization
+  useEffect(() => {
+    if (!dbInitialized || !isInitialized || isLoading) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+
+    if (!user && !inAuthGroup) {
+      // User not logged in, redirect to auth
+      router.replace('/auth');
+    } else if (user && inAuthGroup) {
+      // User logged in but on auth page, redirect to home
+      router.replace('/home');
+    }
+  }, [user, dbInitialized, isInitialized, isLoading, segments]);
+
   if (!dbInitialized || !isInitialized || isLoading) {
     return (
       <ThemeProvider>
@@ -53,10 +70,6 @@ function RootLayoutContent() {
         </View>
       </ThemeProvider>
     );
-  }
-
-  if (!user) {
-    return <Redirect href="/auth" />;
   }
 
   return (
