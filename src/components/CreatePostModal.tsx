@@ -13,7 +13,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
+// Conditional import for web compatibility
+let ImagePicker: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  ImagePicker = require('expo-image-picker');
+} else {
+  // Web platform - use mocks
+  ImagePicker = {
+    MediaTypeOptions: { Images: 'Images' },
+    requestMediaLibraryPermissionsAsync: async () => ({ status: 'granted' }),
+    requestCameraPermissionsAsync: async () => ({ status: 'granted' }),
+    launchImageLibraryAsync: async () => ({ canceled: true }),
+    launchCameraAsync: async () => ({ canceled: true }),
+  };
+}
 import { ImageCompressionService } from '../lib/imageCompression';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,9 +36,7 @@ import { z } from 'zod';
 import { Button, useTheme } from '../design';
 import { useCreatePost } from '../hooks/useCommunity';
 import { useAuthStore } from '../store/authStore';
-import { Database } from '../lib/database.types';
-
-type Post = Database['public']['Tables']['posts']['Row'] & { is_announcement?: boolean };
+import { Post } from '../types/posts';
 
 const postSchema = z.object({
   content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
@@ -131,7 +144,7 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
       });
 
       if (!result.canceled) {
-        const newPhotos = result.assets.map(asset => asset.uri);
+        const newPhotos = result.assets.map((asset: any) => asset.uri);
         const compressed = await ImageCompressionService.compressImages(newPhotos, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
         setPhotos(prev => [...prev, ...compressed].slice(0, 5)); // Max 5 photos
       }

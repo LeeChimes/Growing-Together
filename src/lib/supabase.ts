@@ -1,10 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
-import * as SecureStore from 'expo-secure-store';
+// Conditional import for web compatibility
+let SecureStore: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  SecureStore = require('expo-secure-store');
+} else {
+  // Web platform - use localStorage
+  SecureStore = {
+    setItemAsync: async (key: string, value: string) => {
+      localStorage.setItem(`secure_${key}`, value);
+    },
+    getItemAsync: async (key: string) => {
+      return localStorage.getItem(`secure_${key}`);
+    },
+    deleteItemAsync: async (key: string) => {
+      localStorage.removeItem(`secure_${key}`);
+    },
+  };
+}
 import { Database } from './database.types';
 
-// Supabase configuration
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+// Supabase configuration with fallbacks for development
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'demo-anon-key';
 
 // Custom storage adapter for Expo SecureStore
 const ExpoSecureStoreAdapter = {

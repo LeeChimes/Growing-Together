@@ -2,6 +2,9 @@
   "expo": {
     "name": "Growing Together",
     "slug": "growing-together",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
     "scheme": "grow",
     "icon": "./assets/icons/growing-logo-1024.png",
     "ios": {
@@ -35,7 +38,9 @@
           "sounds": [],
           "defaultChannel": "default"
         }
-      ]
+      ],
+      "expo-router",
+      "expo-font"
     ]
   }
 }

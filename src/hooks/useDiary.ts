@@ -46,15 +46,16 @@ export const useDiaryEntries = (filters: {
         if (error) throw error;
         
         // Client-side filter for plant/tag until backend fields exist
-        if (data) {
+        let filteredData = data;
+        if (filteredData) {
           if (filters.plantId) {
-            data = (data as any[]).filter((e: any) => e.plant_id === filters.plantId);
+            filteredData = (filteredData as any[]).filter((e: any) => e.plant_id === filters.plantId);
           }
           if (filters.tag) {
-            data = (data as any[]).filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
+            filteredData = (filteredData as any[]).filter((e: any) => Array.isArray(e.tags) ? e.tags.includes(filters.tag) : false);
           }
 
-          const processedData = (data as any[]).map((item: any) => ({
+          const processedData = (filteredData as any[]).map((item: any) => ({
             ...item,
             photos: Array.isArray(item.photos) ? JSON.stringify(item.photos) : item.photos,
             tags: Array.isArray(item.tags) ? JSON.stringify(item.tags) : item.tags,
@@ -63,7 +64,7 @@ export const useDiaryEntries = (filters: {
           await cacheOperations.upsertCache('diary_entries_cache', processedData);
         }
         
-        return data || [];
+        return filteredData || [];
       } else {
         // Fallback to cached data
         let whereClause = `user_id = ?`;

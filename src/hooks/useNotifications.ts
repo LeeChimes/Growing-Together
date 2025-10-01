@@ -1,6 +1,33 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as Notifications from 'expo-notifications';
+// Conditional import for web compatibility
+let Notifications: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  Notifications = require('expo-notifications');
+} else {
+  // Web platform - use mocks
+  Notifications = {
+    requestPermissionsAsync: async () => ({ status: 'granted' }),
+    getPermissionsAsync: async () => ({ status: 'granted', canAskAgain: true, granted: true }),
+    scheduleNotificationAsync: async (notification: any) => 'mock-id',
+    cancelAllScheduledNotificationsAsync: async () => {},
+    cancelScheduledNotificationAsync: async (id: string) => {},
+    setNotificationHandler: (handler: any) => {},
+    setNotificationCategoryAsync: async (identifier: string, actions: any[], options: any) => {},
+    getNotificationCategoriesAsync: async () => [],
+    deleteNotificationCategoryAsync: async (identifier: string) => {},
+    addNotificationReceivedListener: (listener: any) => ({ remove: () => {} }),
+    addNotificationResponseReceivedListener: (listener: any) => ({ remove: () => {} }),
+    removeNotificationSubscription: (subscription: any) => {},
+    dismissAllNotificationsAsync: async () => {},
+    dismissNotificationAsync: async (id: string) => {},
+    getPresentedNotificationsAsync: async () => [],
+    setBadgeCountAsync: async (count: number) => {},
+    getBadgeCountAsync: async () => 0,
+  };
+}
 import { notificationService, NotificationPreferences } from '../lib/notifications';
 import { useEvents } from './useEvents';
 import { useTasks } from './useTasks';
@@ -27,7 +54,7 @@ export const useNotifications = () => {
   // Set up notification response handler
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
+      (response: any) => {
         const { notification } = response;
         const { type, eventId, taskId, announcementId, relatedId } = notification.request.content.data as any;
         

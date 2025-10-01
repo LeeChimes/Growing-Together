@@ -1,5 +1,40 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+// Conditional imports for web compatibility
+let Notifications: any;
+let Device: any;
+
+if (typeof window === 'undefined') {
+  // Native platform
+  Notifications = require('expo-notifications');
+  Device = require('expo-device');
+} else {
+  // Web platform - use mocks
+  Notifications = {
+    requestPermissionsAsync: async () => ({ status: 'granted' }),
+    getPermissionsAsync: async () => ({ status: 'granted', canAskAgain: true, granted: true }),
+    scheduleNotificationAsync: async (notification: any) => 'mock-id',
+    cancelAllScheduledNotificationsAsync: async () => {},
+    cancelScheduledNotificationAsync: async (id: string) => {},
+    setNotificationHandler: (handler: any) => {},
+    setNotificationCategoryAsync: async (identifier: string, actions: any[], options: any) => {},
+    getNotificationCategoriesAsync: async () => [],
+    deleteNotificationCategoryAsync: async (identifier: string) => {},
+    addNotificationReceivedListener: (listener: any) => ({ remove: () => {} }),
+    addNotificationResponseReceivedListener: (listener: any) => ({ remove: () => {} }),
+    removeNotificationSubscription: (subscription: any) => {},
+    dismissAllNotificationsAsync: async () => {},
+    dismissNotificationAsync: async (id: string) => {},
+    getPresentedNotificationsAsync: async () => [],
+    setBadgeCountAsync: async (count: number) => {},
+    getBadgeCountAsync: async () => 0,
+  };
+  Device = {
+    isDevice: true,
+    brand: 'Web',
+    modelName: 'Browser',
+    osName: 'Web',
+    osVersion: '1.0.0',
+  };
+}
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -385,7 +420,7 @@ class NotificationService {
     // when events/tasks are created or updated
   }
 
-  async getAllScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
+  async getAllScheduledNotifications(): Promise<any[]> {
     return await Notifications.getAllScheduledNotificationsAsync();
   }
 
@@ -404,7 +439,7 @@ export const notificationService = NotificationService.getInstance();
 
 // Export utility functions for React hooks
 export const useNotificationHandler = () => {
-  const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
+  const handleNotificationResponse = (response: any) => {
     const { notification } = response;
     const { type, eventId, taskId, announcementId } = notification.request.content.data as any;
     
