@@ -54,7 +54,7 @@ export const useNotifications = () => {
   // Set up notification response handler
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
+      (response: any) => {
         const { notification } = response;
         const { type, eventId, taskId, announcementId, relatedId } = notification.request.content.data as any;
         

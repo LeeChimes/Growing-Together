@@ -90,6 +90,45 @@ function RootLayoutContent() {
               },
             }}
           >
+        {/* Hide auth and other non-tab screens */}
+        <Tabs.Screen 
+          name="auth" 
+          options={{ 
+            href: null,
+          }} 
+        />
+        <Tabs.Screen 
+          name="plants" 
+          options={{ 
+            href: null,
+          }} 
+        />
+        <Tabs.Screen 
+          name="tasks" 
+          options={{ 
+            href: null,
+          }} 
+        />
+        <Tabs.Screen 
+          name="rules" 
+          options={{ 
+            href: null,
+          }} 
+        />
+        <Tabs.Screen 
+          name="documents" 
+          options={{ 
+            href: null,
+          }} 
+        />
+        <Tabs.Screen 
+          name="inspections" 
+          options={{ 
+            href: null,
+          }} 
+        />
+        
+        {/* Tab screens */}
         <Tabs.Screen 
           name="home" 
           options={{ 

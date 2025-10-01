@@ -82,12 +82,12 @@ export class PerformanceMonitor {
  * Hook to measure component render performance
  */
 export const useRenderPerformance = (componentName: string) => {
-  const startTime = useRef<number>();
+  const startTime = useRef<number>(0);
   const [renderTime, setRenderTime] = useState<number>(0);
 
   useEffect(() => {
     startTime.current = performance.now();
-  });
+  }, []);
 
   useEffect(() => {
     if (startTime.current) {
@@ -104,7 +104,7 @@ export const useRenderPerformance = (componentName: string) => {
         console.warn(`⚠️ Slow render detected in ${componentName}: ${duration.toFixed(2)}ms`);
       }
     }
-  });
+  }, [componentName]);
 
   return renderTime;
 };
@@ -115,7 +115,7 @@ export const useRenderPerformance = (componentName: string) => {
 export const useLoadPerformance = (operationName: string) => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadTime, setLoadTime] = useState<number>(0);
-  const startTime = useRef<number>();
+  const startTime = useRef<number>(0);
 
   const startTimer = () => {
     startTime.current = performance.now();

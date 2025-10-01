@@ -420,7 +420,7 @@ class NotificationService {
     // when events/tasks are created or updated
   }
 
-  async getAllScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
+  async getAllScheduledNotifications(): Promise<any[]> {
     return await Notifications.getAllScheduledNotificationsAsync();
   }
 
@@ -439,7 +439,7 @@ export const notificationService = NotificationService.getInstance();
 
 // Export utility functions for React hooks
 export const useNotificationHandler = () => {
-  const handleNotificationResponse = (response: Notifications.NotificationResponse) => {
+  const handleNotificationResponse = (response: any) => {
     const { notification } = response;
     const { type, eventId, taskId, announcementId } = notification.request.content.data as any;
     

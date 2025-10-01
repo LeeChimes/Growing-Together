@@ -123,7 +123,7 @@ export const CreateInspectionModal: React.FC<CreateInspectionModalProps> = ({
       });
 
       if (!result.canceled && result.assets) {
-        const newPhotos = result.assets.map(asset => asset.uri);
+        const newPhotos = result.assets.map((asset: any) => asset.uri);
         const compressed = await ImageCompressionService.compressImages(newPhotos, { maxWidth: 1600, maxHeight: 1600, quality: 0.8 });
         setSelectedPhotos(prev => [...prev, ...compressed]);
         setValue('photos', [...selectedPhotos, ...compressed]);
