@@ -1,0 +1,23 @@
+# Auto-merge configuration for Growing Together
+# This file tells git how to handle merges for different file types
+
+# For package files, always use our version
+package.json merge=ours
+package-lock.json merge=ours
+
+# For config files, prefer our version
+babel.config.js merge=ours
+metro.config.js merge=ours
+*.config.js merge=ours
+
+# For source files, prefer our version
+src/**/*.ts merge=ours
+src/**/*.tsx merge=ours
+app/**/*.tsx merge=ours
+
+# For documentation, prefer our version
+*.md merge=ours
+README.md merge=ours
+
+# For SQL files, prefer our version
+*.sql merge=ours
