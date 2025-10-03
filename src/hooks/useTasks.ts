@@ -4,6 +4,17 @@ import { cacheOperations, syncManager } from '../lib/database';
 import { enqueueMutation } from '../lib/queue';
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
+import { 
+  Task, 
+  TaskWithAssignment, 
+  CreateTaskData, 
+  TaskAssignment,
+  getTaskStatus,
+  isTaskAvailable,
+  isTaskOverdue,
+  canAcceptTask,
+  canCompleteTask
+} from '../types/tasks';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
@@ -242,4 +253,233 @@ export const useTaskStats = () => {
     },
     enabled: !!user,
   });
+};
+
+// New comprehensive task management hooks
+
+// Hook to get all tasks with assignments and user info
+export const useAllTasks = () => {
+  const { user } = useAuthStore();
+  
+  return useQuery({
+    queryKey: ['all-tasks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          assignments (
+            id,
+            task_id,
+            user_id,
+            accepted_at,
+            started_at,
+            completed_at,
+            notes
+          ),
+          assigned_user:assignments.user_id (
+            id,
+            full_name,
+            plot_number
+          ),
+          created_by_user:created_by (
+            id,
+            full_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as TaskWithAssignment[];
+    },
+    enabled: !!user,
+  });
+};
+
+// Hook to get available tasks (not assigned to anyone)
+export const useAvailableTasks = () => {
+  const { data: tasks, ...rest } = useAllTasks();
+  
+  const availableTasks = tasks?.filter(task => {
+    const status = getTaskStatus(task);
+    return status === 'available' && !task.assigned_to;
+  }) || [];
+  
+  return {
+    data: availableTasks,
+    ...rest
+  };
+};
+
+// Hook to get tasks assigned to current user
+export const useMyAssignedTasks = () => {
+  const { user } = useAuthStore();
+  const { data: tasks, ...rest } = useAllTasks();
+  
+  const myTasks = tasks?.filter(task => 
+    task.assigned_to === user?.id && 
+    getTaskStatus(task) !== 'completed'
+  ) || [];
+  
+  return {
+    data: myTasks,
+    ...rest
+  };
+};
+
+// Hook to get overdue tasks
+export const useOverdueTasks = () => {
+  const { data: tasks, ...rest } = useAllTasks();
+  
+  const overdueTasks = tasks?.filter(task => isTaskOverdue(task)) || [];
+  
+  return {
+    data: overdueTasks,
+    ...rest
+  };
+};
+
+// Hook to accept a task (members)
+export const useAcceptTask = () => {
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      // First, update the task to assign it to the user
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .update({ 
+          assigned_to: user.id,
+          status: 'accepted'
+        })
+        .eq('id', taskId);
+      
+      if (taskError) throw taskError;
+      
+      // Then create an assignment record
+      const { data, error } = await supabase
+        .from('task_assignments')
+        .insert({
+          task_id: taskId,
+          user_id: user.id,
+          accepted_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+// Hook to start a task (mark as in progress)
+export const useStartTask = () => {
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      // Update task status
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .update({ status: 'in_progress' })
+        .eq('id', taskId)
+        .eq('assigned_to', user.id);
+      
+      if (taskError) throw taskError;
+      
+      // Update assignment record
+      const { data, error } = await supabase
+        .from('task_assignments')
+        .update({ started_at: new Date().toISOString() })
+        .eq('task_id', taskId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+// Hook to complete a task with notes
+export const useCompleteTaskWithNotes = () => {
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ taskId, notes }: { taskId: string; notes?: string }) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      const now = new Date().toISOString();
+      
+      // Update task status
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .update({ 
+          status: 'completed',
+          completed_at: now,
+          is_completed: true
+        })
+        .eq('id', taskId)
+        .eq('assigned_to', user.id);
+      
+      if (taskError) throw taskError;
+      
+      // Update assignment record
+      const { data, error } = await supabase
+        .from('task_assignments')
+        .update({ 
+          completed_at: now,
+          notes: notes || null
+        })
+        .eq('task_id', taskId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+};
+
+// Hook to get comprehensive task statistics
+export const useComprehensiveTaskStats = () => {
+  const { data: tasks, ...rest } = useAllTasks();
+  
+  const stats = {
+    total: tasks?.length || 0,
+    available: tasks?.filter(task => {
+      const status = getTaskStatus(task);
+      return status === 'available' && !task.assigned_to;
+    }).length || 0,
+    inProgress: tasks?.filter(task => getTaskStatus(task) === 'in_progress').length || 0,
+    completed: tasks?.filter(task => getTaskStatus(task) === 'completed').length || 0,
+    overdue: tasks?.filter(task => isTaskOverdue(task)).length || 0,
+  };
+  
+  return {
+    data: stats,
+    ...rest
+  };
 };

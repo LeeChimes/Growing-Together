@@ -25,6 +25,7 @@ import { useTasks } from '../src/hooks/useTasks';
 import { useEvents } from '../src/hooks/useEvents';
 import { usePosts } from '../src/hooks/useCommunity';
 import { fetchWeatherSnapshot, WeatherSnapshot } from '../src/lib/weather';
+import { TaskPanel } from '../src/components/TaskPanel';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -186,47 +187,10 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Weekly Tasks */}
-        <Card style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardTitleRow}>
-              <Ionicons name="checkmark-circle" size={24} color={theme.colors.green} />
-              <Text style={[styles.cardTitle, { color: theme.colors.charcoal }]}>
-                This Week's Tasks
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => router.push('/more')}>
-              <Text style={[styles.seeAll, { color: theme.colors.green }]}>
-                See All
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          {siteTasks.length > 0 ? (
-            <View style={styles.taskList}>
-              {siteTasks
-                .filter(t => !t.due_date || (new Date(t.due_date) <= new Date(Date.now() + 7*24*60*60*1000)))
-                .slice(0, 3)
-                .map((task: any) => (
-                <View key={task.id} style={styles.taskItem}>
-                  <View style={styles.taskContent}>
-                    <Text style={[styles.taskTitle, { color: theme.colors.charcoal }]}>
-                      {task.title}
-                    </Text>
-                    <Text style={[styles.taskDate, { color: theme.colors.gray }]}>
-                      {task.due_date ? `Due ${new Date(task.due_date).toLocaleDateString('en-GB')}` : 'No due date'}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <EmptyState
-              title="No tasks this week"
-              description="All caught up! Check back later."
-            />
-          )}
-        </Card>
+        {/* Task Management Panel */}
+        <View style={styles.taskPanelContainer}>
+          <TaskPanel />
+        </View>
 
         {/* Next Event */}
         {nextEvent && (
@@ -395,6 +359,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
+  },
+  taskPanelContainer: {
+    marginBottom: 24,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionGrid: {
     flexDirection: 'row',

@@ -2,370 +2,266 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  Modal,
-  ScrollView,
-  TouchableOpacity,
   TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
   Alert,
+  Modal,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button, FormField, Tag, useTheme } from '../design';
+import { Button } from '../design/Button';
+import { Card } from '../design/Card';
+import { tokens } from '../design/tokens';
 import { useCreateTask } from '../hooks/useTasks';
-import { Database } from '../lib/database.types';
-import { useAuthStore } from '../store/authStore';
-
-type Task = Database['public']['Tables']['tasks']['Row'];
-
-const taskSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  type: z.enum(['personal', 'site']),
-  due_date: z.string().optional(),
-});
-
-type TaskFormData = z.infer<typeof taskSchema>;
+import { 
+  CreateTaskData, 
+  TaskPriority, 
+  TaskCategory, 
+  TASK_PRIORITY_LABELS, 
+  TASK_CATEGORY_LABELS,
+  TASK_PRIORITY_COLORS,
+  TASK_CATEGORY_ICONS
+} from '../types/tasks';
 
 interface CreateTaskModalProps {
   visible: boolean;
   onClose: () => void;
-  task?: Task;
-  defaultType?: 'personal' | 'site';
 }
 
-const taskTemplates = [
-  {
-    id: 'watering',
-    title: 'Watering',
-    type: 'personal' as const,
-    emoji: '💧',
-    template: {
-      title: 'Water plants',
-      description: 'Check soil moisture and water as needed',
-    },
-  },
-  {
-    id: 'weeding',
-    title: 'Weeding',
-    type: 'personal' as const,
-    emoji: '🌿',
-    template: {
-      title: 'Weed plot',
-      description: 'Remove weeds from beds and pathways',
-    },
-  },
-  {
-    id: 'harvesting',
-    title: 'Harvesting',
-    type: 'personal' as const,
-    emoji: '🥕',
-    template: {
-      title: 'Harvest vegetables',
-      description: 'Pick ripe vegetables and fruits',
-    },
-  },
-  {
-    id: 'maintenance',
-    title: 'Plot Maintenance',
-    type: 'personal' as const,
-    emoji: '🔧',
-    template: {
-      title: 'General maintenance',
-      description: 'Repair structures, check fencing, tidy plot',
-    },
-  },
-  {
-    id: 'communal',
-    title: 'Communal Area',
-    type: 'site' as const,
-    emoji: '🏡',
-    template: {
-      title: 'Maintain communal area',
-      description: 'Work on shared spaces and facilities',
-    },
-  },
-  {
-    id: 'compost',
-    title: 'Compost Management',
-    type: 'site' as const,
-    emoji: '♻️',
-    template: {
-      title: 'Manage compost bins',
-      description: 'Turn compost, add materials, maintain bins',
-    },
-  },
-];
+export function CreateTaskModal({ visible, onClose }: CreateTaskModalProps) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [priority, setPriority] = useState<TaskPriority>('medium');
+  const [category, setCategory] = useState<TaskCategory>('general');
+  const [estimatedDuration, setEstimatedDuration] = useState('');
+  const [location, setLocation] = useState('');
 
-export function CreateTaskModal({ visible, onClose, task, defaultType }: CreateTaskModalProps) {
-  const theme = useTheme();
-  const { profile } = useAuthStore();
-  const [selectedType, setSelectedType] = useState<'personal' | 'site'>(
-    task?.type || defaultType || 'personal'
-  );
+  const createTaskMutation = useCreateTask();
 
-  const createMutation = useCreateTask();
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      Alert.alert('Error', 'Please enter a task title');
+      return;
+    }
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-    reset,
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
-    defaultValues: {
-      title: task?.title || '',
-      description: task?.description || '',
-      type: selectedType,
-      due_date: task?.due_date || '',
-    },
-  });
+    if (!description.trim()) {
+      Alert.alert('Error', 'Please enter a task description');
+      return;
+    }
+
+    if (!dueDate) {
+      Alert.alert('Error', 'Please select a due date');
+      return;
+    }
+
+    const taskData: CreateTaskData = {
+      title: title.trim(),
+      description: description.trim(),
+      due_date: dueDate,
+      priority,
+      category,
+      estimated_duration: estimatedDuration ? parseInt(estimatedDuration) : undefined,
+      location: location.trim() || undefined,
+    };
+
+    try {
+      await createTaskMutation.mutateAsync(taskData);
+      Alert.alert('Success', 'Task created successfully!');
+      handleClose();
+    } catch (error) {
+      console.error('Error creating task:', error);
+      Alert.alert('Error', 'Failed to create task. Please try again.');
+    }
+  };
 
   const handleClose = () => {
-    reset();
-    setSelectedType(defaultType || 'personal');
+    setTitle('');
+    setDescription('');
+    setDueDate('');
+    setPriority('medium');
+    setCategory('general');
+    setEstimatedDuration('');
+    setLocation('');
     onClose();
   };
 
-  const onSubmit = async (data: TaskFormData) => {
-    try {
-      const taskData = {
-        ...data,
-        type: selectedType,
-        assigned_to: selectedType === 'personal' ? profile?.id : null,
-        due_date: data.due_date || null,
-      } as any;
-
-      await createMutation.mutateAsync(taskData);
-      handleClose();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create task');
+  const getDateInput = () => {
+    if (Platform.OS === 'web') {
+      return (
+        <TextInput
+          style={styles.input}
+          placeholder="YYYY-MM-DD"
+          value={dueDate}
+          onChangeText={setDueDate}
+          placeholderTextColor={tokens.colors.text.secondary}
+        />
+      );
     }
+
+    return (
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => {
+          // For native, you could use a date picker here
+          const today = new Date().toISOString().split('T')[0];
+          setDueDate(today);
+        }}
+      >
+        <Text style={styles.dateButtonText}>
+          {dueDate || 'Select Date'}
+        </Text>
+        <Ionicons name="calendar-outline" size={20} color={tokens.colors.primary} />
+      </TouchableOpacity>
+    );
   };
 
-  const applyTemplate = (template: { title: string; description: string }) => {
-    setValue('title', template.title);
-    setValue('description', template.description);
-  };
+  const PrioritySelector = () => (
+    <View style={styles.selectorContainer}>
+      <Text style={styles.label}>Priority</Text>
+      <View style={styles.selectorRow}>
+        {(['low', 'medium', 'high', 'urgent'] as TaskPriority[]).map((p) => (
+          <TouchableOpacity
+            key={p}
+            style={[
+              styles.selectorOption,
+              { backgroundColor: priority === p ? TASK_PRIORITY_COLORS[p] : tokens.colors.background.secondary },
+            ]}
+            onPress={() => setPriority(p)}
+          >
+            <Text style={[
+              styles.selectorOptionText,
+              { color: priority === p ? 'white' : tokens.colors.text.primary }
+            ]}>
+              {TASK_PRIORITY_LABELS[p]}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
 
-  const formatDateForInput = (dateString: string) => {
-    if (!dateString) return '';
-    return new Date(dateString).toISOString().split('T')[0];
-  };
-
-  const handleDateChange = (dateStr: string) => {
-    if (dateStr) {
-      // Convert to ISO string for storage
-      const date = new Date(dateStr + 'T00:00:00');
-      setValue('due_date', date.toISOString());
-    } else {
-      setValue('due_date', '');
-    }
-  };
+  const CategorySelector = () => (
+    <View style={styles.selectorContainer}>
+      <Text style={styles.label}>Category</Text>
+      <View style={styles.selectorGrid}>
+        {(['general', 'maintenance', 'planting', 'harvesting', 'cleaning', 'repair', 'inspection', 'community'] as TaskCategory[]).map((c) => (
+          <TouchableOpacity
+            key={c}
+            style={[
+              styles.categoryOption,
+              { backgroundColor: category === c ? tokens.colors.primary : tokens.colors.background.secondary },
+            ]}
+            onPress={() => setCategory(c)}
+          >
+            <Ionicons
+              name={TASK_CATEGORY_ICONS[c] as any}
+              size={20}
+              color={category === c ? 'white' : tokens.colors.text.primary}
+            />
+            <Text style={[
+              styles.categoryOptionText,
+              { color: category === c ? 'white' : tokens.colors.text.primary }
+            ]}>
+              {TASK_CATEGORY_LABELS[c]}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="formSheet">
-      <SafeAreaView style={styles.container}>
-        <View style={[styles.header, { borderBottomColor: theme.colors.grayLight }]}>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <View style={styles.container}>
+        <View style={styles.header}>
           <TouchableOpacity onPress={handleClose}>
-            <Ionicons name="close" size={24} color={theme.colors.charcoal} />
+            <Ionicons name="close" size={24} color={tokens.colors.text.primary} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.charcoal }]}>
-            {task ? 'Edit Task' : 'Create Task'}
-          </Text>
-          <Button
-            title="Save"
-            onPress={handleSubmit(onSubmit)}
-            loading={createMutation.isPending}
-            size="small"
-          />
+          <Text style={styles.headerTitle}>Create New Task</Text>
+          <View style={{ width: 24 }} />
         </View>
 
-        <ScrollView style={styles.content}>
-          {/* Task Type Selection */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.charcoal }]}>
-              Task Type
-            </Text>
-            <View style={styles.typeSelector}>
-              <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  {
-                    backgroundColor: selectedType === 'personal' ? theme.colors.green + '20' : theme.colors.grayLight,
-                    borderColor: selectedType === 'personal' ? theme.colors.green : 'transparent',
-                  }
-                ]}
-                onPress={() => {
-                  setSelectedType('personal');
-                  setValue('type', 'personal');
-                }}
-              >
-                <Ionicons 
-                  name="person" 
-                  size={20} 
-                  color={selectedType === 'personal' ? theme.colors.green : theme.colors.gray} 
-                />
-                <Text 
-                  style={[
-                    styles.typeText,
-                    { color: selectedType === 'personal' ? theme.colors.green : theme.colors.gray }
-                  ]}
-                >
-                  Personal Plot
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  {
-                    backgroundColor: selectedType === 'site' ? theme.colors.sky + '20' : theme.colors.grayLight,
-                    borderColor: selectedType === 'site' ? theme.colors.sky : 'transparent',
-                  }
-                ]}
-                onPress={() => {
-                  setSelectedType('site');
-                  setValue('type', 'site');
-                }}
-              >
-                <Ionicons 
-                  name="home" 
-                  size={20} 
-                  color={selectedType === 'site' ? theme.colors.sky : theme.colors.gray} 
-                />
-                <Text 
-                  style={[
-                    styles.typeText,
-                    { color: selectedType === 'site' ? theme.colors.sky : theme.colors.gray }
-                  ]}
-                >
-                  Site/Communal
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Task Templates */}
-          {!task && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.charcoal }]}>
-                Quick Templates
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.templatesScroll}>
-                {taskTemplates
-                  .filter(template => template.type === selectedType)
-                  .map((template) => (
-                    <TouchableOpacity
-                      key={template.id}
-                      style={[styles.templateButton, { borderColor: theme.colors.grayLight }]}
-                      onPress={() => applyTemplate(template.template)}
-                    >
-                      <Text style={styles.templateEmoji}>{template.emoji}</Text>
-                      <Text style={[styles.templateTitle, { color: theme.colors.charcoal }]}>
-                        {template.title}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Basic Information */}
-          <View style={styles.section}>
-            <Controller
-              control={control}
-              name="title"
-              render={({ field: { onChange, value } }) => (
-                <FormField
-                  label="Task Title"
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="What needs to be done?"
-                  error={errors.title?.message}
-                  required
-                />
-              )}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <Card style={styles.card}>
+            <Text style={styles.label}>Task Title *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter task title"
+              value={title}
+              onChangeText={setTitle}
+              placeholderTextColor={tokens.colors.text.secondary}
             />
+          </Card>
 
-            <Controller
-              control={control}
-              name="description"
-              render={({ field: { onChange, value } }) => (
-                <View>
-                  <Text style={[styles.label, { color: theme.colors.charcoal }]}>
-                    Description (Optional)
-                  </Text>
-                  <TextInput
-                    style={[
-                      styles.textArea,
-                      {
-                        borderColor: theme.colors.grayLight,
-                        color: theme.colors.charcoal,
-                      }
-                    ]}
-                    value={value || ''}
-                    onChangeText={onChange}
-                    placeholder="Add more details about this task..."
-                    placeholderTextColor={theme.colors.gray}
-                    multiline
-                    numberOfLines={3}
-                    textAlignVertical="top"
-                  />
-                </View>
-              )}
+          <Card style={styles.card}>
+            <Text style={styles.label}>Description *</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Describe what needs to be done"
+              value={description}
+              onChangeText={setDescription}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              placeholderTextColor={tokens.colors.text.secondary}
             />
-          </View>
+          </Card>
 
-          {/* Due Date */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.charcoal }]}>
-              Due Date
-            </Text>
-            <Controller
-              control={control}
-              name="due_date"
-              render={({ field: { value } }) => (
-                <TextInput
-                  style={[
-                    styles.dateInput,
-                    { borderColor: theme.colors.grayLight, color: theme.colors.charcoal }
-                  ]}
-                  value={formatDateForInput(value || '')}
-                  onChangeText={handleDateChange}
-                  placeholder="YYYY-MM-DD (optional)"
-                  placeholderTextColor={theme.colors.gray}
-                />
-              )}
+          <Card style={styles.card}>
+            <Text style={styles.label}>Due Date *</Text>
+            {getDateInput()}
+          </Card>
+
+          <Card style={styles.card}>
+            <PrioritySelector />
+          </Card>
+
+          <Card style={styles.card}>
+            <CategorySelector />
+          </Card>
+
+          <Card style={styles.card}>
+            <Text style={styles.label}>Estimated Duration (minutes)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., 30"
+              value={estimatedDuration}
+              onChangeText={setEstimatedDuration}
+              keyboardType="numeric"
+              placeholderTextColor={tokens.colors.text.secondary}
             />
-          </View>
+          </Card>
 
-          {/* Task Type Info */}
-          <View style={[styles.infoBox, { backgroundColor: selectedType === 'personal' ? theme.colors.green + '10' : theme.colors.sky + '10' }]}>
-            <View style={styles.infoHeader}>
-              <Ionicons 
-                name="information-circle" 
-                size={20} 
-                color={selectedType === 'personal' ? theme.colors.green : theme.colors.sky} 
-              />
-              <Text style={[styles.infoTitle, { color: selectedType === 'personal' ? theme.colors.green : theme.colors.sky }]}>
-                {selectedType === 'personal' ? 'Personal Plot Task' : 'Site/Communal Task'}
-              </Text>
-            </View>
-            <Text style={[styles.infoText, { color: theme.colors.charcoal }]}>
-              {selectedType === 'personal' 
-                ? 'This task will be assigned to you and relates to your individual plot maintenance.'
-                : 'This task relates to communal areas and can be picked up by any community member.'
-              }
-            </Text>
-          </View>
+          <Card style={styles.card}>
+            <Text style={styles.label}>Location (optional)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Plot 15, Greenhouse, Main Path"
+              value={location}
+              onChangeText={setLocation}
+              placeholderTextColor={tokens.colors.text.secondary}
+            />
+          </Card>
         </ScrollView>
-      </SafeAreaView>
+
+        <View style={styles.footer}>
+          <Button
+            title="Cancel"
+            onPress={handleClose}
+            style={[styles.button, styles.cancelButton]}
+            textStyle={styles.cancelButtonText}
+          />
+          <Button
+            title="Create Task"
+            onPress={handleSubmit}
+            style={[styles.button, styles.submitButton]}
+            loading={createTaskMutation.isPending}
+          />
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -373,107 +269,117 @@ export function CreateTaskModal({ visible, onClose, task, defaultType }: CreateT
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: tokens.colors.background.primary,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
     borderBottomWidth: 1,
-    backgroundColor: 'white',
+    borderBottomColor: tokens.colors.border.primary,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: tokens.colors.text.primary,
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  typeSelector: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  typeButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    gap: 8,
-  },
-  typeText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  templatesScroll: {
-    marginHorizontal: -4,
-  },
-  templateButton: {
-    alignItems: 'center',
-    padding: 12,
-    borderWidth: 1,
-    borderRadius: 12,
-    backgroundColor: 'white',
-    marginHorizontal: 4,
-    minWidth: 90,
-  },
-  templateEmoji: {
-    fontSize: 24,
-    marginBottom: 4,
-  },
-  templateTitle: {
-    fontSize: 12,
-    fontWeight: '500',
-    textAlign: 'center',
+  card: {
+    marginBottom: 16,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
+    color: tokens.colors.text.primary,
     marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: tokens.colors.border.primary,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: tokens.colors.text.primary,
+    backgroundColor: tokens.colors.background.primary,
   },
   textArea: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: 'white',
-    minHeight: 80,
+    height: 100,
   },
-  dateInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: 'white',
-  },
-  infoBox: {
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  infoHeader: {
+  dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: tokens.colors.border.primary,
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: tokens.colors.background.primary,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: tokens.colors.text.primary,
+  },
+  selectorContainer: {
+    marginBottom: 16,
+  },
+  selectorRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+  selectorOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: tokens.colors.border.primary,
   },
-  infoText: {
+  selectorOptionText: {
     fontSize: 14,
-    lineHeight: 20,
+    fontWeight: '500',
+  },
+  selectorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  categoryOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: tokens.colors.border.primary,
+    gap: 6,
+  },
+  categoryOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  footer: {
+    flexDirection: 'row',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: tokens.colors.border.primary,
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+  },
+  cancelButton: {
+    backgroundColor: tokens.colors.background.secondary,
+  },
+  cancelButtonText: {
+    color: tokens.colors.text.primary,
+  },
+  submitButton: {
+    backgroundColor: tokens.colors.primary,
   },
 });

@@ -143,14 +143,35 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   title TEXT NOT NULL,
   description TEXT,
   type TEXT NOT NULL CHECK (type IN ('personal', 'site')),
+  status TEXT NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'accepted', 'in_progress', 'completed', 'overdue')),
   assigned_to UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   due_date DATE,
   is_completed BOOLEAN NOT NULL DEFAULT false,
   proof_photos JSONB DEFAULT '[]'::jsonb,
   completed_at TIMESTAMP WITH TIME ZONE,
+  priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  category TEXT NOT NULL DEFAULT 'general' CHECK (category IN ('general', 'maintenance', 'planting', 'harvesting', 'cleaning', 'repair', 'inspection', 'community')),
+  estimated_duration INTEGER, -- in minutes
+  location TEXT,
   created_by UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- =====================================================
+-- 9.1. TASK ASSIGNMENTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.task_assignments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  task_id UUID NOT NULL REFERENCES public.tasks(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  accepted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  started_at TIMESTAMP WITH TIME ZONE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(task_id, user_id) -- Prevent duplicate assignments
 );
 
 -- =====================================================
@@ -293,6 +314,7 @@ ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.task_assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.albums ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inspections ENABLE ROW LEVEL SECURITY;
@@ -366,6 +388,12 @@ CREATE POLICY "Creators and assigned users can update tasks" ON public.tasks FOR
   created_by = auth.uid() OR assigned_to = auth.uid()
 );
 CREATE POLICY "Creators can delete tasks" ON public.tasks FOR DELETE USING (created_by = auth.uid());
+
+-- TASK ASSIGNMENTS: Users can manage their own assignments
+CREATE POLICY "Task assignments are viewable by everyone" ON public.task_assignments FOR SELECT USING (true);
+CREATE POLICY "Users can create their own assignments" ON public.task_assignments FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users can update their own assignments" ON public.task_assignments FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "Users can delete their own assignments" ON public.task_assignments FOR DELETE USING (user_id = auth.uid());
 
 -- ALBUMS: Public albums viewable by all, private only by creator
 CREATE POLICY "Public albums are viewable by everyone" ON public.albums FOR SELECT USING (is_private = false OR created_by = auth.uid());
