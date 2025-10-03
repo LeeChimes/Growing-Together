@@ -13,7 +13,7 @@ import { startAutoSync } from '../src/lib/sync';
 import { useNotifications } from '../src/hooks/useNotifications';
 import { PerformanceMonitor } from '../src/lib/performance';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 
 function RootLayoutContent() {
   const { user, isLoading, isInitialized, initialize } = useAuthStore();
@@ -30,15 +30,19 @@ function RootLayoutContent() {
         // Initialize performance monitoring
         PerformanceMonitor.startMonitoring();
         
-        // Initialize SQLite database
-        await initializeDatabase();
+        // Initialize SQLite database (skip on web during debug)
+        if (Platform.OS !== 'web') {
+          await initializeDatabase();
+        }
         setDbInitialized(true);
         
         // Initialize auth
         await initialize();
         
-        // Start auto-sync
-        startAutoSync();
+        // Start auto-sync (skip on web during debug)
+        if (Platform.OS !== 'web') {
+          startAutoSync();
+        }
       } catch (error) {
         console.error('Failed to initialize app:', error);
       }
