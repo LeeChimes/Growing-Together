@@ -100,7 +100,7 @@ export default function InspectionsScreen() {
             <View style={styles.plotInfo}>
               <Text style={styles.plotNumber}>Plot {plot?.number || 'N/A'}</Text>
               <Text style={styles.inspectionDate}>
-                {new Date(inspection.date).toLocaleDateString()}
+                {new Date(inspection.date).toLocaleDateString('en-GB')}
               </Text>
             </View>
             <View style={[styles.scoreCircle, { backgroundColor: scoreColor }]}>
@@ -150,7 +150,7 @@ export default function InspectionsScreen() {
             <View style={styles.reinspectRow}>
               <Ionicons name="time" size={16} color={tokens.colors.text.secondary} />
               <Text style={styles.reinspectText}>
-                Reinspect by: {new Date(inspection.reinspect_by).toLocaleDateString()}
+                Reinspect by: {new Date(inspection.reinspect_by).toLocaleDateString('en-GB')}
               </Text>
             </View>
           )}

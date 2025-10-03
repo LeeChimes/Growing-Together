@@ -51,33 +51,28 @@ export const useNotifications = () => {
     initNotifications();
   }, []);
 
-  // Set up notification response handler
+  // Set up notification response handler (skip effect on web to avoid warnings)
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener(
-      (response: any) => {
-        const { notification } = response;
-        const { type, eventId, taskId, announcementId, relatedId } = notification.request.content.data as any;
-        
-        // Handle different notification types
-        switch (type) {
-          case 'event_reminder':
-            // Could navigate to event details if needed
-            queryClient.invalidateQueries({ queryKey: ['events'] });
-            break;
-          case 'task_reminder':
-          case 'task_due_reminder':
-            // Could navigate to tasks if needed
-            queryClient.invalidateQueries({ queryKey: ['tasks'] });
-            break;
-          case 'announcement':
-            // Handle announcement navigation
-            break;
-          case 'community':
-            queryClient.invalidateQueries({ queryKey: ['posts'] });
-            break;
-        }
+    if (typeof window !== 'undefined') {
+      // Web: notifications listeners are no-ops; skip to avoid console warnings
+      return;
+    }
+    const subscription = Notifications.addNotificationResponseReceivedListener((response: any) => {
+      const { notification } = response;
+      const { type } = notification.request.content.data as any;
+      switch (type) {
+        case 'event_reminder':
+          queryClient.invalidateQueries({ queryKey: ['events'] });
+          break;
+        case 'task_reminder':
+        case 'task_due_reminder':
+          queryClient.invalidateQueries({ queryKey: ['tasks'] });
+          break;
+        case 'community':
+          queryClient.invalidateQueries({ queryKey: ['posts'] });
+          break;
       }
-    );
+    });
 
     return () => subscription.remove();
   }, [queryClient]);

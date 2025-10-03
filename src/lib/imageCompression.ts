@@ -57,7 +57,7 @@ export class ImageCompressionService {
       const finalOptions = { ...DEFAULT_OPTIONS, ...options };
       
       // Get image info to determine if compression is needed
-      const imageInfo = await ImageManipulator.manipulateAsync(imageUri, [], { format: ImageManipulator.SaveFormat.JPEG });
+      const imageInfo = await manipulateAsync(imageUri, [], { format: SaveFormat.JPEG });
       
       const actions: any[] = [];
       let needsResize = false;
@@ -145,7 +145,7 @@ export class ImageCompressionService {
     size?: number;
   }> {
     try {
-      const result = await ImageManipulator.manipulateAsync(imageUri, [], { format: ImageManipulator.SaveFormat.JPEG });
+      const result = await ImageManipulator.manipulateAsync(imageUri, [], { format: SaveFormat.JPEG });
       
       // Try to get file size (not always available)
       let size: number | undefined;
@@ -257,7 +257,7 @@ export class ImageCompressionService {
 
 // Helper function for picking and compressing images
 export const pickAndCompressImage = async (
-  options: any & { compression?: ImageCompressionOptions } = {}
+  options: ImagePicker.ImagePickerOptions & { compression?: ImageCompressionOptions } = {}
 ): Promise<{ uri: string; compressed: boolean } | null> => {
   try {
     const { compression, ...pickerOptions } = options;
@@ -289,7 +289,7 @@ export const pickAndCompressImage = async (
 
 // Helper function for multiple image selection with compression
 export const pickAndCompressImages = async (
-  options: any & { compression?: ImageCompressionOptions } = {},
+  options: ImagePicker.ImagePickerOptions & { compression?: ImageCompressionOptions } = {},
   onProgress?: (completed: number, total: number) => void
 ): Promise<{ uris: string[]; compressed: boolean[] } | null> => {
   try {
@@ -306,7 +306,7 @@ export const pickAndCompressImages = async (
       return null;
     }
     
-    const imageUris = result.assets.map((asset: any) => asset.uri);
+    const imageUris = result.assets.map(asset => asset.uri);
     const compressedUris = await ImageCompressionService.compressImages(
       imageUris,
       compression,

@@ -16,6 +16,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, FormField, Tag, useTheme } from '../design';
+import { notificationService } from '../lib/notifications';
 import { useCreateEvent } from '../hooks/useEvents';
 import { Database } from '../lib/database.types';
 
@@ -81,6 +82,8 @@ export function CreateEventModal({ visible, onClose, event }: CreateEventModalPr
     onClose();
   };
 
+  const [sendPushNow, setSendPushNow] = useState(false);
+
   const onSubmit = async (data: EventFormData) => {
     try {
       const eventData = {
@@ -90,7 +93,17 @@ export function CreateEventModal({ visible, onClose, event }: CreateEventModalPr
         end_date: data.end_date || null,
       };
 
-      await createMutation.mutateAsync(eventData);
+      const created = await createMutation.mutateAsync(eventData);
+
+      // Optionally send push now
+      if (sendPushNow && created) {
+        await notificationService.initialize();
+        await notificationService.sendAnnouncementNotification({
+          id: created.id,
+          title: 'New Community Event',
+          content: `${created.title} at ${created.location} on ${new Date(created.start_date).toLocaleString('en-GB')}`,
+        });
+      }
       handleClose();
     } catch (error) {
       Alert.alert('Error', 'Failed to create event');
@@ -370,6 +383,17 @@ export function CreateEventModal({ visible, onClose, event }: CreateEventModalPr
                 ))}
               </View>
             )}
+          </View>
+
+          {/* Notifications */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.charcoal }]}>Notifications</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TouchableOpacity onPress={() => setSendPushNow(!sendPushNow)}>
+                <Ionicons name={sendPushNow ? 'toggle' : 'toggle-outline'} size={32} color={sendPushNow ? theme.colors.green : theme.colors.gray} />
+              </TouchableOpacity>
+              <Text style={{ color: theme.colors.charcoal }}>Send push notification now</Text>
+            </View>
           </View>
         </ScrollView>
 

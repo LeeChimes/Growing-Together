@@ -1,18 +1,19 @@
+// Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
+/** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-// Prefer explicit platform order
-config.resolver.platforms = ['ios', 'android', 'native', 'web'];
-
-// Keep web aliasing minimal (Expo already handles most cases)
-config.resolver.alias = {
-  ...config.resolver.alias,
-  'react-native$': 'react-native-web',
+// Provide a web-compatible mock for expo-sqlite
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (platform === 'web' && moduleName === 'expo-sqlite') {
+    return {
+      filePath: path.resolve(__dirname, 'expo-sqlite.web.js'),
+      type: 'sourceFile',
+    };
+  }
+  // Use default resolver for everything else
+  return context.resolveRequest(context, moduleName, platform);
 };
-
-// Ensure ESM modules (.mjs) are transpiled by Metro (so Babel can transform import.meta)
-config.resolver.sourceExts = Array.from(new Set([...(config.resolver.sourceExts || []), 'mjs', 'cjs']));
-
-// Use default transformer options (Expo defaults are stable)
 module.exports = config;

@@ -34,6 +34,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button, Card, FormField, Tag, useTheme } from '../design';
 import { useCreateDiaryEntry, useUpdateDiaryEntry } from '../hooks/useDiary';
+import { useCreatePost } from '../hooks/useCommunity';
 import { Database } from '../lib/database.types';
 
 type DiaryEntry = Database['public']['Tables']['diary_entries']['Row'];
@@ -128,6 +129,8 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
 
   const createMutation = useCreateDiaryEntry();
   const updateMutation = useUpdateDiaryEntry();
+  const createPost = useCreatePost();
+  const [shareToCommunity, setShareToCommunity] = useState(false);
 
   const {
     control,
@@ -167,7 +170,13 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
       if (entry) {
         await updateMutation.mutateAsync({ id: entry.id, updates: entryData });
       } else {
-        await createMutation.mutateAsync(entryData);
+        const created = await createMutation.mutateAsync(entryData);
+        if (shareToCommunity && created) {
+          await createPost.mutateAsync({
+            content: `${created.title}\n\n${created.content}`,
+            photos: created.photos || [],
+          } as any);
+        }
       }
 
       handleClose();
@@ -401,6 +410,13 @@ export function DiaryEntryModal({ visible, onClose, entry, defaultTemplate }: Di
             )}
           </View>
         </ScrollView>
+        {/* Share toggle */}
+        <View style={{ padding: 16 }}>
+          <TouchableOpacity onPress={() => setShareToCommunity(!shareToCommunity)} style={{ flexDirection:'row', alignItems:'center', gap: 8 }}>
+            <Ionicons name={shareToCommunity ? 'checkbox' : 'square-outline'} size={20} color={shareToCommunity ? theme.colors.green : theme.colors.gray} />
+            <Text style={{ color: theme.colors.charcoal }}>Share to community after saving</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </Modal>
   );

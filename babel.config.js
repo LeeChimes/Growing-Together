@@ -3,8 +3,7 @@ module.exports = function(api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      // Transform `import.meta` so classic scripts can execute
-      ['babel-plugin-transform-import-meta'],
+      require('./babel-plugin-transform-import-meta')
     ],
   };
 };

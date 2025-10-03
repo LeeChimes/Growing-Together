@@ -37,6 +37,7 @@ import { Button, useTheme } from '../design';
 import { useCreatePost } from '../hooks/useCommunity';
 import { useAuthStore } from '../store/authStore';
 import { Post } from '../types/posts';
+import { notificationService } from '../lib/notifications';
 
 const postSchema = z.object({
   content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
@@ -48,6 +49,7 @@ interface CreatePostModalProps {
   visible: boolean;
   onClose: () => void;
   post?: Post;
+  defaultAnnouncement?: boolean;
 }
 
 const postTemplates = [
@@ -83,11 +85,12 @@ const postTemplates = [
   },
 ];
 
-export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps) {
+export function CreatePostModal({ visible, onClose, post, defaultAnnouncement = false }: CreatePostModalProps) {
   const theme = useTheme();
   const [photos, setPhotos] = useState<string[]>(post?.photos || []);
   const [characterCount, setCharacterCount] = useState(0);
   const [isAnnouncement, setIsAnnouncement] = useState(false);
+  const [sendPushNow, setSendPushNow] = useState(false);
   const { profile } = useAuthStore();
 
   const createMutation = useCreatePost();
@@ -112,6 +115,13 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
     setCharacterCount(watchContent?.length || 0);
   }, [watchContent]);
 
+  React.useEffect(() => {
+    if (visible) {
+      setIsAnnouncement(!!defaultAnnouncement);
+      setSendPushNow(false);
+    }
+  }, [visible, defaultAnnouncement]);
+
   const handleClose = () => {
     reset();
     setPhotos([]);
@@ -127,7 +137,17 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
         is_announcement: profile?.role === 'admin' ? isAnnouncement : false,
       } as any;
 
-      await createMutation.mutateAsync(postData);
+      const created = await createMutation.mutateAsync(postData);
+
+      // If announcement and send-now enabled, push immediately
+      if (isAnnouncement && sendPushNow && created) {
+        await notificationService.initialize();
+        await notificationService.sendAnnouncementNotification({
+          id: created.id,
+          title: 'New Announcement',
+          content: created.text || created.content || 'New post',
+        });
+      }
       handleClose();
     } catch (error) {
       Alert.alert('Error', 'Failed to create post');
@@ -255,6 +275,14 @@ export function CreatePostModal({ visible, onClose, post }: CreatePostModalProps
             <View style={[styles.section, { flexDirection:'row', alignItems:'center', gap: 8 }]}> 
               <Switch value={isAnnouncement} onValueChange={setIsAnnouncement} />
               <Text style={{ color: theme.colors.charcoal }}>Show as announcement banner on Home</Text>
+            </View>
+          )}
+
+          {/* Push Now Toggle (Admins + Announcement) */}
+          {profile?.role === 'admin' && isAnnouncement && (
+            <View style={[styles.section, { flexDirection:'row', alignItems:'center', gap: 8 }]}> 
+              <Switch value={sendPushNow} onValueChange={setSendPushNow} />
+              <Text style={{ color: theme.colors.charcoal }}>Send push notification now</Text>
             </View>
           )}
 

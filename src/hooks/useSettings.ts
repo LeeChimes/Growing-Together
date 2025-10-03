@@ -46,6 +46,7 @@ const USER_SETTINGS_STORAGE_KEY = 'user_settings';
 
 export const useAccessibilitySettings = () => {
   const [settings, setSettings] = useState<AccessibilitySettings>(DEFAULT_ACCESSIBILITY_SETTINGS);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['accessibility-settings'],
@@ -77,6 +78,8 @@ export const useAccessibilitySettings = () => {
     },
     onSuccess: (updatedSettings) => {
       setSettings(updatedSettings);
+      // Propagate to any listeners (e.g., ThemeProvider)
+      queryClient.setQueryData(['accessibility-settings'], updatedSettings);
     },
   });
 

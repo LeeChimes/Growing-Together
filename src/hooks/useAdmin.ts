@@ -73,8 +73,7 @@ export const useCreateJoinCode = () => {
         created_by: user!.id,
         expires_at: joinCodeData.expires_at,
         max_uses: joinCodeData.max_uses,
-        is_active: true,
-        current_uses: 0,
+        uses_count: 0,
       };
 
       if (await syncManager.isOnline()) {
@@ -112,18 +111,20 @@ export const useToggleJoinCode = () => {
 
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      // Since is_active doesn't exist in schema, we set/clear expires_at to activate/deactivate
+      const expires_at = isActive ? null : new Date().toISOString();
+      
       if (await syncManager.isOnline()) {
         const { error } = await supabase
           .from('join_codes')
-          .update({ is_active: isActive } as any)
+          .update({ expires_at } as any)
           .eq('id', id);
 
         if (error) throw error;
       } else {
         await cacheOperations.addToMutationQueue('join_codes', 'UPDATE', {
           id,
-          is_active: isActive,
-          updated_at: new Date().toISOString(),
+          expires_at,
         });
       }
     },

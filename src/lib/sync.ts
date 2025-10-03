@@ -49,19 +49,26 @@ class SyncManagerImpl implements SyncManager {
       await this.processMutationQueue();
       
       // Then sync all tables
+      const chatEnabled = (process.env.EXPO_PUBLIC_ENABLE_CHAT || '').toLowerCase() === 'true';
       const tables = [
         'profiles',
         'diary_entries', 
         'events',
         'event_rsvps',
         'posts',
+        ...(chatEnabled ? ['chat_messages'] : []),
         'tasks',
         'albums',
         'photos'
       ];
 
       for (const table of tables) {
-        await this.syncTable(table);
+        try {
+          await this.syncTable(table);
+        } catch (e) {
+          // Skip tables that are not present (e.g., feature not provisioned yet)
+          console.warn(`Skipping sync for table '${table}':`, e);
+        }
       }
     } catch (error) {
       console.error('Sync failed:', error);
@@ -79,7 +86,23 @@ class SyncManagerImpl implements SyncManager {
         .order('updated_at', { ascending: false })
         .limit(1000);
 
-      if (error) throw error;
+      if (error) {
+        // Handle 404 (table not found) gracefully
+        const code = (error as any)?.code || '';
+        const message = (error as any)?.message || '';
+        if (
+          code === 'PGRST25' || // PostgREST: table not found
+          code === '42P01' || // Postgres undefined_table
+          message.includes('relation') ||
+          message.includes('not found') ||
+          message.includes('Could not find the table') ||
+          message.includes('does not exist')
+        ) {
+          console.warn(`Table '${tableName}' not found on server; skipping.`);
+          return;
+        }
+        throw error;
+      }
 
       if (data && data.length > 0) {
         // Convert arrays to JSON strings for SQLite storage

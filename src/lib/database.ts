@@ -1,21 +1,77 @@
-// Platform-specific database import
-const isWeb = typeof window !== 'undefined';
+import { Platform } from 'react-native';
 
-let db: any;
+// Conditional import for web compatibility
+let SQLite: any;
 
-if (isWeb) {
-  // Web version - use our custom web database
-  const { createWebDatabase } = require('./database.web');
-  db = createWebDatabase('growing_together.db');
+if (Platform.OS === 'web') {
+  // Web platform - use localStorage mock (don't import expo-sqlite at all)
+  SQLite = {
+    openDatabase: (name: string) => ({
+      transaction: (fn: any) => fn({
+        executeSql: (sql: string, params: any[], success: any, error: any) => {
+          try {
+            if (sql.includes('SELECT')) {
+              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
+              success(null, { rows: { _array: JSON.parse(data) } });
+            } else {
+              success(null, { rowsAffected: 1 });
+            }
+          } catch (e) {
+            error(e);
+          }
+        }
+      })
+    }),
+    openDatabaseSync: (name: string) => ({
+      transaction: (fn: any) => fn({
+        executeSql: (sql: string, params: any[], success: any, error: any) => {
+          try {
+            if (sql.includes('SELECT')) {
+              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
+              success(null, { rows: { _array: JSON.parse(data) } });
+            } else {
+              success(null, { rowsAffected: 1 });
+            }
+          } catch (e) {
+            error(e);
+          }
+        }
+      }),
+      execAsync: async (query: string) => {
+        console.log('[SQLite Mock] execAsync:', query);
+        return { rows: [] };
+      },
+      runAsync: async (query: string, params: any[] = []) => {
+        console.log('[SQLite Mock] runAsync:', query, params);
+        return { lastInsertRowId: 1, changes: 1 };
+      },
+      getAllAsync: async (query: string, params: any[] = []) => {
+        console.log('[SQLite Mock] getAllAsync:', query, params);
+        try {
+          // Return empty array for SELECT queries
+          return [];
+        } catch (e) {
+          console.error('[SQLite Mock] getAllAsync error:', e);
+          return [];
+        }
+      },
+      getFirstAsync: async (query: string, params: any[] = []) => {
+        console.log('[SQLite Mock] getFirstAsync:', query, params);
+        return null;
+      },
+    })
+  };
 } else {
-  // Native version - use expo-sqlite
-  const SQLite = require('expo-sqlite');
-  db = SQLite.openDatabaseSync('growing_together.db');
+  // Native platform
+  SQLite = require('expo-sqlite');
 }
 
-export { db };
+import { Database } from './database.types';
 
-// Database initialization function
+// Initialize SQLite database
+export const db = SQLite.openDatabaseSync('growing_together.db');
+
+// Database initialization
 export const initializeDatabase = async (): Promise<void> => {
   try {
     // For the new SQLite API, we execute SQL directly
@@ -153,6 +209,54 @@ export const initializeDatabase = async (): Promise<void> => {
         caption TEXT,
         uploaded_by TEXT NOT NULL,
         created_at TEXT NOT NULL,
+        sync_status TEXT DEFAULT 'synced'
+      );
+    `);
+
+    // Recipes cache
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS recipes_cache (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        ingredients TEXT,
+        steps TEXT,
+        photos TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        sync_status TEXT DEFAULT 'synced'
+      );
+    `);
+
+    // Chat messages cache (community chat)
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS chat_messages_cache (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        text TEXT NOT NULL,
+        photos TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        sync_status TEXT DEFAULT 'synced'
+      );
+    `);
+
+    // User documents cache
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS user_documents_cache (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        type TEXT NOT NULL,
+        file_url TEXT,
+        file_name TEXT,
+        file_size INTEGER,
+        mime_type TEXT,
+        uploaded_by_user_id TEXT,
+        expires_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
         sync_status TEXT DEFAULT 'synced'
       );
     `);
