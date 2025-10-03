@@ -213,6 +213,54 @@ export const initializeDatabase = async (): Promise<void> => {
       );
     `);
 
+    // Recipes cache
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS recipes_cache (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        ingredients TEXT,
+        steps TEXT,
+        photos TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        sync_status TEXT DEFAULT 'synced'
+      );
+    `);
+
+    // Chat messages cache (community chat)
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS chat_messages_cache (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        text TEXT NOT NULL,
+        photos TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        sync_status TEXT DEFAULT 'synced'
+      );
+    `);
+
+    // User documents cache
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS user_documents_cache (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        type TEXT NOT NULL,
+        file_url TEXT,
+        file_name TEXT,
+        file_size INTEGER,
+        mime_type TEXT,
+        uploaded_by_user_id TEXT,
+        expires_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        sync_status TEXT DEFAULT 'synced'
+      );
+    `);
+
     // Mutation queue for offline operations
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS mutation_queue (

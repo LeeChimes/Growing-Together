@@ -253,6 +253,33 @@ CREATE TABLE IF NOT EXISTS public.join_codes (
 );
 
 -- =====================================================
+-- 17. CHAT MESSAGES TABLE (Community Chat)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.chat_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  text TEXT NOT NULL,
+  photos JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- =====================================================
+-- 18. RECIPES TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.recipes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  ingredients JSONB DEFAULT '[]'::jsonb,
+  steps JSONB DEFAULT '[]'::jsonb,
+  photos JSONB DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- =====================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- =====================================================
 
@@ -273,6 +300,8 @@ ALTER TABLE public.rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rule_acknowledgements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.join_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.recipes ENABLE ROW LEVEL SECURITY;
 
 -- PROFILES: Users can read all profiles, update their own
 CREATE POLICY "Profiles are viewable by everyone" ON public.profiles FOR SELECT USING (true);
@@ -404,6 +433,20 @@ CREATE POLICY "Authenticated users can view join codes" ON public.join_codes FOR
 CREATE POLICY "Admins can create join codes" ON public.join_codes FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
+
+-- CHAT MESSAGES: Everyone can read, authenticated can create, creators can update/delete
+CREATE POLICY "Chat is viewable by everyone" ON public.chat_messages FOR SELECT USING (true);
+CREATE POLICY "Authenticated users can send messages" ON public.chat_messages FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Creators can update their messages" ON public.chat_messages FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "Creators can delete their messages" ON public.chat_messages FOR DELETE USING (user_id = auth.uid());
+
+-- RECIPES: Everyone can read, members+ can create, creators can update/delete
+CREATE POLICY "Recipes are viewable by everyone" ON public.recipes FOR SELECT USING (true);
+CREATE POLICY "Members can create recipes" ON public.recipes FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin','member'))
+);
+CREATE POLICY "Creators can update their recipes" ON public.recipes FOR UPDATE USING (user_id = auth.uid());
+CREATE POLICY "Creators can delete their recipes" ON public.recipes FOR DELETE USING (user_id = auth.uid());
 CREATE POLICY "Admins can update join codes" ON public.join_codes FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );

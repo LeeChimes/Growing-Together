@@ -33,6 +33,7 @@ export default function DocumentsScreen() {
 
   // Hooks
   const { data: myDocuments = [], isLoading: loadingDocuments } = useMyDocuments();
+  const documentsEnabled = (process.env.EXPO_PUBLIC_ENABLE_DOCUMENTS ?? 'false').toLowerCase() === 'true';
   const { data: attentionDocuments = [] } = useDocumentsRequiringAttention();
   const deleteDocumentMutation = useDeleteDocument();
   const downloadDocumentMutation = useDownloadDocument();
@@ -124,7 +125,7 @@ export default function DocumentsScreen() {
               {document.file_name}
             </Text>
             <Text style={styles.uploadDate}>
-              Uploaded: {new Date(document.created_at).toLocaleDateString()}
+              Uploaded: {new Date(document.created_at).toLocaleDateString('en-GB')}
             </Text>
             {document.expires_at && (
               <View style={styles.expiryInfo}>
@@ -233,7 +234,7 @@ export default function DocumentsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>My Documents</Text>
-          {isAdmin && (
+          {isAdmin && documentsEnabled && (
             <TouchableOpacity
               style={styles.adminButton}
               onPress={() => setShowAdminModal(true)}
@@ -245,6 +246,13 @@ export default function DocumentsScreen() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {!documentsEnabled && (
+            <Card style={[styles.attentionCard, { marginTop: 16, backgroundColor: tokens.colors.info + '10', borderColor: tokens.colors.info + '30' }]}>
+              <Text style={{ color: tokens.colors.text.secondary }}>
+                Documents backend is disabled for this environment. Set EXPO_PUBLIC_ENABLE_DOCUMENTS=true once the Supabase table and storage bucket are provisioned.
+              </Text>
+            </Card>
+          )}
           {/* Attention Card */}
           {renderAttentionCard()}
 
@@ -255,15 +263,21 @@ export default function DocumentsScreen() {
           {myDocuments.length === 0 && !loadingDocuments ? (
             <View style={styles.emptyState}>
               <Ionicons name="folder-open" size={64} color={tokens.colors.text.secondary} />
-              <Text style={styles.emptyStateTitle}>No Documents Yet</Text>
-              <Text style={styles.emptyStateDescription}>
-                Upload your first document to get started. You can store contracts, ID documents, and other important files.
+              <Text style={styles.emptyStateTitle}>
+                {documentsEnabled ? 'No Documents Yet' : 'Documents Disabled'}
               </Text>
-              <Button
-                title="Upload Document"
-                onPress={() => setShowUploadModal(true)}
-                style={styles.emptyStateButton}
-              />
+              <Text style={styles.emptyStateDescription}>
+                {documentsEnabled
+                  ? 'Upload your first document to get started. You can store contracts, ID documents, and other important files.'
+                  : 'Documents are currently disabled in this environment. Ask an admin to enable the backend or try again later.'}
+              </Text>
+              {documentsEnabled && (
+                <Button
+                  title="Upload Document"
+                  onPress={() => setShowUploadModal(true)}
+                  style={styles.emptyStateButton}
+                />
+              )}
             </View>
           ) : (
             <View style={styles.documentsContainer}>
@@ -279,7 +293,7 @@ export default function DocumentsScreen() {
         </ScrollView>
 
         {/* Upload FAB */}
-        {myDocuments.length > 0 && (
+        {myDocuments.length > 0 && documentsEnabled && (
           <FAB
             icon="add"
             onPress={() => setShowUploadModal(true)}
@@ -289,7 +303,7 @@ export default function DocumentsScreen() {
 
         {/* Modals */}
         <UploadDocumentModal
-          visible={showUploadModal}
+          visible={documentsEnabled && showUploadModal}
           onClose={() => setShowUploadModal(false)}
         />
 

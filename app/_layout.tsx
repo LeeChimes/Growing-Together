@@ -5,8 +5,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '../src/design';
-import { Logo } from '../src/design/Logo';
+import { Avatar } from '../src/design';
 import { useAuthStore } from '../src/store/authStore';
+import { Logo } from '../src/design/Logo';
 import { queryClient } from '../src/lib/queryClient';
 import { initializeDatabase } from '../src/lib/database';
 import { startAutoSync } from '../src/lib/sync';
@@ -16,7 +17,7 @@ import { ErrorBoundary } from '../src/components/ErrorBoundary';
 import { View, ActivityIndicator, Platform } from 'react-native';
 
 function RootLayoutContent() {
-  const { user, isLoading, isInitialized, initialize } = useAuthStore();
+  const { user, profile, isLoading, isInitialized, initialize } = useAuthStore();
   const [dbInitialized, setDbInitialized] = useState(false);
   const router = useRouter();
   const segments = useSegments();
@@ -76,7 +77,20 @@ function RootLayoutContent() {
     <ThemeProvider>
           <Tabs 
             screenOptions={{
-              headerTitle: () => <Logo width={160} />,
+              headerTitle: () => (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Logo width={140} />
+                </View>
+              ),
+              headerRight: () => {
+                // Force update when profile avatar changes by binding to key
+                const key = (profile?.avatar_url || profile?.full_name || user?.email || 'User') as string;
+                return (
+                  <View style={{ paddingRight: 12 }} key={key}>
+                    <Avatar name={profile?.full_name || user?.email || 'User'} imageUri={profile?.avatar_url as any} size="small" />
+                  </View>
+                );
+              },
               tabBarActiveTintColor: '#22c55e',
               tabBarInactiveTintColor: '#6b7280',
               // Use consistent defaults to avoid clipping

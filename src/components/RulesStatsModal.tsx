@@ -140,7 +140,7 @@ export const RulesStatsModal: React.FC<RulesStatsModalProps> = ({
                         {(ack as any).profiles?.full_name || 'Unknown User'}
                       </Text>
                       <Text style={styles.acknowledgmentDate}>
-                        {new Date(ack.acknowledged_at).toLocaleDateString()}
+                        {new Date(ack.acknowledged_at).toLocaleDateString('en-GB')}
                       </Text>
                     </View>
                     <Ionicons 

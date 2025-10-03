@@ -41,6 +41,8 @@ async function dispatchMutation(m: Mutation) {
       return apiCreateTask(m.payload);
     case 'document.upload':
       return apiUploadDocument(m.payload);
+    case 'chat.send':
+      return apiSendChat(m.payload);
     default:
       throw new Error(`Unknown mutation type: ${m.type}`);
   }
@@ -53,5 +55,6 @@ async function apiCreatePost(_payload: any) { /* integrate */ }
 async function apiSetRsvp(_payload: any) { /* integrate */ }
 async function apiCreateTask(_payload: any) { /* integrate */ }
 async function apiUploadDocument(_payload: any) { /* integrate */ }
+async function apiSendChat(_payload: any) { /* integrate */ }
 
 

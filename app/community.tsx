@@ -29,6 +29,7 @@ import {
   useCreateComment 
 } from '../src/hooks/useCommunity';
 import { CreatePostModal } from '../src/components/CreatePostModal';
+import { ChatModal } from '../src/components/ChatModal';
 import { useAuthStore } from '../src/store/authStore';
 
 export default function CommunityScreen() {
@@ -36,6 +37,7 @@ export default function CommunityScreen() {
   const { user, profile } = useAuthStore();
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pinned'>('all');
+  const [showChat, setShowChat] = useState(false);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [showComments, setShowComments] = useState<Set<string>>(new Set());
 
@@ -300,8 +302,16 @@ export default function CommunityScreen() {
           </Text>
         </View>
 
-        {/* Filter Toggle */}
-        <View style={[styles.filterToggle, { backgroundColor: theme.colors.grayLight }]}>
+        {/* Header Actions: Chat + Filter Toggle */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity
+            onPress={() => setShowChat(true)}
+            style={{ padding: 8, borderRadius: 20, backgroundColor: theme.colors.sky + '20' }}
+          >
+            <Ionicons name="chatbubbles" size={20} color={theme.colors.sky} />
+          </TouchableOpacity>
+
+          <View style={[styles.filterToggle, { backgroundColor: theme.colors.grayLight }]}>
           <TouchableOpacity
             style={[
               styles.filterButton,
@@ -339,6 +349,7 @@ export default function CommunityScreen() {
               Pinned
             </Text>
           </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -376,6 +387,9 @@ export default function CommunityScreen() {
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}
       />
+
+      {/* Chat Modal */}
+      <ChatModal visible={showChat} onClose={() => setShowChat(false)} />
     </SafeAreaView>
   );
 }

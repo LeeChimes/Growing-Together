@@ -160,6 +160,29 @@ export default function HomeScreen() {
                 Gallery
               </Text>
             </TouchableOpacity>
+
+            {/* Admin Tools shortcut */}
+            {profile?.role === 'admin' && (
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: theme.colors.error + '20' }]}
+                onPress={() => router.push('/more')}
+              >
+                <Ionicons name="shield-checkmark" size={24} color={theme.colors.error} />
+                <Text style={[styles.actionText, { color: theme.colors.error }]}> 
+                  Admin Tools
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.colors.sunflower }]}
+              onPress={() => router.push('/recipes')}
+            >
+              <Ionicons name="restaurant" size={24} color={theme.colors.charcoal} />
+              <Text style={[styles.actionText, { color: theme.colors.charcoal }]}> 
+                Recipes
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -191,7 +214,7 @@ export default function HomeScreen() {
                       {task.title}
                     </Text>
                     <Text style={[styles.taskDate, { color: theme.colors.gray }]}>
-                      {task.due_date ? `Due ${new Date(task.due_date).toLocaleDateString()}` : 'No due date'}
+                      {task.due_date ? `Due ${new Date(task.due_date).toLocaleDateString('en-GB')}` : 'No due date'}
                     </Text>
                   </View>
                 </View>
@@ -226,7 +249,7 @@ export default function HomeScreen() {
                   {nextEvent.title}
                 </Text>
                 <Text style={[styles.eventDate, { color: theme.colors.gray }]}>
-                  {new Date(nextEvent.start_date).toLocaleDateString()}
+                  {new Date(nextEvent.start_date).toLocaleDateString('en-GB')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={theme.colors.gray} />

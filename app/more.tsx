@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,8 +16,21 @@ import {
   Card, 
   Button,
   useTheme,
-  ListItem 
+  ListItem,
+  Avatar,
 } from '../src/design';
+// Conditional import for web compatibility (image picker)
+let ImagePicker: any;
+if (typeof window === 'undefined') {
+  ImagePicker = require('expo-image-picker');
+} else {
+  ImagePicker = {
+    MediaTypeOptions: { Images: 'Images' },
+    requestMediaLibraryPermissionsAsync: async () => ({ status: 'granted' }),
+    launchImageLibraryAsync: async () => ({ canceled: true }),
+  };
+}
+import { supabase } from '../src/lib/supabase';
 import { useNotificationPreferences, useNotificationPermissions } from '../src/hooks/useNotifications';
 import { useAccessibilitySettings, useUserProfile, useUpdateProfile } from '../src/hooks/useSettings';
 import { useAuthStore } from '../src/store/authStore';
@@ -27,12 +41,15 @@ import { DevOfflineHarness } from '../src/components/DevOfflineHarness';
 export default function MoreScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, profile, signOut } = useAuthStore();
+  const { user, profile, signOut, refreshProfile } = useAuthStore();
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showAccessibilitySettings, setShowAccessibilitySettings] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showQADashboard, setShowQADashboard] = useState(false);
   const [showDevOffline, setShowDevOffline] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   
   const { 
     preferences, 
@@ -52,6 +69,132 @@ export default function MoreScreen() {
   } = useAccessibilitySettings();
 
   const { data: userProfile } = useUserProfile();
+  const updateProfileMutation = useUpdateProfile();
+  const [editProfile, setEditProfile] = useState({
+    full_name: userProfile?.full_name || profile?.full_name || '',
+    plot_number: userProfile?.plot_number || profile?.plot_number || '',
+    phone: userProfile?.phone || '',
+    emergency_contact: userProfile?.emergency_contact || '',
+  });
+  const [avatarUrlInput, setAvatarUrlInput] = useState('');
+  const [generatedAvatars, setGeneratedAvatars] = useState<string[]>([]);
+  const [avatarIndex, setAvatarIndex] = useState<number>(-1); // -1 = no preview
+
+  const applyLocalProfile = (partial: any) => {
+    const current = useAuthStore.getState().profile as any;
+    useAuthStore.setState({ profile: { ...current, ...partial } as any });
+  };
+
+  const handleUploadAvatarFromPicker = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync?.();
+      if (perm && perm.status !== 'granted') {
+        Alert.alert('Permission required', 'Please allow photo library access to choose an avatar.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        base64: false,
+      });
+      if (result.canceled || !result.assets?.length) {
+        Alert.alert('No photo selected', 'You can also paste an image URL below on web.');
+        return;
+      }
+      const uri = result.assets[0].uri;
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const fileName = `avatars/${user!.id}-${Date.now()}.jpg`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('photos')
+        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('photos').getPublicUrl(uploadData.path);
+      // Optimistic update and immediate navigate to Home
+      applyLocalProfile({ avatar_url: urlData.publicUrl });
+      setShowProfile(false);
+      router.push('/home');
+      updateProfileMutation.mutate({ avatar_url: urlData.publicUrl });
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to update avatar');
+    }
+  };
+
+  const handleSaveAll = async () => {
+    try {
+      // Build payload from form + avatar selection priorities:
+      // 1) If a URL is typed, use it
+      // 2) Else if a generated preview is selected, use it
+      // 3) Else leave avatar unchanged
+      const urlFromInput = avatarUrlInput.trim();
+      const previewUrl = avatarIndex >= 0 ? generatedAvatars[avatarIndex] : undefined;
+      const payload: any = { ...editProfile };
+      if (urlFromInput) payload.avatar_url = urlFromInput;
+      else if (previewUrl) payload.avatar_url = previewUrl;
+
+      // Optimistic local update and navigate immediately
+      applyLocalProfile(payload);
+      setAvatarUrlInput('');
+      setShowProfile(false);
+      router.push('/home');
+      updateProfileMutation.mutate(payload);
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to update profile');
+    }
+  };
+
+  const handleGenerateAvatar = async () => {
+    // Generate a new random avatar preview and append to history
+    const seed = Math.random().toString(36).slice(2);
+    const styles = ['fun-emoji', 'adventurer', 'bottts', 'lorelei', 'thumbs'];
+    const style = styles[Math.floor(Math.random() * styles.length)];
+    const url = `https://api.dicebear.com/7.x/${style}/png?size=128&seed=${seed}`;
+    setGeneratedAvatars((prev) => {
+      const next = prev.slice(0, avatarIndex + 1).concat([url]);
+      setAvatarIndex(next.length - 1);
+      return next;
+    });
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      await updateProfileMutation.mutateAsync({ avatar_url: null as any });
+      applyLocalProfile({ avatar_url: null });
+      Alert.alert('Avatar removed', 'Reverting to initials.');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to remove avatar');
+    }
+  };
+
+  const handleSaveCurrentPreview = async () => {
+    const url = avatarIndex >= 0 ? generatedAvatars[avatarIndex] : '';
+    if (!url) {
+      Alert.alert('No selection', 'Generate an avatar first or paste an image URL.');
+      return;
+    }
+    try {
+      // Optimistic update and immediate navigate to Home
+      applyLocalProfile({ avatar_url: url });
+      setShowProfile(false);
+      router.push('/home');
+      updateProfileMutation.mutate({ avatar_url: url });
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to update avatar');
+    }
+  };
+
+  const handlePrevPreview = () => {
+    if (avatarIndex > 0) setAvatarIndex(avatarIndex - 1);
+  };
+
+  const handleNextPreview = () => {
+    if (avatarIndex < generatedAvatars.length - 1) setAvatarIndex(avatarIndex + 1);
+  };
+
+  const handleClearPreview = () => {
+    setAvatarIndex(-1);
+    setGeneratedAvatars([]);
+  };
 
   const handleSignOut = () => {
     Alert.alert(
@@ -230,7 +373,7 @@ export default function MoreScreen() {
   };
 
   const renderNotificationSettings = () => {
-    if (!showNotificationSettings || !preferences) return null;
+    if (!showNotificationSettings) return null;
 
     return (
       <View style={styles.settingsSection}>
@@ -287,14 +430,14 @@ export default function MoreScreen() {
                 </Text>
               </View>
               <Switch
-                value={preferences.eventReminders}
+                value={preferences?.eventReminders ?? false}
                 onValueChange={(value) => updatePreferences({ eventReminders: value })}
                 trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                thumbColor={preferences.eventReminders ? theme.colors.green : theme.colors.gray}
+                thumbColor={(preferences?.eventReminders ?? false) ? theme.colors.green : theme.colors.gray}
               />
             </View>
 
-            {preferences.eventReminders && (
+            {preferences?.eventReminders && (
               <>
                 <View style={styles.settingItem}>
                   <View style={styles.settingInfo}>
@@ -306,10 +449,10 @@ export default function MoreScreen() {
                     </Text>
                   </View>
                   <Switch
-                    value={preferences.eventReminder24h}
+                    value={preferences?.eventReminder24h ?? false}
                     onValueChange={(value) => updatePreferences({ eventReminder24h: value })}
                     trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                    thumbColor={preferences.eventReminder24h ? theme.colors.green : theme.colors.gray}
+                    thumbColor={(preferences?.eventReminder24h ?? false) ? theme.colors.green : theme.colors.gray}
                   />
                 </View>
 
@@ -323,10 +466,10 @@ export default function MoreScreen() {
                     </Text>
                   </View>
                   <Switch
-                    value={preferences.eventReminder1h}
+                    value={preferences?.eventReminder1h ?? false}
                     onValueChange={(value) => updatePreferences({ eventReminder1h: value })}
                     trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                    thumbColor={preferences.eventReminder1h ? theme.colors.green : theme.colors.gray}
+                    thumbColor={(preferences?.eventReminder1h ?? false) ? theme.colors.green : theme.colors.gray}
                   />
                 </View>
               </>
@@ -349,21 +492,21 @@ export default function MoreScreen() {
                 </Text>
               </View>
               <Switch
-                value={preferences.taskReminders}
+                value={preferences?.taskReminders ?? false}
                 onValueChange={(value) => updatePreferences({ taskReminders: value })}
                 trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                thumbColor={preferences.taskReminders ? theme.colors.green : theme.colors.gray}
+                thumbColor={(preferences?.taskReminders ?? false) ? theme.colors.green : theme.colors.gray}
               />
             </View>
 
-            {preferences.taskReminders && (
+            {preferences?.taskReminders && (
               <View style={styles.settingItem}>
                 <View style={styles.settingInfo}>
                   <Text style={[styles.settingLabel, { color: theme.colors.charcoal }]}>
                     Reminder Time
                   </Text>
                   <Text style={[styles.settingDescription, { color: theme.colors.gray }]}>
-                    Currently set to {preferences.taskReminderTime}
+                    Currently set to {preferences?.taskReminderTime ?? '09:00'}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -374,7 +517,7 @@ export default function MoreScreen() {
                   }}
                 >
                   <Text style={[styles.timeButtonText, { color: theme.colors.charcoal }]}>
-                    {preferences.taskReminderTime}
+                    {preferences?.taskReminderTime ?? '09:00'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -397,10 +540,10 @@ export default function MoreScreen() {
                 </Text>
               </View>
               <Switch
-                value={preferences.announcementNotifications}
+                value={preferences?.announcementNotifications ?? false}
                 onValueChange={(value) => updatePreferences({ announcementNotifications: value })}
                 trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                thumbColor={preferences.announcementNotifications ? theme.colors.green : theme.colors.gray}
+                thumbColor={(preferences?.announcementNotifications ?? false) ? theme.colors.green : theme.colors.gray}
               />
             </View>
 
@@ -414,10 +557,10 @@ export default function MoreScreen() {
                 </Text>
               </View>
               <Switch
-                value={preferences.communityNotifications}
+                value={preferences?.communityNotifications ?? false}
                 onValueChange={(value) => updatePreferences({ communityNotifications: value })}
                 trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                thumbColor={preferences.communityNotifications ? theme.colors.green : theme.colors.gray}
+                thumbColor={(preferences?.communityNotifications ?? false) ? theme.colors.green : theme.colors.gray}
               />
             </View>
 
@@ -431,10 +574,10 @@ export default function MoreScreen() {
                 </Text>
               </View>
               <Switch
-                value={preferences.sound}
+                value={preferences?.sound ?? true}
                 onValueChange={(value) => updatePreferences({ sound: value })}
                 trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                thumbColor={preferences.sound ? theme.colors.green : theme.colors.gray}
+                thumbColor={(preferences?.sound ?? true) ? theme.colors.green : theme.colors.gray}
               />
             </View>
 
@@ -448,12 +591,162 @@ export default function MoreScreen() {
                 </Text>
               </View>
               <Switch
-                value={preferences.vibration}
+                value={preferences?.vibration ?? true}
                 onValueChange={(value) => updatePreferences({ vibration: value })}
                 trackColor={{ false: theme.colors.grayLight, true: theme.colors.green + '40' }}
-                thumbColor={preferences.vibration ? theme.colors.green : theme.colors.gray}
+                thumbColor={(preferences?.vibration ?? true) ? theme.colors.green : theme.colors.gray}
               />
             </View>
+          </Card>
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderProfile = () => {
+    if (!showProfile) return null;
+    return (
+      <View style={styles.settingsSection}>
+        <TouchableOpacity style={styles.backHeader} onPress={() => setShowProfile(false)}>
+          <Ionicons name="arrow-back" size={24} color={theme.colors.charcoal} />
+          <Text style={[styles.backHeaderTitle, { color: theme.colors.charcoal }]}>Profile</Text>
+        </TouchableOpacity>
+        <ScrollView style={styles.settingsContent}>
+          <Card style={styles.settingsCard}>
+            <Text style={[styles.settingsTitle, { color: theme.colors.charcoal }]}>Account Details</Text>
+            <View style={{ gap: 12 }}>
+              {/* Avatar Builder */}
+              <View style={{ alignItems: 'center', marginBottom: 8 }}>
+                <Avatar
+                  name={editProfile.full_name || profile?.full_name || user?.email || 'User'}
+                  imageUri={(avatarIndex >= 0 ? generatedAvatars[avatarIndex] : ((userProfile as any)?.avatar_url || profile?.avatar_url)) as any}
+                  size="large"
+                />
+                <Text style={{ color: theme.colors.gray, fontSize: 12, marginTop: 6 }}>Tap a method below to change your avatar</Text>
+              </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+                <Button title="Upload Photo" onPress={handleUploadAvatarFromPicker} variant="secondary" />
+                <Button title="Generate New" onPress={handleGenerateAvatar} variant="secondary" />
+                <Button title="Prev" onPress={handlePrevPreview} variant="outline" />
+                <Button title="Next" onPress={handleNextPreview} variant="outline" />
+                <Button title="Clear" onPress={handleClearPreview} variant="ghost" />
+                <Button title="Remove Avatar" onPress={handleRemoveAvatar} variant="outline" />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.charcoal, marginTop: 8, marginBottom: 6 }}>Or paste image URL</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TextInput
+                    value={avatarUrlInput}
+                    onChangeText={setAvatarUrlInput}
+                    placeholder="https://example.com/me.jpg"
+                    placeholderTextColor={theme.colors.gray}
+                    style={{ flex: 1, borderWidth: 1, borderColor: theme.colors.grayLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.charcoal }}
+                  />
+                  <Button title="Save" onPress={handleSaveAll} variant="primary" />
+                </View>
+              </View>
+
+              {/* Role and Email (read-only for now, show for context) */}
+              <View>
+                <Text style={{ color: theme.colors.charcoal, marginBottom: 6 }}>Email (read-only)</Text>
+                <TextInput
+                  value={profile?.email || user?.email || ''}
+                  editable={false}
+                  placeholderTextColor={theme.colors.gray}
+                  style={{ borderWidth: 1, borderColor: theme.colors.grayLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.gray }}
+                />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.charcoal, marginBottom: 6 }}>Role</Text>
+                <TextInput
+                  value={profile?.role || 'member'}
+                  editable={false}
+                  placeholderTextColor={theme.colors.gray}
+                  style={{ borderWidth: 1, borderColor: theme.colors.grayLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.gray }}
+                />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.charcoal, marginBottom: 6 }}>Full Name</Text>
+                <TextInput
+                  value={editProfile.full_name}
+                  onChangeText={(t) => setEditProfile((p) => ({ ...p, full_name: t }))}
+                  placeholder="Your full name"
+                  placeholderTextColor={theme.colors.gray}
+                  style={{ borderWidth: 1, borderColor: theme.colors.grayLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.charcoal }}
+                />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.charcoal, marginBottom: 6 }}>Plot Number</Text>
+                <TextInput
+                  value={editProfile.plot_number || ''}
+                  onChangeText={(t) => setEditProfile((p) => ({ ...p, plot_number: t }))}
+                  placeholder="e.g., A12"
+                  placeholderTextColor={theme.colors.gray}
+                  style={{ borderWidth: 1, borderColor: theme.colors.grayLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.charcoal }}
+                />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.charcoal, marginBottom: 6 }}>Phone</Text>
+                <TextInput
+                  value={editProfile.phone}
+                  onChangeText={(t) => setEditProfile((p) => ({ ...p, phone: t }))}
+                  placeholder="Mobile number"
+                  placeholderTextColor={theme.colors.gray}
+                  keyboardType="phone-pad"
+                  style={{ borderWidth: 1, borderColor: theme.colors.grayLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.charcoal }}
+                />
+              </View>
+              <View>
+                <Text style={{ color: theme.colors.charcoal, marginBottom: 6 }}>Emergency Contact</Text>
+                <TextInput
+                  value={editProfile.emergency_contact}
+                  onChangeText={(t) => setEditProfile((p) => ({ ...p, emergency_contact: t }))}
+                  placeholder="Name and phone"
+                  placeholderTextColor={theme.colors.gray}
+                  style={{ borderWidth: 1, borderColor: theme.colors.grayLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: theme.colors.charcoal }}
+                />
+              </View>
+              <Button
+                title={updateProfileMutation.isPending ? 'Saving…' : 'Save Changes'}
+                onPress={handleSaveAll}
+              />
+            </View>
+          </Card>
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderPrivacy = () => {
+    if (!showPrivacy) return null;
+    return (
+      <View style={styles.settingsSection}>
+        <TouchableOpacity style={styles.backHeader} onPress={() => setShowPrivacy(false)}>
+          <Ionicons name="arrow-back" size={24} color={theme.colors.charcoal} />
+          <Text style={[styles.backHeaderTitle, { color: theme.colors.charcoal }]}>Privacy & Security</Text>
+        </TouchableOpacity>
+        <ScrollView style={styles.settingsContent}>
+          <Card style={styles.settingsCard}>
+            <Text style={[styles.settingsTitle, { color: theme.colors.charcoal }]}>Privacy</Text>
+            <Text style={{ color: theme.colors.gray }}>Privacy controls will be available here.</Text>
+          </Card>
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderHelp = () => {
+    if (!showHelp) return null;
+    return (
+      <View style={styles.settingsSection}>
+        <TouchableOpacity style={styles.backHeader} onPress={() => setShowHelp(false)}>
+          <Ionicons name="arrow-back" size={24} color={theme.colors.charcoal} />
+          <Text style={[styles.backHeaderTitle, { color: theme.colors.charcoal }]}>Help & Support</Text>
+        </TouchableOpacity>
+        <ScrollView style={styles.settingsContent}>
+          <Card style={styles.settingsCard}>
+            <Text style={[styles.settingsTitle, { color: theme.colors.charcoal }]}>Support</Text>
+            <Text style={{ color: theme.colors.gray }}>Help content will be available here.</Text>
           </Card>
         </ScrollView>
       </View>
@@ -472,6 +765,30 @@ export default function MoreScreen() {
     return (
       <SafeAreaView style={styles.container}>
         {renderAccessibilitySettings()}
+      </SafeAreaView>
+    );
+  }
+
+  if (showProfile) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {renderProfile()}
+      </SafeAreaView>
+    );
+  }
+
+  if (showPrivacy) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {renderPrivacy()}
+      </SafeAreaView>
+    );
+  }
+
+  if (showHelp) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {renderHelp()}
       </SafeAreaView>
     );
   }
@@ -572,7 +889,7 @@ export default function MoreScreen() {
             icon={<Ionicons name="person" size={24} color={theme.colors.green} />}
             title="Profile"
             subtitle="Edit your profile information"
-            onPress={() => Alert.alert('Profile', 'Profile editing coming soon')}
+            onPress={() => setShowProfile(true)}
             showChevron
           />
 
@@ -580,7 +897,7 @@ export default function MoreScreen() {
             icon={<Ionicons name="shield-checkmark" size={24} color={theme.colors.warning} />}
             title="Privacy & Security"
             subtitle="Control your privacy settings"
-            onPress={() => Alert.alert('Privacy', 'Privacy settings coming soon')}
+            onPress={() => setShowPrivacy(true)}
             showChevron
           />
 
@@ -588,7 +905,7 @@ export default function MoreScreen() {
             icon={<Ionicons name="help-circle" size={24} color={theme.colors.info} />}
             title="Help & Support"
             subtitle="Get help and contact support"
-            onPress={() => Alert.alert('Help', 'Help center coming soon')}
+            onPress={() => setShowHelp(true)}
             showChevron
           />
 

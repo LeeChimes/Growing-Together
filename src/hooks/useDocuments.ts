@@ -33,6 +33,9 @@ if (typeof window === 'undefined') {
 import { ImageCompressionService } from '../lib/imageCompression';
 import { Alert, Share } from 'react-native';
 
+// Feature flag (defaults to disabled). Set EXPO_PUBLIC_ENABLE_DOCUMENTS=true to enable explicitly
+const DOCUMENTS_ENABLED = (process.env.EXPO_PUBLIC_ENABLE_DOCUMENTS ?? 'false').toLowerCase() === 'true';
+
 // Get user's documents
 export const useMyDocuments = () => {
   const { user } = useAuthStore();
@@ -42,13 +45,10 @@ export const useMyDocuments = () => {
     queryFn: async (): Promise<UserDocumentT[]> => {
       if (!user) return [];
 
-      if (await syncManager.isOnline()) {
+      if (await syncManager.isOnline() && DOCUMENTS_ENABLED) {
         const { data, error } = await supabase
           .from('user_documents')
-          .select(`
-            *,
-            uploader:uploaded_by_user_id(full_name, email)
-          `)
+          .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
@@ -75,7 +75,8 @@ export const useUserDocuments = (userId?: string) => {
   return useQuery({
     queryKey: ['user-documents', userId],
     queryFn: async (): Promise<UserDocumentT[]> => {
-      if (!userId || !(await syncManager.isOnline())) return [];
+      if (!userId) return [];
+      if (!(await syncManager.isOnline()) || !DOCUMENTS_ENABLED) return [];
 
       const { data, error } = await supabase
         .from('user_documents')
@@ -100,7 +101,7 @@ export const useUsersWithDocuments = () => {
   return useQuery({
     queryKey: ['users-documents-summary'],
     queryFn: async () => {
-      if (!(await syncManager.isOnline())) return [];
+      if (!(await syncManager.isOnline()) || !DOCUMENTS_ENABLED) return [];
 
       // Get all users with document counts
       const { data, error } = await supabase
@@ -161,6 +162,7 @@ export const useUploadDocument = () => {
       userId?: string; // For admin uploading on behalf of user
     }): Promise<UserDocumentT> => {
       if (!user) throw new Error('User not authenticated');
+      if (!DOCUMENTS_ENABLED) throw new Error('Documents backend is disabled in this environment');
 
       // Validate file
       const validation = validateDocumentUpload(data.file);
@@ -245,6 +247,7 @@ export const useDeleteDocument = () => {
 
   return useMutation({
     mutationFn: async (documentId: string) => {
+      if (!DOCUMENTS_ENABLED) throw new Error('Documents backend is disabled in this environment');
       if (!(await syncManager.isOnline())) {
         throw new Error('Document deletion requires internet connection');
       }
@@ -331,6 +334,7 @@ export const useDownloadDocument = () => {
   return useMutation({
     mutationFn: async (document: UserDocumentT) => {
       try {
+        if (!DOCUMENTS_ENABLED) throw new Error('Documents backend is disabled in this environment');
         if (!(await syncManager.isOnline())) {
           throw new Error('Document download requires internet connection');
         }
@@ -362,7 +366,7 @@ export const useDocumentsRequiringAttention = () => {
   return useQuery({
     queryKey: ['documents-attention', user?.id],
     queryFn: async () => {
-      if (!(await syncManager.isOnline())) return [];
+      if (!(await syncManager.isOnline()) || !DOCUMENTS_ENABLED) return [];
 
       const query = user?.role === 'admin' 
         ? supabase.from('user_documents').select(`
@@ -397,6 +401,7 @@ export const useUpdateDocument = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<UserDocumentT> & { id: string }) => {
+      if (!DOCUMENTS_ENABLED) throw new Error('Documents backend is disabled in this environment');
       if (!(await syncManager.isOnline())) {
         throw new Error('Document update requires internet connection');
       }

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { cacheOperations, syncManager } from '../lib/database';
@@ -256,6 +257,111 @@ export const useCreateComment = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['post-comments', variables.postId] });
+    },
+  });
+};
+
+// =========================
+// Community Chat (MVP)
+// =========================
+
+export type ChatMessage = {
+  id: string;
+  user_id: string;
+  text: string;
+  photos?: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+export const useChatMessages = () => {
+  const query = useQuery({
+    queryKey: ['chat-messages'],
+    queryFn: async (): Promise<ChatMessage[]> => {
+      if (await syncManager.isOnline()) {
+        const { data, error } = await supabase
+          .from('chat_messages' as any)
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (data) {
+          const processed = (data as any[]).map((m: any) => ({
+            ...m,
+            photos: Array.isArray(m.photos) ? JSON.stringify(m.photos) : m.photos,
+            sync_status: 'synced',
+          }));
+          await cacheOperations.upsertCache('chat_messages_cache', processed);
+        }
+
+        return (data as any[]) || [];
+      }
+
+      const cached = await cacheOperations.getCache('chat_messages_cache');
+      return cached.map((m: any) => ({
+        ...m,
+        photos: typeof m.photos === 'string' ? JSON.parse(m.photos || '[]') : m.photos,
+      }));
+    },
+  });
+  // Realtime subscription
+  useEffect(() => {
+    const channel = (supabase as any).channel?.('chat_messages_channel')?.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'chat_messages' },
+      () => {
+        query.refetch();
+      }
+    ).subscribe?.();
+
+    return () => {
+      try { (supabase as any).removeChannel?.(channel); } catch {}
+    };
+  }, [query.refetch]);
+
+  return query;
+};
+
+export const useSendChatMessage = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+
+  return useMutation({
+    mutationFn: async (payload: { text: string; photos?: string[] }) => {
+      const message: ChatMessage = {
+        id: crypto.randomUUID(),
+        user_id: user!.id,
+        text: payload.text,
+        photos: payload.photos || [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (await syncManager.isOnline()) {
+        const { data, error } = await supabase
+          .from('chat_messages' as any)
+          .insert({
+            ...message,
+          } as any)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        const cacheEntry = {
+          ...message,
+          photos: JSON.stringify(message.photos || []),
+          sync_status: 'pending',
+        } as any;
+        await cacheOperations.upsertCache('chat_messages_cache', [cacheEntry]);
+        enqueueMutation({ type: 'chat.send', payload: message });
+        return message;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat-messages'] });
     },
   });
 };

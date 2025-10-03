@@ -186,7 +186,7 @@ export const AdminDocumentsModal: React.FC<AdminDocumentsModalProps> = ({
                     
                     <Text style={styles.documentFileName}>{doc.file_name}</Text>
                     <Text style={styles.documentDate}>
-                      Uploaded: {new Date(doc.created_at).toLocaleDateString()}
+                      Uploaded: {new Date(doc.created_at).toLocaleDateString('en-GB')}
                     </Text>
                   </Card>
                 );

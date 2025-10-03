@@ -171,7 +171,7 @@ export function PhotoViewerModal({
                 {currentPhoto.uploader.full_name}
               </Text>
               <Text style={styles.uploadDate}>
-                {new Date(currentPhoto.created_at).toLocaleDateString()}
+                {new Date(currentPhoto.created_at).toLocaleDateString('en-GB')}
               </Text>
             </View>
           </View>

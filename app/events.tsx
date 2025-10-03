@@ -25,6 +25,15 @@ import { useEventNotifications } from '../src/hooks/useNotifications';
 import { CreateEventModal } from '../src/components/CreateEventModal';
 import { Database } from '../src/lib/database.types';
 import { useAuthStore } from '../src/store/authStore';
+import * as Device from 'expo-device';
+
+let Calendar: any = null;
+try {
+  // Avoid importing on web SSR path in case of incompatibility
+  // Dynamically require so web mock builds succeed
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  Calendar = require('expo-calendar');
+} catch {}
 
 type Event = Database['public']['Tables']['events']['Row'];
 type EventRSVP = Database['public']['Tables']['event_rsvps']['Row'];
@@ -236,7 +245,7 @@ export default function EventsScreen() {
       <ScrollView style={styles.calendarContainer}>
         <View style={styles.calendarHeader}>
           <Text style={[styles.calendarTitle, { color: theme.colors.charcoal }]}>
-            {monthName}
+          {monthName}
           </Text>
         </View>
 
@@ -409,6 +418,57 @@ function EventDetailView({ event, onBack }: { event: Event; onBack: () => void }
   const { data: comments = [] } = useEventComments(event.id);
   const createComment = useCreateEventComment();
   const [commentText, setCommentText] = useState('');
+  const [isAddingToCalendar, setIsAddingToCalendar] = useState(false);
+
+  const ensureCalendarPermissions = async (): Promise<boolean> => {
+    if (!Calendar) return false;
+    if (!Device.isDevice) return false;
+    const { status } = await Calendar.requestCalendarPermissionsAsync();
+    return status === 'granted';
+  };
+
+  const getDefaultCalendarId = async (): Promise<string | null> => {
+    if (!Calendar) return null;
+    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    const defaultCal = calendars.find((c: any) => c.source?.name === 'Default' || c.source?.type === 'local') || calendars[0];
+    return defaultCal?.id ?? null;
+  };
+
+  const addToDeviceCalendar = async () => {
+    try {
+      if (!Calendar || !Device.isDevice) {
+        return;
+      }
+      setIsAddingToCalendar(true);
+      const granted = await ensureCalendarPermissions();
+      if (!granted) {
+        setIsAddingToCalendar(false);
+        return;
+      }
+
+      const calendarId = await getDefaultCalendarId();
+      if (!calendarId) {
+        setIsAddingToCalendar(false);
+        return;
+      }
+
+      const startDate = new Date(event.start_date);
+      const endDate = event.end_date ? new Date(event.end_date) : new Date(new Date(event.start_date).getTime() + 60 * 60 * 1000);
+
+      await Calendar.createEventAsync(calendarId, {
+        title: event.title,
+        location: event.location,
+        notes: event.description,
+        startDate,
+        endDate,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+    } catch (e) {
+      // no-op; we avoid user alerts for silent add
+    } finally {
+      setIsAddingToCalendar(false);
+    }
+  };
   
   return (
     <SafeAreaView style={styles.container}>
@@ -437,6 +497,16 @@ function EventDetailView({ event, onBack }: { event: Event; onBack: () => void }
               Where: {event.location}
             </Text>
           </View>
+          {!!Calendar && Device.isDevice && (
+            <View style={{ marginTop: 12 }}>
+              <Button
+                title={isAddingToCalendar ? 'Adding…' : 'Add to My Device Calendar'}
+                onPress={addToDeviceCalendar}
+                disabled={isAddingToCalendar}
+                size="small"
+              />
+            </View>
+          )}
         </Card>
 
         {/* Bring list */}

@@ -241,7 +241,7 @@ export default function RulesScreen() {
               <View style={styles.rulesInfo}>
                 <Text style={styles.rulesVersion}>Version {rules.version}</Text>
                 <Text style={styles.rulesDate}>
-                  Published: {new Date(rules.published_at).toLocaleDateString()}
+                  Published: {new Date(rules.published_at).toLocaleDateString('en-GB')}
                 </Text>
                 {rules.summary && (
                   <Text style={styles.rulesSummary}>{rules.summary}</Text>

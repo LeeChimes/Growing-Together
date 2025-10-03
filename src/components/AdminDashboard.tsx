@@ -23,6 +23,10 @@ import {
   useHideContent,
 } from '../hooks/useAdmin';
 import { CreateJoinCodeModal } from './CreateJoinCodeModal';
+import { CreateEventModal } from './CreateEventModal';
+import { CreatePostModal } from './CreatePostModal';
+import { AdminDocumentsModal } from './AdminDocumentsModal';
+import { TasksGeneratorModal } from './TasksGeneratorModal';
 
 type AdminView = 'dashboard' | 'members' | 'join-codes' | 'content' | 'export';
 
@@ -35,6 +39,11 @@ export function AdminDashboard({ visible, onClose }: AdminDashboardProps) {
   const theme = useTheme();
   const [currentView, setCurrentView] = useState<AdminView>('dashboard');
   const [showCreateJoinCode, setShowCreateJoinCode] = useState(false);
+  const [showTasksGenerator, setShowTasksGenerator] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
+  const [showInspectionsHint] = useState(true);
 
   // Data hooks
   const { data: stats } = useAdminStats();
@@ -227,6 +236,71 @@ export function AdminDashboard({ visible, onClose }: AdminDashboardProps) {
               Moderate Content
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.colors.sunflower + '20' }]}
+            onPress={() => setShowTasksGenerator(true)}
+          >
+            <Ionicons name="leaf" size={24} color={theme.colors.sunflower} />
+            <Text style={[styles.actionText, { color: theme.colors.sunflower }]}> 
+              Tasks Generator
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.colors.sky + '20' }]}
+            onPress={() => setShowCreateEvent(true)}
+          >
+            <Ionicons name="calendar" size={24} color={theme.colors.sky} />
+            <Text style={[styles.actionText, { color: theme.colors.sky }]}> 
+              Create Event
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.colors.warning + '20' }]}
+            onPress={() => setShowAnnouncement(true)}
+          >
+            <Ionicons name="megaphone" size={24} color={theme.colors.warning} />
+            <Text style={[styles.actionText, { color: theme.colors.warning }]}> 
+              New Announcement
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.colors.soil + '20' }]}
+            onPress={() => setShowDocuments(true)}
+          >
+            <Ionicons name="document-text" size={24} color={theme.colors.soil} />
+            <Text style={[styles.actionText, { color: theme.colors.soil }]}> 
+              Documents
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.colors.green + '20' }]}
+            onPress={() => {
+              // Navigate via a hint; admin can access inspections from its tab/screen
+              Alert.alert(
+                'Open Plot Inspections',
+                'Go to the Inspections tab to start an inspection.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Open Inspections',
+                    onPress: () => {
+                      // In app navigation, this would route to /inspections
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <Ionicons name="checkbox" size={24} color={theme.colors.green} />
+            <Text style={[styles.actionText, { color: theme.colors.green }]}> 
+              Plot Inspections
+            </Text>
+          </TouchableOpacity>
         </View>
       </Card>
     </ScrollView>
@@ -340,7 +414,7 @@ export function AdminDashboard({ visible, onClose }: AdminDashboardProps) {
             
             {joinCode.expires_at && (
               <Text style={[styles.expiryText, { color: theme.colors.warning }]}>
-                Expires: {new Date(joinCode.expires_at).toLocaleDateString()}
+                Expires: {new Date(joinCode.expires_at).toLocaleDateString('en-GB')}
               </Text>
             )}
           </Card>
@@ -429,6 +503,27 @@ export function AdminDashboard({ visible, onClose }: AdminDashboardProps) {
       <CreateJoinCodeModal
         visible={showCreateJoinCode}
         onClose={() => setShowCreateJoinCode(false)}
+      />
+
+      <TasksGeneratorModal
+        visible={showTasksGenerator}
+        onClose={() => setShowTasksGenerator(false)}
+      />
+
+      <CreateEventModal
+        visible={showCreateEvent}
+        onClose={() => setShowCreateEvent(false)}
+      />
+
+      <CreatePostModal
+        visible={showAnnouncement}
+        onClose={() => setShowAnnouncement(false)}
+        defaultAnnouncement
+      />
+
+      <AdminDocumentsModal
+        visible={showDocuments}
+        onClose={() => setShowDocuments(false)}
       />
     </SafeAreaView>
   );

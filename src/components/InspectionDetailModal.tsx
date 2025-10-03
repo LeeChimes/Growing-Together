@@ -51,7 +51,7 @@ export const InspectionDetailModal: React.FC<InspectionDetailModalProps> = ({
     try {
       const shareContent = `Plot ${plot?.number || 'N/A'} Inspection Report
 
-Date: ${new Date(inspection.date).toLocaleDateString()}
+Date: ${new Date(inspection.date).toLocaleDateString('en-GB')}
 Score: ${inspection.score}/100
 Use Status: ${USE_STATUS_LABELS[inspection.use_status as keyof typeof USE_STATUS_LABELS]}
 Upkeep: ${UPKEEP_LABELS[inspection.upkeep as keyof typeof UPKEEP_LABELS]}
@@ -59,7 +59,7 @@ Action: ${ACTION_LABELS[inspection.action as keyof typeof ACTION_LABELS]}
 
 ${inspection.issues.length > 0 ? `Issues: ${inspection.issues.map(issue => INSPECTION_ISSUE_LABELS[issue as keyof typeof INSPECTION_ISSUE_LABELS]).join(', ')}` : ''}
 ${inspection.notes ? `Notes: ${inspection.notes}` : ''}
-${inspection.reinspect_by ? `Reinspect by: ${new Date(inspection.reinspect_by).toLocaleDateString()}` : ''}`;
+${inspection.reinspect_by ? `Reinspect by: ${new Date(inspection.reinspect_by).toLocaleDateString('en-GB')}` : ''}`;
 
       await Share.share({
         message: shareContent,
