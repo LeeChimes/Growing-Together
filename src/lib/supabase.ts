@@ -1,40 +1,64 @@
 import { createClient } from '@supabase/supabase-js';
-// Conditional import for web compatibility
-let SecureStore: any;
-
-if (typeof window === 'undefined') {
-  // Native platform
-  SecureStore = require('expo-secure-store');
-} else {
-  // Web platform - use localStorage
-  SecureStore = {
-    setItemAsync: async (key: string, value: string) => {
-      localStorage.setItem(`secure_${key}`, value);
-    },
-    getItemAsync: async (key: string) => {
-      return localStorage.getItem(`secure_${key}`);
-    },
-    deleteItemAsync: async (key: string) => {
-      localStorage.removeItem(`secure_${key}`);
-    },
-  };
-}
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { Database } from './database.types';
 
-// Supabase configuration with fallbacks for development
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'demo-anon-key';
+const getEnvVar = (key: string): string | undefined => {
+  const globalObj: any = typeof globalThis !== 'undefined' ? globalThis : undefined;
 
-// Custom storage adapter for Expo SecureStore
+  const fromProcess = globalObj?.process?.env?.[key];
+  const fromExpoConfig = Constants?.expoConfig?.extra?.[key];
+  const fromManifest2 = (Constants as any)?.manifest2?.extra?.[key];
+  const fromManifest = (Constants as any)?.manifest?.extra?.[key];
+  const fromGlobal = globalObj?.[key];
+
+  return fromProcess ?? fromExpoConfig ?? fromManifest2 ?? fromManifest ?? fromGlobal;
+};
+
+// Supabase configuration with fallbacks for development
+if (typeof globalThis !== 'undefined' && !globalThis.__import_meta_env__) {
+  globalThis.__import_meta_env__ = {
+    EXPO_PUBLIC_SUPABASE_URL: getEnvVar('EXPO_PUBLIC_SUPABASE_URL'),
+    EXPO_PUBLIC_SUPABASE_ANON_KEY: getEnvVar('EXPO_PUBLIC_SUPABASE_ANON_KEY'),
+  };
+}
+
+const supabaseUrl =
+  getEnvVar('EXPO_PUBLIC_SUPABASE_URL') ??
+  (typeof globalThis !== 'undefined' ? globalThis.__import_meta_env__?.EXPO_PUBLIC_SUPABASE_URL : undefined) ??
+  'https://demo.supabase.co';
+
+const supabaseAnonKey =
+  getEnvVar('EXPO_PUBLIC_SUPABASE_ANON_KEY') ??
+  (typeof globalThis !== 'undefined' ? globalThis.__import_meta_env__?.EXPO_PUBLIC_SUPABASE_ANON_KEY : undefined) ??
+  'demo-anon-key';
+
+// Custom storage adapter that works on both web and native
 const ExpoSecureStoreAdapter = {
-  getItem: (key: string): string | null => {
-    return SecureStore.getItemAsync(key) as any;
+  getItem: async (key: string): Promise<string | null> => {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem(`supabase_${key}`);
+    } else if (Platform.OS !== 'web') {
+      const SecureStore = require('expo-secure-store');
+      return await SecureStore.getItemAsync(key);
+    }
+    return null;
   },
-  setItem: (key: string, value: string): void => {
-    SecureStore.setItemAsync(key, value);
+  setItem: async (key: string, value: string): Promise<void> => {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(`supabase_${key}`, value);
+    } else if (Platform.OS !== 'web') {
+      const SecureStore = require('expo-secure-store');
+      await SecureStore.setItemAsync(key, value);
+    }
   },
-  removeItem: (key: string): void => {
-    SecureStore.deleteItemAsync(key);
+  removeItem: async (key: string): Promise<void> => {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(`supabase_${key}`);
+    } else if (Platform.OS !== 'web') {
+      const SecureStore = require('expo-secure-store');
+      await SecureStore.deleteItemAsync(key);
+    }
   },
 };
 
@@ -55,11 +79,19 @@ export const authHelpers = {
       .from('join_codes')
       .select('*')
       .eq('code', joinCode)
-      .eq('is_active', true)
       .single();
 
     if (joinCodeError || !joinCodeData) {
       throw new Error('Invalid or expired join code');
+    }
+
+    // Check if join code is still valid
+    if (joinCodeData.expires_at && new Date(joinCodeData.expires_at) < new Date()) {
+      throw new Error('Join code has expired');
+    }
+
+    if (joinCodeData.max_uses && joinCodeData.uses_count >= joinCodeData.max_uses) {
+      throw new Error('Join code has reached maximum uses');
     }
 
     // Sign up the user

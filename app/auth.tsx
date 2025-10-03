@@ -61,7 +61,7 @@ export default function AuthScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Logo width={200} />
+            <Logo width={280} />
             <Text style={[styles.welcome, { color: theme.colors.charcoal }]}>
               Welcome to Growing Together
             </Text>

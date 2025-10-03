@@ -21,7 +21,8 @@
       }
     },
     "web": {
-      "favicon": "./assets/icons/growing-logo-256.png"
+      "favicon": "./assets/icons/growing-logo-256.png",
+      "output": "static"
     },
     "splash": {
       "image": "./assets/logos/growing-logo-1600x400.png",

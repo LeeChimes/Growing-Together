@@ -205,7 +205,7 @@ export const useCreateInspection = () => {
             const blob = await response.blob();
             
             const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('media')
+              .from('photos')
               .upload(fileName, blob, {
                 contentType: 'image/jpeg',
                 upsert: false
@@ -216,7 +216,7 @@ export const useCreateInspection = () => {
               photoUrls.push(photo); // Use local URI as fallback
             } else {
               const { data: urlData } = supabase.storage
-                .from('media')
+                .from('photos')
                 .getPublicUrl(uploadData.path);
               photoUrls.push(urlData.publicUrl);
             }

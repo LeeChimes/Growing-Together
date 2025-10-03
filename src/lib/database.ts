@@ -1,11 +1,10 @@
+import { Platform } from 'react-native';
+
 // Conditional import for web compatibility
 let SQLite: any;
 
-if (typeof window === 'undefined') {
-  // Native platform
-  SQLite = require('expo-sqlite');
-} else {
-  // Web platform - use localStorage mock
+if (Platform.OS === 'web') {
+  // Web platform - use localStorage mock (don't import expo-sqlite at all)
   SQLite = {
     openDatabase: (name: string) => ({
       transaction: (fn: any) => fn({
@@ -62,7 +61,11 @@ if (typeof window === 'undefined') {
       },
     })
   };
+} else {
+  // Native platform
+  SQLite = require('expo-sqlite');
 }
+
 import { Database } from './database.types';
 
 // Initialize SQLite database

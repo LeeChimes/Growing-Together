@@ -13,7 +13,7 @@ import { startAutoSync } from '../src/lib/sync';
 import { useNotifications } from '../src/hooks/useNotifications';
 import { PerformanceMonitor } from '../src/lib/performance';
 import { ErrorBoundary } from '../src/components/ErrorBoundary';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 
 function RootLayoutContent() {
   const { user, isLoading, isInitialized, initialize } = useAuthStore();
@@ -79,22 +79,37 @@ function RootLayoutContent() {
               headerTitle: () => <Logo width={160} />,
               tabBarActiveTintColor: '#22c55e',
               tabBarInactiveTintColor: '#6b7280',
+              // Use consistent defaults to avoid clipping
               tabBarStyle: {
-                paddingBottom: 8,
-                paddingTop: 8,
-                height: 64,
+                paddingBottom: 10,
+                paddingTop: 6,
+                height: 66,
+              },
+              tabBarItemStyle: {
+                paddingVertical: 0,
               },
               tabBarLabelStyle: {
                 fontSize: 12,
                 fontWeight: '500',
+                marginBottom: 0,
               },
             }}
           >
         {/* Hide auth and other non-tab screens */}
         <Tabs.Screen 
+          name="index" 
+          options={{ 
+            href: null,
+            headerShown: false,
+            tabBarStyle: { display: 'none' },
+          }} 
+        />
+        <Tabs.Screen 
           name="auth" 
           options={{ 
             href: null,
+            headerShown: false,
+            tabBarStyle: { display: 'none' },
           }} 
         />
         <Tabs.Screen 
@@ -134,7 +149,7 @@ function RootLayoutContent() {
           options={{ 
             title: 'Home',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="home" size={size} color={color} />
+              <Ionicons name="home" size={22} color={color} />
             ),
           }} 
         />
@@ -143,7 +158,7 @@ function RootLayoutContent() {
           options={{ 
             title: 'Diary',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="book" size={size} color={color} />
+              <Ionicons name="book" size={22} color={color} />
             ),
           }} 
         />
@@ -152,7 +167,7 @@ function RootLayoutContent() {
           options={{ 
             title: 'Events',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="calendar" size={size} color={color} />
+              <Ionicons name="calendar" size={22} color={color} />
             ),
           }} 
         />
@@ -161,7 +176,7 @@ function RootLayoutContent() {
           options={{ 
             title: 'Community',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="people" size={size} color={color} />
+              <Ionicons name="people" size={22} color={color} />
             ),
           }} 
         />
@@ -170,7 +185,7 @@ function RootLayoutContent() {
           options={{ 
             title: 'Gallery',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="images" size={size} color={color} />
+              <Ionicons name="images" size={22} color={color} />
             ),
           }} 
         />
@@ -180,7 +195,7 @@ function RootLayoutContent() {
           options={{ 
             title: 'More',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="ellipsis-horizontal" size={size} color={color} />
+              <Ionicons name="ellipsis-horizontal" size={22} color={color} />
             ),
           }} 
         />

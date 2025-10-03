@@ -59,10 +59,9 @@ export interface Database {
           code: string
           role: 'admin' | 'member' | 'guest'
           created_by: string
-          is_active: boolean
           expires_at: string | null
           max_uses: number | null
-          current_uses: number
+          uses_count: number
           created_at: string
         }
         Insert: {
@@ -70,10 +69,9 @@ export interface Database {
           code: string
           role?: 'admin' | 'member' | 'guest'
           created_by: string
-          is_active?: boolean
           expires_at?: string | null
           max_uses?: number | null
-          current_uses?: number
+          uses_count?: number
           created_at?: string
         }
         Update: {
@@ -81,10 +79,9 @@ export interface Database {
           code?: string
           role?: 'admin' | 'member' | 'guest'
           created_by?: string
-          is_active?: boolean
           expires_at?: string | null
           max_uses?: number | null
-          current_uses?: number
+          uses_count?: number
           created_at?: string
         }
       }
@@ -92,9 +89,12 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          plot_id: string | null
           title: string
           content: string
-          template_type: 'sowing' | 'watering' | 'harvesting' | 'maintenance' | 'general'
+          template_type: string
+          plant_id: string | null
+          tags: string[] | null
           weather: string | null
           temperature: number | null
           photos: string[] | null
@@ -104,9 +104,12 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
+          plot_id?: string | null
           title: string
           content: string
-          template_type: 'sowing' | 'watering' | 'harvesting' | 'maintenance' | 'general'
+          template_type?: string
+          plant_id?: string | null
+          tags?: string[] | null
           weather?: string | null
           temperature?: number | null
           photos?: string[] | null
@@ -116,9 +119,12 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
+          plot_id?: string | null
           title?: string
           content?: string
-          template_type?: 'sowing' | 'watering' | 'harvesting' | 'maintenance' | 'general'
+          template_type?: string
+          plant_id?: string | null
+          tags?: string[] | null
           weather?: string | null
           temperature?: number | null
           photos?: string[] | null
@@ -206,27 +212,30 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          content: string
+          text: string
           photos: string[] | null
           is_pinned: boolean
+          is_announcement: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          content: string
+          text: string
           photos?: string[] | null
           is_pinned?: boolean
+          is_announcement?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          content?: string
+          text?: string
           photos?: string[] | null
           is_pinned?: boolean
+          is_announcement?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -315,6 +324,7 @@ export interface Database {
           caption: string | null
           uploaded_by: string
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -323,6 +333,7 @@ export interface Database {
           caption?: string | null
           uploaded_by: string
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -331,6 +342,228 @@ export interface Database {
           caption?: string | null
           uploaded_by?: string
           created_at?: string
+          updated_at?: string
+        }
+      }
+      plots: {
+        Row: {
+          id: string
+          number: number
+          size: string
+          holder_user_id: string | null
+          status: 'occupied' | 'vacant' | 'pending'
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          number: number
+          size: string
+          holder_user_id?: string | null
+          status?: 'occupied' | 'vacant' | 'pending'
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          number?: number
+          size?: string
+          holder_user_id?: string | null
+          status?: 'occupied' | 'vacant' | 'pending'
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      comments: {
+        Row: {
+          id: string
+          post_id: string | null
+          event_id: string | null
+          user_id: string
+          text: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          post_id?: string | null
+          event_id?: string | null
+          user_id: string
+          text: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string | null
+          event_id?: string | null
+          user_id?: string
+          text?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      reactions: {
+        Row: {
+          id: string
+          post_id: string | null
+          comment_id: string | null
+          user_id: string
+          type: 'like' | 'love' | 'helpful' | 'celebrate'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id?: string | null
+          comment_id?: string | null
+          user_id: string
+          type: 'like' | 'love' | 'helpful' | 'celebrate'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string | null
+          comment_id?: string | null
+          user_id?: string
+          type?: 'like' | 'love' | 'helpful' | 'celebrate'
+          created_at?: string
+        }
+      }
+      inspections: {
+        Row: {
+          id: string
+          plot_id: string
+          inspector_id: string
+          inspection_date: string
+          use_status: 'active' | 'inactive' | 'partial'
+          upkeep: 'excellent' | 'good' | 'fair' | 'poor'
+          issues: string[] | null
+          notes: string | null
+          photos: string[] | null
+          action: 'none' | 'advisory' | 'notice' | 'warning'
+          reinspect_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          plot_id: string
+          inspector_id: string
+          inspection_date?: string
+          use_status: 'active' | 'inactive' | 'partial'
+          upkeep: 'excellent' | 'good' | 'fair' | 'poor'
+          issues?: string[] | null
+          notes?: string | null
+          photos?: string[] | null
+          action: 'none' | 'advisory' | 'notice' | 'warning'
+          reinspect_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          plot_id?: string
+          inspector_id?: string
+          inspection_date?: string
+          use_status?: 'active' | 'inactive' | 'partial'
+          upkeep?: 'excellent' | 'good' | 'fair' | 'poor'
+          issues?: string[] | null
+          notes?: string | null
+          photos?: string[] | null
+          action?: 'none' | 'advisory' | 'notice' | 'warning'
+          reinspect_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      rules: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          category: string
+          is_published: boolean
+          version: number
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          category: string
+          is_published?: boolean
+          version?: number
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          category?: string
+          is_published?: boolean
+          version?: number
+          created_by?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      rule_acknowledgements: {
+        Row: {
+          id: string
+          user_id: string
+          rule_id: string
+          acknowledged_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          rule_id: string
+          acknowledged_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          rule_id?: string
+          acknowledged_at?: string
+        }
+      }
+      documents: {
+        Row: {
+          id: string
+          title: string
+          type: 'insurance' | 'lease' | 'notice' | 'form' | 'other'
+          file_path: string
+          uploaded_by: string
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          type: 'insurance' | 'lease' | 'notice' | 'form' | 'other'
+          file_path: string
+          uploaded_by: string
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          type?: 'insurance' | 'lease' | 'notice' | 'form' | 'other'
+          file_path?: string
+          uploaded_by?: string
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
     }

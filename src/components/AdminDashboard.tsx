@@ -311,7 +311,7 @@ export function AdminDashboard({ visible, onClose }: AdminDashboardProps) {
                     size="small"
                   />
                   <Text style={[styles.joinCodeStatus, { color: theme.colors.gray }]}>
-                    {joinCode.current_uses || 0}/{joinCode.max_uses || '∞'} uses
+                    {joinCode.uses_count || 0}/{joinCode.max_uses || '∞'} uses
                   </Text>
                 </View>
               </View>
