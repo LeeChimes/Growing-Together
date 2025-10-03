@@ -1,74 +1,21 @@
-// Conditional import for web compatibility
-let SQLite: any;
+// Platform-specific database import
+const isWeb = typeof window !== 'undefined';
 
-if (typeof window === 'undefined') {
-  // Native platform
-  SQLite = require('expo-sqlite');
+let db: any;
+
+if (isWeb) {
+  // Web version - use our custom web database
+  const { createWebDatabase } = require('./database.web');
+  db = createWebDatabase('growing_together.db');
 } else {
-  // Web platform - use localStorage mock
-  SQLite = {
-    openDatabase: (name: string) => ({
-      transaction: (fn: any) => fn({
-        executeSql: (sql: string, params: any[], success: any, error: any) => {
-          try {
-            if (sql.includes('SELECT')) {
-              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
-              success(null, { rows: { _array: JSON.parse(data) } });
-            } else {
-              success(null, { rowsAffected: 1 });
-            }
-          } catch (e) {
-            error(e);
-          }
-        }
-      })
-    }),
-    openDatabaseSync: (name: string) => ({
-      transaction: (fn: any) => fn({
-        executeSql: (sql: string, params: any[], success: any, error: any) => {
-          try {
-            if (sql.includes('SELECT')) {
-              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
-              success(null, { rows: { _array: JSON.parse(data) } });
-            } else {
-              success(null, { rowsAffected: 1 });
-            }
-          } catch (e) {
-            error(e);
-          }
-        }
-      }),
-      execAsync: async (query: string) => {
-        console.log('[SQLite Mock] execAsync:', query);
-        return { rows: [] };
-      },
-      runAsync: async (query: string, params: any[] = []) => {
-        console.log('[SQLite Mock] runAsync:', query, params);
-        return { lastInsertRowId: 1, changes: 1 };
-      },
-      getAllAsync: async (query: string, params: any[] = []) => {
-        console.log('[SQLite Mock] getAllAsync:', query, params);
-        try {
-          // Return empty array for SELECT queries
-          return [];
-        } catch (e) {
-          console.error('[SQLite Mock] getAllAsync error:', e);
-          return [];
-        }
-      },
-      getFirstAsync: async (query: string, params: any[] = []) => {
-        console.log('[SQLite Mock] getFirstAsync:', query, params);
-        return null;
-      },
-    })
-  };
+  // Native version - use expo-sqlite
+  const SQLite = require('expo-sqlite');
+  db = SQLite.openDatabaseSync('growing_together.db');
 }
-import { Database } from './database.types';
 
-// Initialize SQLite database
-export const db = SQLite.openDatabaseSync('growing_together.db');
+export { db };
 
-// Database initialization
+// Database initialization function
 export const initializeDatabase = async (): Promise<void> => {
   try {
     // For the new SQLite API, we execute SQL directly
