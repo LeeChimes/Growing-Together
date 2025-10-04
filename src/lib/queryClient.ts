@@ -28,5 +28,9 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Initialize sync when query client is created
-syncManager.syncAll().catch(console.error);
+// Initialize sync when query client is created (if syncManager is available)
+if (syncManager && typeof syncManager.syncAll === 'function') {
+  syncManager.syncAll().catch(console.error);
+} else {
+  console.log('Sync manager not available, skipping sync initialization');
+}
