@@ -11,6 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Button } from '../design/Button';
 import { Card } from '../design/Card';
 import { tokens } from '../design/tokens';
@@ -33,7 +34,9 @@ interface CreateTaskModalProps {
 export function CreateTaskModal({ visible, onClose }: CreateTaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [type, setType] = useState<'personal' | 'site'>('site');
+  const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [category, setCategory] = useState<TaskCategory>('general');
   const [estimatedDuration, setEstimatedDuration] = useState('');
@@ -57,10 +60,16 @@ export function CreateTaskModal({ visible, onClose }: CreateTaskModalProps) {
       return;
     }
 
+    if (!type) {
+      Alert.alert('Error', 'Please select a task type');
+      return;
+    }
+
     const taskData: CreateTaskData = {
       title: title.trim(),
       description: description.trim(),
-      due_date: dueDate,
+      type,
+      due_date: dueDate ? dueDate.toISOString().split('T')[0] : '',
       priority,
       category,
       estimated_duration: estimatedDuration ? parseInt(estimatedDuration) : undefined,
@@ -68,19 +77,21 @@ export function CreateTaskModal({ visible, onClose }: CreateTaskModalProps) {
     };
 
     try {
-      await createTaskMutation.mutateAsync(taskData);
-      Alert.alert('Success', 'Task created successfully!');
-      handleClose();
-    } catch (error) {
-      console.error('Error creating task:', error);
-      Alert.alert('Error', 'Failed to create task. Please try again.');
+      console.log('Creating task with data:', taskData);
+      await createTaskMutation.mutateAsync(taskData); // wait for resolution/rejection
+      onClose(); // close modal on success
+    } catch (e: any) {
+      Alert.alert('Error', e?.message ?? 'Failed to create task');
     }
+    // Note: The loading state is managed by createTaskMutation.isPending
   };
 
   const handleClose = () => {
     setTitle('');
     setDescription('');
-    setDueDate('');
+    setType('site');
+    setDueDate(null);
+    setShowDatePicker(false);
     setPriority('medium');
     setCategory('general');
     setEstimatedDuration('');
@@ -88,33 +99,70 @@ export function CreateTaskModal({ visible, onClose }: CreateTaskModalProps) {
     onClose();
   };
 
+  const formatDateUK = (date: Date) => {
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const onDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDueDate(selectedDate);
+    }
+  };
+
   const getDateInput = () => {
     if (Platform.OS === 'web') {
+      // For web, use HTML date input which shows a calendar picker
       return (
-        <TextInput
-          style={styles.input}
-          placeholder="YYYY-MM-DD"
-          value={dueDate}
-          onChangeText={setDueDate}
-          placeholderTextColor={tokens.colors.text.secondary}
+        <input
+          type="date"
+          value={dueDate ? dueDate.toISOString().split('T')[0] : ''}
+          onChange={(e) => {
+            if (e.target.value) {
+              setDueDate(new Date(e.target.value));
+            }
+          }}
+          min={new Date().toISOString().split('T')[0]}
+          style={{
+            width: '100%',
+            padding: '12px',
+            border: `1px solid ${tokens.colors.border.primary}`,
+            borderRadius: '8px',
+            fontSize: '16px',
+            backgroundColor: tokens.colors.background.primary,
+            color: tokens.colors.text.primary,
+          }}
         />
       );
     }
 
+    // For native platforms, use the community date picker
     return (
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => {
-          // For native, you could use a date picker here
-          const today = new Date().toISOString().split('T')[0];
-          setDueDate(today);
-        }}
-      >
-        <Text style={styles.dateButtonText}>
-          {dueDate || 'Select Date'}
-        </Text>
-        <Ionicons name="calendar-outline" size={20} color={tokens.colors.primary} />
-      </TouchableOpacity>
+      <>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {dueDate ? formatDateUK(dueDate) : 'Select Date'}
+          </Text>
+          <Ionicons name="calendar-outline" size={20} color={tokens.colors.primary} />
+        </TouchableOpacity>
+        
+        {showDatePicker && (
+          <DateTimePicker
+            value={dueDate || new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={onDateChange}
+            minimumDate={new Date()}
+          />
+        )}
+      </>
     );
   };
 
@@ -208,6 +256,40 @@ export function CreateTaskModal({ visible, onClose }: CreateTaskModalProps) {
               textAlignVertical="top"
               placeholderTextColor={tokens.colors.text.secondary}
             />
+          </Card>
+
+          <Card style={styles.card}>
+            <Text style={styles.label}>Task Type *</Text>
+            <View style={styles.selectorRow}>
+              <TouchableOpacity
+                style={[
+                  styles.selectorOption,
+                  { backgroundColor: type === 'site' ? tokens.colors.primary : tokens.colors.background.secondary },
+                ]}
+                onPress={() => setType('site')}
+              >
+                <Text style={[
+                  styles.selectorOptionText,
+                  { color: type === 'site' ? 'white' : tokens.colors.text.primary }
+                ]}>
+                  Site-wide Task
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.selectorOption,
+                  { backgroundColor: type === 'personal' ? tokens.colors.primary : tokens.colors.background.secondary },
+                ]}
+                onPress={() => setType('personal')}
+              >
+                <Text style={[
+                  styles.selectorOptionText,
+                  { color: type === 'personal' ? 'white' : tokens.colors.text.primary }
+                ]}>
+                  Personal Task
+                </Text>
+              </TouchableOpacity>
+            </View>
           </Card>
 
           <Card style={styles.card}>

@@ -126,9 +126,9 @@ export default function HomeScreen() {
               style={[styles.actionButton, { backgroundColor: theme.colors.green }]}
               onPress={() => router.push('/diary')}
             >
-              <Ionicons name="book" size={24} color={theme.colors.paper} />
+              <Ionicons name="book" size={40} color={theme.colors.paper} />
               <Text style={[styles.actionText, { color: theme.colors.paper }]}>
-                Add Diary
+                Diary
               </Text>
             </TouchableOpacity>
             
@@ -136,9 +136,9 @@ export default function HomeScreen() {
               style={[styles.actionButton, { backgroundColor: theme.colors.sky }]}
               onPress={() => router.push('/events')}
             >
-              <Ionicons name="calendar" size={24} color={theme.colors.paper} />
+              <Ionicons name="calendar" size={40} color={theme.colors.paper} />
               <Text style={[styles.actionText, { color: theme.colors.paper }]}>
-                View Events
+                Events
               </Text>
             </TouchableOpacity>
             
@@ -146,7 +146,7 @@ export default function HomeScreen() {
               style={[styles.actionButton, { backgroundColor: theme.colors.sunflower }]}
               onPress={() => router.push('/community')}
             >
-              <Ionicons name="people" size={24} color={theme.colors.charcoal} />
+              <Ionicons name="people" size={40} color={theme.colors.charcoal} />
               <Text style={[styles.actionText, { color: theme.colors.charcoal }]}>
                 Community
               </Text>
@@ -156,7 +156,7 @@ export default function HomeScreen() {
               style={[styles.actionButton, { backgroundColor: theme.colors.soil }]}
               onPress={() => router.push('/gallery')}
             >
-              <Ionicons name="images" size={24} color={theme.colors.paper} />
+              <Ionicons name="images" size={40} color={theme.colors.paper} />
               <Text style={[styles.actionText, { color: theme.colors.paper }]}>
                 Gallery
               </Text>
@@ -168,7 +168,7 @@ export default function HomeScreen() {
                 style={[styles.actionButton, { backgroundColor: theme.colors.error + '20' }]}
                 onPress={() => router.push('/more')}
               >
-                <Ionicons name="shield-checkmark" size={24} color={theme.colors.error} />
+                <Ionicons name="shield-checkmark" size={40} color={theme.colors.error} />
                 <Text style={[styles.actionText, { color: theme.colors.error }]}> 
                   Admin Tools
                 </Text>
@@ -179,7 +179,7 @@ export default function HomeScreen() {
               style={[styles.actionButton, { backgroundColor: theme.colors.sunflower }]}
               onPress={() => router.push('/recipes')}
             >
-              <Ionicons name="restaurant" size={24} color={theme.colors.charcoal} />
+              <Ionicons name="restaurant" size={40} color={theme.colors.charcoal} />
               <Text style={[styles.actionText, { color: theme.colors.charcoal }]}> 
                 Recipes
               </Text>
@@ -370,6 +370,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    // Web compatibility
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
   },
   actionGrid: {
     flexDirection: 'row',
@@ -377,17 +379,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   actionButton: {
-    width: '48%',
-    aspectRatio: 1.5,
-    borderRadius: 16,
+    width: '31%',
+    aspectRatio: 1.0,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
   },
   actionText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     marginTop: 8,
+    textAlign: 'center',
   },
   taskList: {
     gap: 12,

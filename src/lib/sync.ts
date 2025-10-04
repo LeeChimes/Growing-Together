@@ -39,6 +39,18 @@ class SyncManagerImpl implements SyncManager {
   async syncAll(): Promise<void> {
     if (this.isCurrentlySync) return;
     
+    // Prevent sync error spam - bail out when cache ops aren't present
+    try {
+      // @ts-ignore
+      if (!cacheOperations) {
+        console.log('cacheOperations not available, skipping sync');
+        return;
+      }
+    } catch (e) {
+      console.warn('Skipping sync (not wired for web):', e);
+      return;
+    }
+    
     const online = await this.isOnline();
     if (!online) return;
 
@@ -126,6 +138,11 @@ class SyncManagerImpl implements SyncManager {
 
   async processMutationQueue(): Promise<void> {
     try {
+      if (!cacheOperations) {
+        console.warn('cacheOperations not available, skipping mutation queue processing');
+        return;
+      }
+      
       const mutations = await cacheOperations.getPendingMutations();
       
       for (const mutation of mutations) {

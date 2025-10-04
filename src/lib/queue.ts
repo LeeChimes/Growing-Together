@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 type Mutation = { id: string; type: string; payload: any; attempts: number; createdAt: number };
 const subscribers: Array<() => void> = [];
 
@@ -53,7 +55,10 @@ async function apiCreateInspection(_payload: any) { /* integrate with useCreateI
 async function apiCreateDiary(_payload: any) { /* integrate */ }
 async function apiCreatePost(_payload: any) { /* integrate */ }
 async function apiSetRsvp(_payload: any) { /* integrate */ }
-async function apiCreateTask(_payload: any) { /* integrate */ }
+async function apiCreateTask(payload: any) {
+  const { error } = await supabase.from('tasks').insert(payload);
+  if (error) throw error;
+}
 async function apiUploadDocument(_payload: any) { /* integrate */ }
 async function apiSendChat(_payload: any) { /* integrate */ }
 

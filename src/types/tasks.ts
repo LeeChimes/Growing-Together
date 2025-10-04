@@ -51,6 +51,7 @@ export interface TaskAssignment {
 export interface CreateTaskData {
   title: string;
   description: string;
+  type: 'personal' | 'site';
   due_date: string;
   priority: TaskPriority;
   category: TaskCategory;
@@ -115,11 +116,11 @@ export const TASK_STATUS_COLORS: Record<TaskStatus, string> = {
 export const TASK_CATEGORY_ICONS: Record<TaskCategory, string> = {
   general: 'list',
   maintenance: 'build',
-  planting: 'eco',
-  harvesting: 'agriculture',
-  cleaning: 'cleaning-services',
-  repair: 'handyman',
-  inspection: 'visibility',
+  planting: 'leaf',
+  harvesting: 'leaf',
+  cleaning: 'water',
+  repair: 'hammer',
+  inspection: 'eye',
   community: 'people'
 };
 

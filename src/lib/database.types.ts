@@ -246,11 +246,16 @@ export interface Database {
           title: string
           description: string | null
           type: 'personal' | 'site'
+          status: 'available' | 'accepted' | 'in_progress' | 'completed' | 'overdue'
           assigned_to: string | null
           due_date: string | null
           is_completed: boolean
           proof_photos: string[] | null
           completed_at: string | null
+          priority: 'low' | 'medium' | 'high' | 'urgent'
+          category: 'general' | 'maintenance' | 'planting' | 'harvesting' | 'cleaning' | 'repair' | 'inspection' | 'community'
+          estimated_duration: number | null
+          location: string | null
           created_by: string
           created_at: string
           updated_at: string
@@ -260,11 +265,16 @@ export interface Database {
           title: string
           description?: string | null
           type: 'personal' | 'site'
+          status?: 'available' | 'accepted' | 'in_progress' | 'completed' | 'overdue'
           assigned_to?: string | null
           due_date?: string | null
           is_completed?: boolean
           proof_photos?: string[] | null
           completed_at?: string | null
+          priority?: 'low' | 'medium' | 'high' | 'urgent'
+          category?: 'general' | 'maintenance' | 'planting' | 'harvesting' | 'cleaning' | 'repair' | 'inspection' | 'community'
+          estimated_duration?: number | null
+          location?: string | null
           created_by: string
           created_at?: string
           updated_at?: string
@@ -274,11 +284,16 @@ export interface Database {
           title?: string
           description?: string | null
           type?: 'personal' | 'site'
+          status?: 'available' | 'accepted' | 'in_progress' | 'completed' | 'overdue'
           assigned_to?: string | null
           due_date?: string | null
           is_completed?: boolean
           proof_photos?: string[] | null
           completed_at?: string | null
+          priority?: 'low' | 'medium' | 'high' | 'urgent'
+          category?: 'general' | 'maintenance' | 'planting' | 'harvesting' | 'cleaning' | 'repair' | 'inspection' | 'community'
+          estimated_duration?: number | null
+          location?: string | null
           created_by?: string
           created_at?: string
           updated_at?: string

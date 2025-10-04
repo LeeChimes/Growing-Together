@@ -4,39 +4,9 @@ import { Platform } from 'react-native';
 let SQLite: any;
 
 if (Platform.OS === 'web') {
-  // Web platform - use localStorage mock (don't import expo-sqlite at all)
+  // Web platform - use localStorage mock
   SQLite = {
-    openDatabase: (name: string) => ({
-      transaction: (fn: any) => fn({
-        executeSql: (sql: string, params: any[], success: any, error: any) => {
-          try {
-            if (sql.includes('SELECT')) {
-              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
-              success(null, { rows: { _array: JSON.parse(data) } });
-            } else {
-              success(null, { rowsAffected: 1 });
-            }
-          } catch (e) {
-            error(e);
-          }
-        }
-      })
-    }),
     openDatabaseSync: (name: string) => ({
-      transaction: (fn: any) => fn({
-        executeSql: (sql: string, params: any[], success: any, error: any) => {
-          try {
-            if (sql.includes('SELECT')) {
-              const data = localStorage.getItem(`sqlite_${name}`) || '[]';
-              success(null, { rows: { _array: JSON.parse(data) } });
-            } else {
-              success(null, { rowsAffected: 1 });
-            }
-          } catch (e) {
-            error(e);
-          }
-        }
-      }),
       execAsync: async (query: string) => {
         console.log('[SQLite Mock] execAsync:', query);
         return { rows: [] };
@@ -47,13 +17,7 @@ if (Platform.OS === 'web') {
       },
       getAllAsync: async (query: string, params: any[] = []) => {
         console.log('[SQLite Mock] getAllAsync:', query, params);
-        try {
-          // Return empty array for SELECT queries
-          return [];
-        } catch (e) {
-          console.error('[SQLite Mock] getAllAsync error:', e);
-          return [];
-        }
+        return [];
       },
       getFirstAsync: async (query: string, params: any[] = []) => {
         console.log('[SQLite Mock] getFirstAsync:', query, params);
@@ -62,318 +26,279 @@ if (Platform.OS === 'web') {
     })
   };
 } else {
-  // Native platform
+  // Native platform - use actual SQLite
   SQLite = require('expo-sqlite');
 }
 
-import { Database } from './database.types';
+// Database instance
+let db: any = null;
+let isInitialized = false;
 
-// Initialize SQLite database
-export const db = SQLite.openDatabaseSync('growing_together.db');
-
-// Database initialization
-export const initializeDatabase = async (): Promise<void> => {
+// Initialize database
+export const initializeDatabase = async () => {
+  if (isInitialized) return;
+  
   try {
-    // For the new SQLite API, we execute SQL directly
-    await db.execAsync(`
-      PRAGMA journal_mode = WAL;
-      PRAGMA foreign_keys = ON;
-    `);
+    db = SQLite.openDatabaseSync('growing_together.db');
     
-    // Profiles cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS profiles_cache (
-        id TEXT PRIMARY KEY,
-        email TEXT NOT NULL,
-        full_name TEXT,
-        avatar_url TEXT,
-        role TEXT NOT NULL,
-        plot_number TEXT,
-        phone TEXT,
-        emergency_contact TEXT,
-        join_date TEXT NOT NULL,
-        is_approved BOOLEAN NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Diary entries cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS diary_entries_cache (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        template_type TEXT NOT NULL,
-        plant_id TEXT,
-        tags TEXT,
-        weather TEXT,
-        temperature REAL,
-        photos TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Events cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS events_cache (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        start_date TEXT NOT NULL,
-        end_date TEXT,
-        location TEXT NOT NULL,
-        max_attendees INTEGER,
-        bring_list TEXT,
-        created_by TEXT NOT NULL,
-        is_cancelled BOOLEAN NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Event RSVPs cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS event_rsvps_cache (
-        id TEXT PRIMARY KEY,
-        event_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        status TEXT NOT NULL,
-        bringing_items TEXT,
-        notes TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Posts cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS posts_cache (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        content TEXT NOT NULL,
-        photos TEXT,
-        is_pinned BOOLEAN NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Tasks cache
+    // Create essential tables
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS tasks_cache (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         description TEXT,
         type TEXT NOT NULL,
-        assigned_to TEXT,
         due_date TEXT,
-        is_completed BOOLEAN NOT NULL,
+        priority TEXT DEFAULT 'medium',
+        category TEXT,
+        estimated_duration INTEGER,
+        location TEXT,
+        status TEXT DEFAULT 'available',
+        created_by TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
         proof_photos TEXT,
+        completion_notes TEXT,
+        completed_at TEXT
+      );
+    `);
+
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS task_assignments_cache (
+        id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        assigned_at TEXT NOT NULL,
+        status TEXT DEFAULT 'assigned',
+        started_at TEXT,
         completed_at TEXT,
-        created_by TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
+        FOREIGN KEY (task_id) REFERENCES tasks_cache (id),
+        FOREIGN KEY (user_id) REFERENCES profiles_cache (id)
       );
     `);
 
-    // Albums cache
     await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS albums_cache (
+      CREATE TABLE IF NOT EXISTS profiles_cache (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT,
-        cover_photo TEXT,
-        created_by TEXT NOT NULL,
-        is_private BOOLEAN NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        full_name TEXT,
+        avatar_url TEXT,
+        role TEXT DEFAULT 'member',
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
+        updated_at TEXT NOT NULL
       );
     `);
 
-    // Photos cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS photos_cache (
-        id TEXT PRIMARY KEY,
-        url TEXT NOT NULL,
-        album_id TEXT,
-        caption TEXT,
-        uploaded_by TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Recipes cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS recipes_cache (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        description TEXT,
-        ingredients TEXT,
-        steps TEXT,
-        photos TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Chat messages cache (community chat)
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS chat_messages_cache (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        text TEXT NOT NULL,
-        photos TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // User documents cache
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS user_documents_cache (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        type TEXT NOT NULL,
-        file_url TEXT,
-        file_name TEXT,
-        file_size INTEGER,
-        mime_type TEXT,
-        uploaded_by_user_id TEXT,
-        expires_at TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sync_status TEXT DEFAULT 'synced'
-      );
-    `);
-
-    // Mutation queue for offline operations
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS mutation_queue (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         table_name TEXT NOT NULL,
         operation TEXT NOT NULL,
         data TEXT NOT NULL,
         created_at TEXT NOT NULL,
         retry_count INTEGER DEFAULT 0,
-        last_error TEXT,
-        next_attempt_at TEXT,
-        max_retries INTEGER DEFAULT 5
+        last_retry_at TEXT
       );
     `);
 
-    // Sync status tracking
-    await db.execAsync(`
-      CREATE TABLE IF NOT EXISTS sync_status (
-        table_name TEXT PRIMARY KEY,
-        last_sync TEXT NOT NULL,
-        is_syncing BOOLEAN DEFAULT false
-      );
-    `);
-
+    isInitialized = true;
+    console.log('✅ Database initialized successfully');
   } catch (error) {
-    console.error('Database initialization error:', error);
+    console.error('❌ Database initialization failed:', error);
     throw error;
   }
 };
 
+// Ensure database is ready
+export const ensureDbReady = async () => {
+  if (!isInitialized) {
+    await initializeDatabase();
+  }
+  return isInitialized;
+};
+
 // Generic cache operations
 export const cacheOperations = {
-  // Insert or update cache
-  upsertCache: async (tableName: string, data: any[]): Promise<void> => {
-    if (data.length === 0) {
+  async upsertCache(table: string, data: any) {
+    if (!db) {
+      console.warn('Database not initialized, skipping cache operation');
       return;
     }
-
-    for (const item of data) {
-      const keys = Object.keys(item);
-      const values = Object.values(item);
-      const placeholders = keys.map(() => '?').join(', ');
-      
-      const query = `INSERT OR REPLACE INTO ${tableName} (${keys.join(', ')}) VALUES (${placeholders})`;
-      await db.runAsync(query as any, ...(values as any));
-    }
-  },
-
-  // Get cached data
-  getCache: async (tableName: string, where?: string, params?: any[]): Promise<any[]> => {
-    const query = `SELECT * FROM ${tableName}${where ? ` WHERE ${where}` : ''}`;
-    const result = await db.getAllAsync(query as any, ...(params || []) as any);
-    return result;
-  },
-
-  // Clear cache
-  clearCache: async (tableName: string): Promise<void> => {
-    await db.runAsync(`DELETE FROM ${tableName}`);
-  },
-
-  // Add to mutation queue
-  addToMutationQueue: async (tableName: string, operation: string, data: any): Promise<void> => {
-    await db.runAsync(
-      `INSERT INTO mutation_queue (table_name, operation, data, created_at) VALUES (?, ?, ?, ?)`,
-      [tableName, operation, JSON.stringify(data), new Date().toISOString()]
-    );
-  },
-
-  // Get pending mutations
-  getPendingMutations: async (): Promise<any[]> => {
-    const nowIso = new Date().toISOString();
-    const result = await db.getAllAsync(
-      `SELECT * FROM mutation_queue 
-       WHERE next_attempt_at IS NULL OR next_attempt_at <= ?
-       ORDER BY created_at ASC`,
-      [nowIso]
-    );
-    return result;
-  },
-
-  // Remove processed mutation
-  removeMutation: async (id: number): Promise<void> => {
-    await db.runAsync(`DELETE FROM mutation_queue WHERE id = ?`, [id]);
-  },
-
-  // Record mutation attempt failure with backoff scheduling
-  bumpMutationRetryWithBackoff: async (
-    id: number,
-    currentRetryCount: number,
-    lastError: string,
-    baseDelayMs: number = 1000,
-    maxDelayMs: number = 60_000
-  ): Promise<void> => {
-    const nextRetryCount = currentRetryCount + 1;
-    const backoffDelay = Math.min(Math.pow(2, currentRetryCount) * baseDelayMs, maxDelayMs);
-    const nextAttemptAt = new Date(Date.now() + backoffDelay).toISOString();
-    await db.runAsync(
-      `UPDATE mutation_queue 
-       SET retry_count = ?, last_error = ?, next_attempt_at = ?
-       WHERE id = ?`,
-      [nextRetryCount, lastError, nextAttemptAt, id]
-    );
-  },
-};
-
-// Sync manager for online/offline detection
-export const syncManager = {
-  isOnline: async (): Promise<boolean> => {
+    
     try {
-      // Simple network check - in a real app you might want more sophisticated detection
-      return true; // For now, assume always online in development
-    } catch {
-      return false;
+      const keys = Object.keys(data);
+      const values = Object.values(data);
+      const placeholders = keys.map(() => '?').join(', ');
+      const updateClause = keys.map(key => `${key} = ?`).join(', ');
+      
+      await db.runAsync(
+        `INSERT OR REPLACE INTO ${table}_cache (${keys.join(', ')}) VALUES (${placeholders})`,
+        values
+      );
+    } catch (error) {
+      console.error(`Error upserting to ${table}_cache:`, error);
     }
   },
+
+  async getCache(table: string, conditions: Record<string, any> = {}) {
+    if (!db) {
+      console.warn('Database not initialized, returning empty array');
+      return [];
+    }
+    
+    try {
+      let query = `SELECT * FROM ${table}_cache`;
+      const values: any[] = [];
+      
+      if (Object.keys(conditions).length > 0) {
+        const whereClause = Object.keys(conditions).map(key => `${key} = ?`).join(' AND ');
+        query += ` WHERE ${whereClause}`;
+        values.push(...Object.values(conditions));
+      }
+      
+      return await db.getAllAsync(query, values);
+    } catch (error) {
+      console.error(`Error getting from ${table}_cache:`, error);
+      return [];
+    }
+  },
+
+  async clearCache(table: string) {
+    if (!db) {
+      console.warn('Database not initialized, skipping cache clear');
+      return;
+    }
+    
+    try {
+      await db.runAsync(`DELETE FROM ${table}_cache`);
+    } catch (error) {
+      console.error(`Error clearing ${table}_cache:`, error);
+    }
+  },
+
+  async addToMutationQueue(table: string, operation: string, data: any) {
+    if (!db) {
+      console.warn('Database not initialized, skipping mutation queue');
+      return;
+    }
+    
+    try {
+      const id = `${table}_${operation}_${Date.now()}_${Math.random()}`;
+      await db.runAsync(
+        'INSERT INTO mutation_queue (id, table_name, operation, data, created_at) VALUES (?, ?, ?, ?, ?)',
+        [id, table, operation, JSON.stringify(data), new Date().toISOString()]
+      );
+    } catch (error) {
+      console.error('Error adding to mutation queue:', error);
+    }
+  },
+
+  async getPendingMutations() {
+    if (!db) {
+      console.warn('Database not initialized, returning empty mutations');
+      return [];
+    }
+    
+    try {
+      return await db.getAllAsync('SELECT * FROM mutation_queue ORDER BY created_at ASC');
+    } catch (error) {
+      console.error('Error getting pending mutations:', error);
+      return [];
+    }
+  },
+
+  async removeMutation(id: string) {
+    if (!db) {
+      console.warn('Database not initialized, skipping mutation removal');
+      return;
+    }
+    
+    try {
+      await db.runAsync('DELETE FROM mutation_queue WHERE id = ?', [id]);
+    } catch (error) {
+      console.error('Error removing mutation:', error);
+    }
+  },
+
+  async bumpMutationRetryWithBackoff(id: string) {
+    if (!db) {
+      console.warn('Database not initialized, skipping retry bump');
+      return;
+    }
+    
+    try {
+      await db.runAsync(
+        'UPDATE mutation_queue SET retry_count = retry_count + 1, last_retry_at = ? WHERE id = ?',
+        [new Date().toISOString(), id]
+      );
+    } catch (error) {
+      console.error('Error bumping mutation retry:', error);
+    }
+  }
 };
+
+// Sync manager
+export const syncManager = {
+  async syncTable(table: string) {
+    if (!db) {
+      console.warn('Database not initialized, skipping sync');
+      return;
+    }
+    
+    try {
+      // This is a simplified sync - in a real app you'd sync with Supabase
+      console.log(`Syncing ${table} table...`);
+    } catch (error) {
+      console.error(`Error syncing ${table}:`, error);
+    }
+  },
+
+  async syncAll() {
+    if (!db) {
+      console.warn('Database not initialized, skipping sync all');
+      return;
+    }
+    
+    try {
+      const tables = ['tasks', 'task_assignments', 'profiles'];
+      for (const table of tables) {
+        await this.syncTable(table);
+      }
+    } catch (error) {
+      console.error('Error syncing all tables:', error);
+    }
+  },
+
+  async processMutationQueue() {
+    if (!db) {
+      console.warn('Database not initialized, skipping mutation processing');
+      return;
+    }
+    
+    try {
+      const mutations = await cacheOperations.getPendingMutations();
+      console.log(`Processing ${mutations.length} pending mutations...`);
+      
+      for (const mutation of mutations) {
+        try {
+          // Process mutation (simplified)
+          console.log(`Processing mutation: ${mutation.operation} on ${mutation.table_name}`);
+          await cacheOperations.removeMutation(mutation.id);
+        } catch (error) {
+          console.error('Error processing mutation:', error);
+          await cacheOperations.bumpMutationRetryWithBackoff(mutation.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing mutation queue:', error);
+    }
+  }
+};
+
+// Initialize database on module load
+initializeDatabase().catch(console.error);
+
+// Debug logging for exports
+console.log('🔧 database.ts - syncManager exported:', !!syncManager);
+console.log('🔧 database.ts - cacheOperations exported:', !!cacheOperations);
+console.log('🔧 database.ts - ensureDbReady exported:', !!ensureDbReady);

@@ -1,7 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { cacheOperations, syncManager } from '../lib/database';
+import { cacheOperations, syncManager, ensureDbReady } from '../lib/database';
 import { enqueueMutation } from '../lib/queue';
+
+// Debug syncManager import
+console.log('🔧 useTasks.ts - syncManager imported:', !!syncManager);
+console.log('🔧 useTasks.ts - cacheOperations imported:', !!cacheOperations);
 import { useAuthStore } from '../store/authStore';
 import { Database } from '../lib/database.types';
 import { 
@@ -17,7 +21,6 @@ import {
 } from '../types/tasks';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
-type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
 export const useTasks = (filters: {
@@ -30,7 +33,7 @@ export const useTasks = (filters: {
   return useQuery({
     queryKey: ['tasks', user?.id, filters],
     queryFn: async (): Promise<(Task & { assignee?: { full_name: string; avatar_url?: string }; creator?: { full_name: string } })[]> => {
-      if (await syncManager.isOnline()) {
+      if (syncManager && await syncManager.isOnline()) {
         let query = supabase
           .from('tasks')
           .select(`
@@ -64,7 +67,11 @@ export const useTasks = (filters: {
             proof_photos: Array.isArray(item.proof_photos) ? JSON.stringify(item.proof_photos) : item.proof_photos,
             sync_status: 'synced'
           }));
-          await cacheOperations.upsertCache('tasks_cache', processedData);
+          if (cacheOperations) {
+            await cacheOperations.upsertCache('tasks_cache', processedData);
+          } else {
+            console.warn('cacheOperations not available, skipping cache update');
+          }
         }
         
         return data || [];
@@ -106,38 +113,57 @@ export const useCreateTask = () => {
   const { user } = useAuthStore();
 
   return useMutation({
-    mutationFn: async (task: TaskInsert): Promise<Task> => {
-      const taskWithUser = {
-        ...task,
-        created_by: user!.id,
-        id: task.id || crypto.randomUUID(),
-        is_completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+    // Accept a slightly looser input (from CreateTaskModal) and normalize to TaskInsert
+    mutationFn: async (task: Partial<TaskInsert> & { title: string; type: 'site' | 'personal'; due_date?: string }): Promise<Task> => {
+        console.log('RUNTIME_SUPABASE_URL', process.env.EXPO_PUBLIC_SUPABASE_URL);
+        console.log('task.create user', user?.id);
 
-      if (await syncManager.isOnline()) {
-        const { data, error } = await supabase
+        const taskWithUser = {
+          title: task.title.trim(),
+          type: task.type, // 'site' | 'personal'
+          description: task.description ?? null,
+          due_date: task.due_date ?? null,
+          priority: task.priority ?? 'medium',
+          category: task.category ?? 'general',
+          estimated_duration: task.estimated_duration ?? null,
+          location: task.location ?? null,
+          created_by: user!.id,           // IMPORTANT for RLS insert policy
+        };
+
+        console.log('About to insert taskWithUser', taskWithUser);
+        
+        // IMPORTANT: select('*').single() so PostgREST returns a single row
+        const { data, error, status } = await supabase
           .from('tasks')
-          .insert(taskWithUser)
-          .select()
+          .insert([taskWithUser])        // pass as array is safest
+          .select('*')
           .single();
 
-        if (error) throw error;
+        console.log('INSERT RESULT', { status, error, data });
+
+        if (error) {
+          console.error('insert tasks failed', { error, payload: taskWithUser });
+          throw error;
+        }
+        
+        // CRITICAL: resolve the mutation so the spinner stops
         return data;
-      } else {
-        const cacheEntry = {
-          ...taskWithUser,
-          proof_photos: JSON.stringify(taskWithUser.proof_photos || []),
-          sync_status: 'pending',
-        };
-        await cacheOperations.upsertCache('tasks_cache', [cacheEntry]);
-        enqueueMutation({ type: 'task.create', payload: taskWithUser });
-        return taskWithUser as Task;
-      }
     },
-    onSuccess: () => {
+    onSuccess: (newTask) => {
+      console.log('🎉 Task created successfully, invalidating queries...');
+      
+      // Invalidate all task-related queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['available-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-assigned-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['overdue-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-stats'] });
+      
+      // Force refetch of all-tasks to ensure immediate update
+      queryClient.refetchQueries({ queryKey: ['all-tasks'] });
+      
+      console.log('✅ All task queries invalidated and refetched');
     },
   });
 };
@@ -153,7 +179,7 @@ export const useUpdateTask = () => {
         updated_at: new Date().toISOString(),
       };
 
-      if (await syncManager.isOnline()) {
+      if (syncManager && await syncManager.isOnline()) {
         const { data, error } = await supabase
           .from('tasks')
           .update(updatedTask)
@@ -171,8 +197,17 @@ export const useUpdateTask = () => {
           sync_status: 'pending',
         };
         
-        await cacheOperations.upsertCache('tasks_cache', [cacheEntry]);
-        await cacheOperations.addToMutationQueue('tasks', 'UPDATE', updatedTask);
+        if (cacheOperations) {
+          await cacheOperations.upsertCache('tasks_cache', [cacheEntry]);
+        } else {
+          console.warn('cacheOperations not available, skipping cache update');
+        }
+        
+        if (cacheOperations) {
+          await cacheOperations.addToMutationQueue('tasks', 'UPDATE', updatedTask);
+        } else {
+          console.warn('cacheOperations not available, skipping mutation queue');
+        }
         
         return updatedTask as Task;
       }
@@ -206,7 +241,7 @@ export const useDeleteTask = () => {
 
   return useMutation({
     mutationFn: async (taskId: string): Promise<void> => {
-      if (await syncManager.isOnline()) {
+      if (syncManager && await syncManager.isOnline()) {
         const { error } = await supabase
           .from('tasks')
           .delete()
@@ -264,35 +299,21 @@ export const useAllTasks = () => {
   return useQuery({
     queryKey: ['all-tasks'],
     queryFn: async () => {
+      console.log('🔍 Fetching all tasks...');
+      console.log('🔍 Current user:', user?.id);
+      
       const { data, error } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          assignments (
-            id,
-            task_id,
-            user_id,
-            accepted_at,
-            started_at,
-            completed_at,
-            notes
-          ),
-          assigned_user:assignments.user_id (
-            id,
-            full_name,
-            plot_number
-          ),
-          created_by_user:created_by (
-            id,
-            full_name
-          )
-        `)
+        .select('id,title,type,status,created_by,created_at')
         .order('created_at', { ascending: false });
+      if (error) console.error('fetch tasks failed', error);
+      else console.log('FETCH RESULT', data?.length, data);
       
-      if (error) throw error;
-      return data as TaskWithAssignment[];
+      return data || [];
     },
     enabled: !!user,
+    retry: 3,
+    retryDelay: 1000,
   });
 };
 

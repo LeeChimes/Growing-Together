@@ -43,17 +43,32 @@ interface TaskPanelProps {
 }
 
 export function TaskPanel({ onTaskPress }: TaskPanelProps) {
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTaskDetails, setShowTaskDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithAssignment | null>(null);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = profile?.role === 'admin';
   
-  const { data: availableTasks = [], isLoading: loadingAvailable } = useAvailableTasks();
-  const { data: myTasks = [], isLoading: loadingMy } = useMyAssignedTasks();
-  const { data: overdueTasks = [], isLoading: loadingOverdue } = useOverdueTasks();
-  const { data: stats } = useComprehensiveTaskStats();
+  const { data: availableTasks = [], isLoading: loadingAvailable, error: availableError } = useAvailableTasks();
+  const { data: myTasks = [], isLoading: loadingMy, error: myTasksError } = useMyAssignedTasks();
+  const { data: overdueTasks = [], isLoading: loadingOverdue, error: overdueError } = useOverdueTasks();
+  const { data: stats, error: statsError } = useComprehensiveTaskStats();
+
+  // Debug logging
+  console.log('🔍 TaskPanel Debug:', {
+    availableTasks: availableTasks.length,
+    myTasks: myTasks.length,
+    overdueTasks: overdueTasks.length,
+    stats,
+    loadingAvailable,
+    loadingMy,
+    loadingOverdue,
+    availableError,
+    myTasksError,
+    overdueError,
+    statsError
+  });
 
   const acceptTaskMutation = useAcceptTask();
   const startTaskMutation = useStartTask();
@@ -247,6 +262,7 @@ export function TaskPanel({ onTaskPress }: TaskPanelProps) {
           <StatsCard title="Overdue" value={stats.overdue} color="#F44336" icon="alert-circle-outline" />
         </View>
       )}
+
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {overdueTasks.length > 0 && (

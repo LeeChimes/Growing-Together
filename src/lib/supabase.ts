@@ -23,15 +23,8 @@ if (typeof globalThis !== 'undefined' && !globalThis.__import_meta_env__) {
   };
 }
 
-const supabaseUrl =
-  getEnvVar('EXPO_PUBLIC_SUPABASE_URL') ??
-  (typeof globalThis !== 'undefined' ? globalThis.__import_meta_env__?.EXPO_PUBLIC_SUPABASE_URL : undefined) ??
-  'https://demo.supabase.co';
-
-const supabaseAnonKey =
-  getEnvVar('EXPO_PUBLIC_SUPABASE_ANON_KEY') ??
-  (typeof globalThis !== 'undefined' ? globalThis.__import_meta_env__?.EXPO_PUBLIC_SUPABASE_ANON_KEY : undefined) ??
-  'demo-anon-key';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
 // Custom storage adapter that works on both web and native
 const ExpoSecureStoreAdapter = {
@@ -62,14 +55,11 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
-export const supabase = createClient<any>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: ExpoSecureStoreAdapter,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+export const supabase = createClient(
+  process.env.EXPO_PUBLIC_SUPABASE_URL!,
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+  { db: { schema: 'public' } }
+);
 
 // Auth helper functions
 export const authHelpers = {
