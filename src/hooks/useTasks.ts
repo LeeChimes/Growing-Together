@@ -2,25 +2,34 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/authStore';
 
-// ---- Types kept intentionally light for compatibility ----
+// Minimal user access; if you already have an auth store, swap this.
+async function getUserId() {
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? null;
+}
+
 export type Task = {
   id: string;
   title: string;
   description?: string | null;
-  status?: 'available' | 'accepted' | 'in_progress' | 'completed' | 'overdue' | string | null;
+  image_url?: string | null;
+  status?: 'available' | 'accepted' | 'in_progress' | 'completed' | string | null;
   priority?: 'low' | 'medium' | 'high' | string | null;
   category?: string | null;
-  due_date?: string | null;           // ISO
-  assigned_to?: string | null;        // user id
-  created_by?: string | null;         // user id
-  created_at?: string | null;         // ISO
-  updated_at?: string | null;         // ISO
+  due_date?: string | null; // ISO
+  assigned_to?: string | null;
+  created_by?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
+type Q<T> = { data: T | undefined; error: unknown; loading: boolean };
+
 // ---- Base: all tasks (single source of truth) ----
-export function useAllTasks() {
+export function useAllTasks(): Q<Task[]> {
   const q = useQuery({
     queryKey: ['tasks', 'all'],
     queryFn: async () => {
@@ -29,100 +38,101 @@ export function useAllTasks() {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Task[];
+      return data as Task[];
     },
   });
-  return { data: q.data, error: q.error, loading: q.isLoading, isLoading: q.isLoading };
+  return { data: q.data, error: q.error, loading: q.isLoading };
 }
 
-// ---- Derivations used by filters (client-side for simplicity & stability) ----
-export function useAvailableTasks() {
-  const { data, error, loading, isLoading } = useAllTasks();
+// ---- Derived lists for filters ----
+export function useAvailableTasks(): Q<Task[]> {
+  const { data, error, loading } = useAllTasks();
   const filtered = useMemo(
     () => (data ?? []).filter(t => (t.status ?? 'available') === 'available'),
     [data]
   );
-  return { data: filtered, error, loading, isLoading };
+  return { data: filtered, error, loading };
 }
 
-export function useMyAssignedTasks() {
-  const userId = useAuthStore.getState().user?.id ?? null;
-  const { data, error, loading, isLoading } = useAllTasks();
+export function useMyAssignedTasks(userId?: string | null): Q<Task[]> {
+  const { data, error, loading } = useAllTasks();
   const filtered = useMemo(
     () => (data ?? []).filter(t => !!userId && t.assigned_to === userId),
     [data, userId]
   );
-  return { data: filtered, error, loading, isLoading };
+  return { data: filtered, error, loading };
 }
 
-export function useOverdueTasks() {
-  const { data, error, loading, isLoading } = useAllTasks();
+export function useOverdueTasks(): Q<Task[]> {
+  const { data, error, loading } = useAllTasks();
+  const now = useMemo(() => new Date(), []);
   const filtered = useMemo(() => {
-    const now = new Date();
     return (data ?? []).filter(t => {
       if (!t.due_date) return false;
       if ((t.status ?? '') === 'completed') return false;
-      const due = new Date(t.due_date);
-      return due < now;
+      return new Date(t.due_date) < now;
     });
-  }, [data]);
-  return { data: filtered, error, loading, isLoading };
+  }, [data, now]);
+  return { data: filtered, error, loading };
 }
 
-// ---- Stats used by TaskPanel badges ----
-export function useComprehensiveTaskStats() {
-  const { data, error, loading, isLoading } = useAllTasks();
-
+// ---- Stats for badges ----
+export function useComprehensiveTaskStats(): Q<{
+  available: number;
+  inProgress: number;
+  completed: number;
+  overdue: number;
+}> {
+  const { data, error, loading } = useAllTasks();
   const stats = useMemo(() => {
     const s = { available: 0, inProgress: 0, completed: 0, overdue: 0 };
     const list = data ?? [];
     const now = new Date();
-
     for (const t of list) {
-      const status = (t.status ?? 'available') as string;
-      if (status === 'completed') s.completed++;
-      else if (status === 'in_progress' || status === 'accepted') s.inProgress++;
+      const st = (t.status ?? 'available') as string;
+      if (st === 'completed') s.completed++;
+      else if (st === 'in_progress' || st === 'accepted') s.inProgress++;
       else s.available++;
 
-      if (t.due_date && status !== 'completed') {
-        try {
-          const due = new Date(t.due_date);
-          if (due < now) s.overdue++;
-        } catch {
-          // ignore bad dates
-        }
-      }
+      if (t.due_date && st !== 'completed' && new Date(t.due_date) < now) s.overdue++;
     }
     return s;
   }, [data]);
-
-  return { data: stats, error, loading, isLoading };
+  return { data: stats, error, loading };
 }
 
-// ---- Mutations ----
+// ---- Mutations (create/update + wrappers the UI calls) ----
 export function useCreateTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: Partial<Task> & { title: string }) => {
-      const payload: Partial<Task> = {
-        title: input.title,
-        description: input.description ?? null,
-        status: input.status ?? 'available',
-        due_date: input.due_date ?? null,
-        priority: input.priority ?? null,
-        category: input.category ?? null,
-        assigned_to: input.assigned_to ?? null,
-        created_by: input.created_by ?? null,
-      };
-      const { data, error } = await supabase.from('tasks').insert(payload).select().single();
+    mutationFn: async (input: {
+      title: string;
+      description?: string | null;
+      image_url?: string | null;
+      due_date?: string | null;
+      priority?: string | null;
+      category?: string | null;
+    }) => {
+      const uid = await getUserId();
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          title: input.title,
+          description: input.description ?? null,
+          image_url: input.image_url ?? null,
+          status: 'available',
+          due_date: input.due_date ?? null,
+          priority: input.priority ?? null,
+          category: input.category ?? null,
+          assigned_to: null,
+          created_by: uid,
+        })
+        .select()
+        .single();
       if (error) throw error;
       return data as Task;
     },
-    onSuccess: () => {
-      const key = ['tasks'];
-      // Invalidate both base and derived queries
-      qc.invalidateQueries({ queryKey: key });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }
 
@@ -133,18 +143,43 @@ export function useUpdateTask() {
       const { id, updates } = args;
       const { data, error } = await supabase
         .from('tasks')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates })
         .eq('id', id)
         .select()
         .single();
       if (error) throw error;
       return data as Task;
     },
-    onSuccess: () => {
-      const key = ['tasks'];
-      qc.invalidateQueries({ queryKey: key });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
+}
+
+export function useStartTask() {
+  const update = useUpdateTask();
+  return {
+    mutateAsync: async (taskId: string) => {
+      const uid = await getUserId();
+      return update.mutateAsync({
+        id: taskId,
+        updates: { status: 'in_progress', assigned_to: uid, started_at: new Date().toISOString() },
+      });
+    },
+    ...update,
+  };
+}
+
+export function useCompleteTaskWithNotes() {
+  const update = useUpdateTask();
+  return {
+    mutateAsync: async (args: { taskId: string; notes?: string | null }) => {
+      // If you later add a notes column, include it here.
+      return update.mutateAsync({
+        id: args.taskId,
+        updates: { status: 'completed', completed_at: new Date().toISOString() },
+      });
+    },
+    ...update,
+  };
 }
 
 export function useDeleteTask() {
@@ -155,57 +190,14 @@ export function useDeleteTask() {
       if (error) throw error;
       return id;
     },
-    onSuccess: () => {
-      const key = ['tasks'];
-      qc.invalidateQueries({ queryKey: key });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }
 
-export function useToggleTaskComplete() {
-  const update = useUpdateTask();
-  return {
-    mutateAsync: async (id: string, shouldComplete: boolean) => {
-      const updates: Partial<Task> = { status: shouldComplete ? 'completed' : 'available' };
-      return update.mutateAsync({ id, updates });
-    },
-    ...update,
-  };
-}
-
-// ---- Small wrapper mutations the panel imports ----
-export function useAcceptTask() {
-  const update = useUpdateTask();
-  return {
-    mutateAsync: async (taskId: string) =>
-      update.mutateAsync({ id: taskId, updates: { status: 'accepted' } }),
-    ...update,
-  };
-}
-
-export function useStartTask() {
-  const update = useUpdateTask();
-  return {
-    mutateAsync: async (taskId: string) =>
-      update.mutateAsync({ id: taskId, updates: { status: 'in_progress' } }),
-    ...update,
-  };
-}
-
-export function useCompleteTaskWithNotes() {
-  const update = useUpdateTask();
-  return {
-    mutateAsync: async (args: { taskId: string; notes?: string | null }) => {
-      return update.mutateAsync({
-        id: args.taskId,
-        updates: { status: 'completed' },
-      });
-    },
-    ...update,
-  };
-}
-
-// ---- Backwards-compat exports (legacy names used around the app) ----
-export { useAllTasks as useTasks };
-// Optional legacy aliases if referenced elsewhere
-export { useAvailableTasks as useTodayTasks, useAvailableTasks as useUpcomingTasks, useAvailableTasks as useDueSoonTasks, useAvailableTasks as useUnscheduledTasks };
+// Back-compat names used around the app
+export {
+  useAllTasks as useTasks,
+  useAvailableTasks as useAvailableTasks,
+  useMyAssignedTasks as useMyAssignedTasks,
+  useOverdueTasks as useOverdueTasks,
+};
